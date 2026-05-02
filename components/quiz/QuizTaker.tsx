@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import ProgressSidebar from "./ProgressSidebar";
 import QuestionCard from "./QuestionCard";
-import { Clock, Send, AlertTriangle, X } from "lucide-react";
+import { Clock, Send, AlertTriangle, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Question {
   id: string;
@@ -31,6 +32,10 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
   const [elapsed, setElapsed] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => setMounted(true), []);
 
   const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
   const pageQuestions = questions.slice(
@@ -108,34 +113,24 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
 
   return (
     <div className="flex gap-6 min-h-[calc(100vh-8rem)]">
-      {/* Sidebar */}
-      <ProgressSidebar
-        questions={questions}
-        answers={answers}
-        flagged={flagged}
-        visited={visited}
-        currentPage={currentPage}
-        questionsPerPage={QUESTIONS_PER_PAGE}
-        onJump={jumpToQuestion}
-      />
 
-      {/* Main */}
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
+      {/* Main Content */}
+      <div className="flex-1 min-w-0 flex flex-col gap-4 transition-all duration-300">
         {/* Top bar */}
-        <div className="glass rounded-2xl p-4 flex items-center gap-4">
+        <div className="bg-white rounded-2xl p-4 flex items-center gap-4 border border-black/5 shadow-sm">
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-sm truncate">{quizTitle}</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="font-bold text-sm truncate text-gray-900">{quizTitle}</h1>
+            <p className="text-xs text-gray-500 font-medium">
               {answeredCount}/{questions.length} answered
             </p>
           </div>
-          <div className="flex items-center gap-2 text-sm font-mono font-semibold text-cyan-400">
+          <div className="flex items-center gap-2 text-sm font-mono font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
             <Clock className="w-4 h-4" />
             {formatTime(elapsed)}
           </div>
           <button
             onClick={() => setShowConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
             style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
           >
             <Send className="w-4 h-4" /> Submit
@@ -166,61 +161,97 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
           <button
             onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
             disabled={currentPage === 0}
-            className="px-4 py-2 rounded-xl text-sm font-medium glass glass-hover disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-black/10 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-colors"
           >
             ← Previous
           </button>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm font-medium text-gray-500">
             Page {currentPage + 1} of {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={currentPage >= totalPages - 1}
-            className="px-4 py-2 rounded-xl text-sm font-medium glass glass-hover disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-black/10 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-colors"
           >
             Next →
           </button>
         </div>
       </div>
 
+      {/* Right Sidebar Portal */}
+      {mounted && createPortal(
+        <div 
+          className={`fixed right-0 top-[88px] bottom-0 z-40 transition-transform duration-300 ease-in-out flex items-start ${
+            sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%-24px)]"
+          }`}
+          style={{ width: "260px" }}
+        >
+          {/* Toggle Button */}
+          <div className="absolute top-24 -left-8 z-50">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="w-8 h-14 bg-white border border-black/10 border-r-0 rounded-l-xl shadow-[-6px_0_12px_rgba(0,0,0,0.04)] flex items-center justify-center text-gray-400 hover:text-purple-600 transition-colors"
+            >
+              {sidebarOpen ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Sidebar Content Container */}
+          <div className="w-full h-full bg-white rounded-tl-3xl border-l border-black/10 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] p-4 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-black/20">
+            <ProgressSidebar
+              questions={questions}
+              answers={answers}
+              flagged={flagged}
+              visited={visited}
+              currentPage={currentPage}
+              questionsPerPage={QUESTIONS_PER_PAGE}
+              onJump={jumpToQuestion}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Confirm modal */}
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="glass rounded-2xl p-8 max-w-sm w-full border border-white/10 space-y-5">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" />
+      {showConfirm && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full border border-black/5 shadow-2xl space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-orange-500" />
+              </div>
               <div>
-                <h3 className="font-bold text-lg">Submit Quiz?</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  You have answered <strong className="text-foreground">{answeredCount}</strong> of{" "}
-                  <strong className="text-foreground">{questions.length}</strong> questions.
+                <h3 className="font-bold text-xl text-gray-900">Submit Quiz?</h3>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                  You have answered <strong className="text-gray-900">{answeredCount}</strong> of{" "}
+                  <strong className="text-gray-900">{questions.length}</strong> questions.
                   {unansweredCount > 0 && (
-                    <span className="text-yellow-400"> {unansweredCount} unanswered.</span>
+                    <span className="text-orange-600 font-semibold block mt-1"> {unansweredCount} unanswered.</span>
                   )}
                 </p>
               </div>
-              <button onClick={() => setShowConfirm(false)} className="text-muted-foreground hover:text-foreground ml-auto">
-                <X className="w-5 h-5" />
-              </button>
             </div>
-            <div className="flex gap-3">
+
+            <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-medium glass glass-hover"
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                disabled={submitting}
               >
-                Review
+                Continue taking
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
               >
-                {submitting ? "Submitting..." : "Confirm Submit"}
+                {submitting ? "Submitting..." : "Yes, Submit"}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

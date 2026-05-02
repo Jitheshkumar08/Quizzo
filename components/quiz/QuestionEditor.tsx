@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, Plus, Check, ChevronDown, ChevronUp } from "lucide-react";
 
 export interface QuestionData {
@@ -15,14 +15,21 @@ export interface QuestionData {
 interface QuestionEditorProps {
   question: QuestionData;
   index: number;
+  globalCollapsed?: boolean;
   onChange: (index: number, updated: QuestionData) => void;
   onDelete: (index: number) => void;
 }
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
-export default function QuestionEditor({ question, index, onChange, onDelete }: QuestionEditorProps) {
+export default function QuestionEditor({ question, index, globalCollapsed, onChange, onDelete }: QuestionEditorProps) {
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (globalCollapsed !== undefined) {
+      setCollapsed(globalCollapsed);
+    }
+  }, [globalCollapsed]);
 
   function update(patch: Partial<QuestionData>) {
     onChange(index, { ...question, ...patch });
@@ -36,10 +43,12 @@ export default function QuestionEditor({ question, index, onChange, onDelete }: 
   }
 
   return (
-    <div className="glass rounded-2xl border border-white/5 overflow-hidden transition-all duration-200 hover:border-purple-500/20">
+    <div className="glass rounded-2xl border border-white/5 transition-all duration-200 hover:border-purple-500/20 relative">
       {/* Header */}
       <div
-        className="flex items-center gap-3 p-4 cursor-pointer select-none"
+        className={`sticky top-[75px] z-40 flex items-center gap-3 p-4 cursor-pointer select-none transition-all ${
+          !collapsed ? "border-b border-black/5 bg-[#FAF9F6]/95 backdrop-blur-xl dark:bg-[#121212]/95 dark:border-white/5 rounded-t-2xl shadow-sm" : ""
+        }`}
         onClick={() => setCollapsed(!collapsed)}
       >
         <span className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 text-sm font-bold flex-shrink-0">
@@ -63,7 +72,7 @@ export default function QuestionEditor({ question, index, onChange, onDelete }: 
       </div>
 
       {!collapsed && (
-        <div className="px-4 pb-4 space-y-4 border-t border-white/5 pt-4">
+        <div className="px-4 pb-4 space-y-4 pt-4">
           {/* Question text */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Question</label>

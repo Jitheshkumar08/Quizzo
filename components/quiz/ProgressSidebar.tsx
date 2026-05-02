@@ -34,11 +34,11 @@ export default function ProgressSidebar({
   }
 
   const statusStyles: Record<string, string> = {
-    answered: "bg-blue-500 text-white border-blue-600",
-    flagged: "bg-orange-500 text-white border-orange-600",
-    skipped: "bg-red-500/70 text-white border-red-600",
-    notVisited: "bg-white/5 text-muted-foreground border-white/10",
-    current: "bg-purple-500 text-white border-purple-600",
+    answered: "bg-blue-500 text-white border-blue-600 shadow-sm",
+    flagged: "bg-orange-500 text-white border-orange-600 shadow-sm",
+    skipped: "bg-red-500/80 text-white border-red-600 shadow-sm",
+    notVisited: "bg-gray-100 text-gray-500 border-black/5",
+    current: "bg-purple-500 text-white border-purple-600 shadow-sm",
   };
 
   const stats = {
@@ -49,44 +49,42 @@ export default function ProgressSidebar({
   };
 
   return (
-    <div className="w-52 flex-shrink-0">
-      <div className="glass rounded-2xl p-4 space-y-4 sticky top-4">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Questions</h3>
+    <div className="space-y-4">
+      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Questions</h3>
 
-        {/* Grid */}
-        <div className="grid grid-cols-5 gap-1.5">
-          {questions.map((q, i) => {
-            const status = getStatus(q);
-            const isOnCurrentPage = Math.floor(i / questionsPerPage) === currentPage;
-            return (
-              <button
-                key={q.id}
-                onClick={() => onJump(i)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 ${statusStyles[status]} ${
-                  isOnCurrentPage ? "ring-2 ring-white/30" : ""
-                }`}
-                title={`Question ${i + 1}: ${status}`}
-              >
-                {i + 1}
-              </button>
-            );
-          })}
-        </div>
+      {/* Grid */}
+      <div className="grid grid-cols-5 gap-1.5">
+        {questions.map((q, i) => {
+          const status = getStatus(q);
+          const isOnCurrentPage = Math.floor(i / questionsPerPage) === currentPage;
+          return (
+            <button
+              key={q.id}
+              onClick={() => onJump(i)}
+              className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 ${statusStyles[status]} ${
+                isOnCurrentPage ? "ring-2 ring-purple-500/30 ring-offset-1" : "hover:brightness-95"
+              }`}
+              title={`Question ${i + 1}: ${status}`}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Legend */}
-        <div className="space-y-1.5 pt-2 border-t border-white/5">
-          {[
-            { color: "bg-blue-500", label: `Answered (${stats.answered})` },
-            { color: "bg-orange-500", label: `Flagged (${stats.flagged})` },
-            { color: "bg-red-500/70", label: `Skipped (${stats.skipped})` },
-            { color: "bg-white/10", label: `Not visited (${stats.notVisited})` },
-          ].map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-sm flex-shrink-0 ${color}`} />
-              <span className="text-xs text-muted-foreground">{label}</span>
-            </div>
-          ))}
-        </div>
+      {/* Legend */}
+      <div className="space-y-1.5 pt-4 border-t border-gray-100">
+        {[
+          { color: "bg-blue-500", label: `Answered (${stats.answered})` },
+          { color: "bg-orange-500", label: `Flagged (${stats.flagged})` },
+          { color: "bg-red-500/80", label: `Skipped (${stats.skipped})` },
+          { color: "bg-gray-200", label: `Not visited (${stats.notVisited})` },
+        ].map(({ color, label }) => (
+          <div key={label} className="flex items-center gap-2">
+            <span className={`w-3 h-3 rounded-sm flex-shrink-0 ${color} shadow-sm border border-black/5`} />
+            <span className="text-xs text-gray-500 font-medium">{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -29,31 +29,39 @@ export default function QuestionCard({
   onClear,
   onFlag,
 }: QuestionCardProps) {
+  const isAnswered = !!selected;
+
   return (
-    <div className={`glass rounded-2xl p-5 space-y-4 border transition-all duration-200 ${
-      isFlagged ? "border-orange-500/30 bg-orange-500/3" : "border-white/5"
+    <div className={`glass rounded-2xl border transition-all duration-200 ${
+      isFlagged ? "border-orange-500/30 bg-orange-50" : "border-black/5 bg-white/50"
     }`}>
       {/* Question header */}
-      <div className="flex items-start gap-3">
-        <span className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 text-sm font-bold flex-shrink-0">
+      <div className="flex items-start gap-3 p-5">
+        <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors ${
+          isAnswered ? "bg-purple-500 text-white shadow-sm" : "bg-black/5 text-gray-500"
+        }`}>
           {index + 1}
         </span>
-        <p className="font-medium text-foreground flex-1 leading-relaxed">{question.questionText}</p>
-        <button
-          onClick={onFlag}
-          className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${
-            isFlagged
-              ? "text-orange-400 bg-orange-400/15"
-              : "text-muted-foreground hover:text-orange-400 hover:bg-orange-400/10"
-          }`}
-          title={isFlagged ? "Remove flag" : "Flag for review"}
-        >
-          <Flag className="w-4 h-4" />
-        </button>
+        <p className={`font-medium flex-1 leading-relaxed ${isAnswered ? "text-gray-900" : "text-gray-700"}`}>
+          {question.questionText}
+        </p>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={onFlag}
+            className={`p-1.5 rounded-lg transition-all ${
+              isFlagged
+                ? "text-orange-500 bg-orange-100"
+                : "text-gray-400 hover:text-orange-500 hover:bg-orange-50"
+            }`}
+            title={isFlagged ? "Remove flag" : "Flag for review"}
+          >
+            <Flag className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Options */}
-      <div className="space-y-2 pl-11">
+      <div className="space-y-2 px-5 pb-5 pl-[60px]">
         {OPTION_KEYS.map((key) => {
           const isSelected = selected === key;
           return (
@@ -62,34 +70,33 @@ export default function QuestionCard({
               onClick={() => onAnswer(key)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all duration-150 border ${
                 isSelected
-                  ? "bg-purple-500/15 border-purple-500/40 text-purple-200"
-                  : "bg-white/3 border-white/5 text-foreground hover:bg-white/6 hover:border-white/15"
+                  ? "bg-purple-50 border-purple-300 text-purple-900 shadow-sm"
+                  : "bg-white border-black/5 text-gray-700 hover:bg-gray-50 hover:border-black/10"
               }`}
             >
               <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 border transition-colors ${
                 isSelected
-                  ? "bg-purple-500 border-purple-500 text-white"
-                  : "bg-white/5 border-white/10"
+                  ? "bg-purple-500 border-purple-500 text-white shadow-sm"
+                  : "bg-gray-100 border-black/5 text-gray-500"
               }`}>
                 {key}
               </span>
-              <span>{question.options[key]}</span>
+              <span className="font-medium">{question.options[key]}</span>
             </button>
           );
         })}
+        {/* Clear response */}
+        {selected && (
+          <div className="pt-2">
+            <button
+              onClick={onClear}
+              className="text-xs text-gray-500 hover:text-gray-900 underline transition-colors"
+            >
+              Clear response
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* Clear response */}
-      {selected && (
-        <div className="pl-11">
-          <button
-            onClick={onClear}
-            className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
-          >
-            Clear response
-          </button>
-        </div>
-      )}
     </div>
   );
 }

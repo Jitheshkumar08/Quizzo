@@ -17,6 +17,7 @@ const QuestionSchema = z.object({
 });
 
 const SaveQuizSchema = z.object({
+  quizId: z.string().optional(),
   title: z.string().min(1),
   description: z.string().optional(),
   jsonBlobUrl: z.string().url().optional(),
@@ -41,29 +42,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    const { title, description, jsonBlobUrl, publish, questions } = parsed.data;
+    const { quizId, title, description, jsonBlobUrl, publish, questions } = parsed.data;
 
-    const quiz = await prisma.quiz.create({
-      data: {
-        title,
-        description,
-        jsonBlobUrl,
-        isPublished: publish,
-        createdById: session.user.id,
-        questions: {
-          create: questions.map((q: QuestionInput) => ({
-            questionText: q.questionText,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation ?? "",
-            order: q.order,
-          })),
+    let quiz;
+    
+    if (quizId) {
+      const existing = await prisma.quiz.findUnique({ where: { id: quizId } });
+      if (!existing || (existing.createdById !== session.user.id && session.user.role !== "ADMIN")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      quiz = await prisma.quiz.update({
+        where: { id: quizId },
+        data: {
+          title,
+          description,
+          jsonBlobUrl,
+          isPublished: publish,
+          questions: {
+            deleteMany: {},
+            create: questions.map((q: QuestionInput) => ({
+              questionText: q.questionText,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              explanation: q.explanation ?? "",
+              order: q.order,
+            })),
+          },
         },
-      },
-      include: { questions: true },
-    });
+      });
+    } else {
+      quiz = await prisma.quiz.create({
+        data: {
+          title,
+          description,
+          jsonBlobUrl,
+          isPublished: publish,
+          createdById: session.user.id,
+          questions: {
+            create: questions.map((q: QuestionInput) => ({
+              questionText: q.questionText,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              explanation: q.explanation ?? "",
+              order: q.order,
+            })),
+          },
+        },
+      });
+    }
 
-    return NextResponse.json({ quizId: quiz.id }, { status: 201 });
+    return NextResponse.json({ success: true, quizId: quiz.id });
   } catch (error) {
     console.error("[SAVE QUIZ ERROR]", error);
     return NextResponse.json({ error: "Failed to save quiz" }, { status: 500 });
