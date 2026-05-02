@@ -11,25 +11,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { remainingText } = await req.json();
+    const { fullText, startIndex, endIndex } = await req.json();
 
-    if (!remainingText) {
-      return NextResponse.json({ error: "No remaining text provided" }, { status: 400 });
+    if (!fullText || !startIndex || !endIndex) {
+      return NextResponse.json({ error: "Missing required parameters (fullText, startIndex, endIndex)" }, { status: 400 });
     }
 
-    // Step 1: Slice the next chunk
-    const CHUNK_SIZE = 12000;
-    const initialText = remainingText.slice(0, CHUNK_SIZE);
-    const newRemainingText = remainingText.length > CHUNK_SIZE ? remainingText.slice(CHUNK_SIZE) : "";
-
-    // Step 2: Generate questions
-    const questions = await generateQuestionsFromText(initialText);
+    // Step 2: Generate specific range of questions from full context
+    const questions = await generateQuestionsFromText(fullText, startIndex, endIndex);
 
     if (!questions.length) {
-      return NextResponse.json({ error: "AI failed to generate more questions from this chunk" }, { status: 500 });
+      return NextResponse.json({ error: "AI failed to generate more questions from this range" }, { status: 500 });
     }
 
-    return NextResponse.json({ questions, remainingText: newRemainingText }, { status: 200 });
+    return NextResponse.json({ questions }, { status: 200 });
   } catch (error) {
     console.error("[GENERATE MORE ERROR]", error);
     return NextResponse.json(

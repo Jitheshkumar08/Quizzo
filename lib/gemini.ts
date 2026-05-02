@@ -9,16 +9,16 @@ export interface GeneratedQuestion {
   explanation: string;
 }
 
-const MCQ_PROMPT = `You are a strict data extraction engine. I am providing you with the text of an exam paper or quiz document that ALREADY CONTAINS multiple-choice questions.
+const MCQ_PROMPT_TEMPLATE = (start: number, end: number) => `You are a strict data extraction engine. I am providing you with the text of an exam paper or quiz document that ALREADY CONTAINS multiple-choice questions.
 
-Your single task is to EXTRACT EVERY SINGLE multiple-choice question found in this text and format it into a JSON array. 
+Your single task is to EXTRACT ONLY questions ${start} through ${end} from this text and format it into a JSON array. 
 
 CRITICAL RULES:
 1. DO NOT INVENT OR GENERATE new questions. Only extract the ones that actually exist in the text.
 2. VERBATIM EXTRACTION: You must extract the exact wording of the question and the exact wording of the 4 options (A, B, C, D) letter-for-letter, space-for-space. Do not alter, rephrase, or "clean up" the text.
-3. DO NOT STOP EARLY. If there are 100 questions in the text, your JSON array MUST contain exactly 100 questions. Continue extracting until the absolute end of the document.
+3. EXTRACT EXACTLY THE REQUESTED RANGE. You must start at question number ${start} and stop exactly after extracting question number ${end}. If the document ends before question ${end}, just extract until the end.
 4. If the text provides the correct answer, use it. If the correct answer is NOT provided, deduce it to the best of your ability.
-5. EXPLANATIONS MUST BE AN EMPTY STRING (""). Do not generate explanations! This is critical to save tokens so you do not get cut off before finishing all questions.
+5. EXPLANATIONS MUST BE AN EMPTY STRING (""). Do not generate explanations! This is critical to save tokens.
 6. Output ONLY a valid JSON array — no markdown blocks (\`\`\`json), no preamble, no trailing text.
 
 Output format (strictly):
@@ -34,8 +34,29 @@ Output format (strictly):
 Text:
 `;
 
+export async function getTotalQuestionsCount(text: string): Promise<number> {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-flash-latest",
+    generationConfig: { temperature: 0.1 },
+  });
+
+  const prompt = `Quickly scan the following text (which is a quiz or exam) and count the EXACT total number of multiple-choice questions present. 
+Output ONLY a single integer representing the total count. Do not output any text, letters, or punctuation. Just the number.
+
+Text:
+${text.slice(0, 48000)}`;
+
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text().trim();
+  const count = parseInt(responseText, 10);
+  
+  return isNaN(count) ? 0 : count;
+}
+
 export async function generateQuestionsFromText(
-  text: string
+  text: string,
+  start: number,
+  end: number
 ): Promise<GeneratedQuestion[]> {
   const model = genAI.getGenerativeModel({
     model: "gemini-flash-latest",
@@ -46,7 +67,7 @@ export async function generateQuestionsFromText(
     },
   });
 
-  const result = await model.generateContent(MCQ_PROMPT + text);
+  const result = await model.generateContent(MCQ_PROMPT_TEMPLATE(start, end) + text.slice(0, 48000));
   const responseText = result.response.text();
 
   let questions: GeneratedQuestion[];

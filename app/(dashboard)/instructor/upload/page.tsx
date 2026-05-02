@@ -17,7 +17,8 @@ export default function InstructorUploadPage() {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
   const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const [remainingText, setRemainingText] = useState("");
+  const [fullText, setFullText] = useState("");
+  const [totalQuestions, setTotalQuestions] = useState(0);
   const [jsonBlobUrl, setJsonBlobUrl] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [fetchingMore, setFetchingMore] = useState(false);
@@ -51,7 +52,8 @@ export default function InstructorUploadPage() {
       );
 
       setQuestions(mapped);
-      setRemainingText(data.remainingText || "");
+      setFullText(data.fullText || "");
+      setTotalQuestions(data.totalQuestions || 0);
       setJsonBlobUrl(data.jsonBlobUrl || undefined);
       setStep("edit");
     } finally {
@@ -60,14 +62,17 @@ export default function InstructorUploadPage() {
   }
 
   async function handleFetchMore() {
-    if (!remainingText) return;
+    if (!fullText) return;
     setFetchingMore(true);
+
+    const startIndex = questions.length + 1;
+    const endIndex = Math.min(startIndex + 24, totalQuestions); // fetch 25 more
 
     try {
       const res = await fetch("/api/quiz/generate-more", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ remainingText }),
+        body: JSON.stringify({ fullText, startIndex, endIndex }),
       });
       const data = await res.json();
 
@@ -87,7 +92,6 @@ export default function InstructorUploadPage() {
       );
 
       setQuestions((prev) => [...prev, ...mapped]);
-      setRemainingText(data.remainingText || "");
     } catch (e) {
       console.error(e);
       alert("Error fetching more questions.");
@@ -216,7 +220,9 @@ export default function InstructorUploadPage() {
           <div className="glass rounded-xl p-4 flex items-center gap-4">
             <div className="flex-1">
               <p className="font-semibold">{title}</p>
-              <p className="text-sm text-muted-foreground">{questions.length} questions generated</p>
+              <p className="text-sm text-muted-foreground">
+                {questions.length} {totalQuestions > 0 ? `out of ~${totalQuestions}` : ""} questions extracted
+              </p>
             </div>
             <div className="flex gap-2">
               <button
@@ -260,7 +266,7 @@ export default function InstructorUploadPage() {
               <Plus className="w-4 h-4" /> Add Custom Question
             </button>
 
-            {remainingText && (
+            {questions.length < totalQuestions && (
               <button
                 onClick={handleFetchMore}
                 disabled={fetchingMore}
@@ -269,7 +275,7 @@ export default function InstructorUploadPage() {
                 {fetchingMore ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Fetching more...</>
                 ) : (
-                  <><Brain className="w-4 h-4" /> Fetch More Questions from PDF</>
+                  <><Brain className="w-4 h-4" /> Fetch Next 25 Questions</>
                 )}
               </button>
             )}

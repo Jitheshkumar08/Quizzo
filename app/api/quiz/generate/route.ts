@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { parsePdfBuffer } from "@/lib/pdfParser";
-import { generateQuestionsFromText } from "@/lib/gemini";
+import { generateQuestionsFromText, getTotalQuestionsCount } from "@/lib/gemini";
 import { uploadJsonToBlob } from "@/lib/blobStorage";
 
 export const maxDuration = 60;
@@ -39,13 +39,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 3: Chunk text to prevent 503 errors and token limits
-    const CHUNK_SIZE = 12000;
-    const initialText = text.slice(0, CHUNK_SIZE);
-    const remainingText = text.length > CHUNK_SIZE ? text.slice(CHUNK_SIZE) : "";
+    // Step 3: Count total questions first
+    const totalQuestions = await getTotalQuestionsCount(text);
 
-    // Generate questions with Gemini for the first chunk
-    const questions = await generateQuestionsFromText(initialText);
+    // Generate first 25 questions
+    const endRange = Math.min(25, totalQuestions || 25);
+    const questions = await generateQuestionsFromText(text, 1, endRange);
 
     if (!questions.length) {
       return NextResponse.json({ error: "AI failed to generate questions" }, { status: 500 });
@@ -54,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Step 4: Upload JSON to Vercel Blob (Initial batch)
     const jsonBlobUrl = await uploadJsonToBlob(title, questions);
 
-    return NextResponse.json({ questions, jsonBlobUrl, remainingText }, { status: 200 });
+    return NextResponse.json({ questions, jsonBlobUrl, fullText: text, totalQuestions }, { status: 200 });
   } catch (error) {
     console.error("[GENERATE ERROR]", error);
     return NextResponse.json(
