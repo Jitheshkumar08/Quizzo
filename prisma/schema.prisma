@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  fullName     String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  createdAt    DateTime @default(now())
+  quizzes      Quiz[]
+  results      Result[]
+}
+
+model Quiz {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime   @default(now())
+  isPublished Boolean    @default(false)
+  createdById String
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  jsonBlobUrl String?
+  questions   Question[]
+  results     Result[]
+}
+
+model Question {
+  id            String @id @default(uuid())
+  quizId        String
+  questionText  String
+  options       Json
+  correctAnswer String
+  explanation   String?
+  order         Int
+  quiz          Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model Result {
+  id          String   @id @default(uuid())
+  quizId      String
+  studentId   String
+  score       Int
+  total       Int
+  timeTaken   Int?
+  userAnswers Json
+  createdAt   DateTime @default(now())
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student     User     @relation(fields: [studentId], references: [id])
+}
