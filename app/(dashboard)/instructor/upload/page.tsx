@@ -218,80 +218,88 @@ export default function InstructorUploadPage() {
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold gradient-text">Generate Quiz from PDF</h1>
-        <p className="text-muted-foreground text-sm mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
+        <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF</h1>
+        <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
       </div>
 
       {/* Step 1: Upload */}
       {step === "upload" && (
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground/80">Quiz Title *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Chapter 3: Cell Biology"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder-muted-foreground focus:outline-none focus:border-purple-500 transition-all"
-            />
-          </div>
+        <div className="space-y-6">
+          <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_16px_32px_rgba(44,42,40,0.06),0_2px_6px_rgba(44,42,40,0.04),inset_0_1px_2px_rgba(255,255,255,0.8)] rounded-[24px] p-8 space-y-6 relative overflow-hidden">
+            {/* Inner top gradient */}
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none"></div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground/80">Description (optional)</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of the quiz content"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder-muted-foreground focus:outline-none focus:border-purple-500 transition-all"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground/80">PDF File *</label>
-            <UploadZone
-              onFileSelect={setFile}
-              selectedFile={file}
-              onClear={() => setFile(null)}
-              disabled={generating}
-            />
-          </div>
-
-          {generateError && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {generateError}
-            </div>
-          )}
-
-          <button
-            onClick={handleGenerate}
-            disabled={!file || !title.trim() || generating}
-            className="w-full py-3.5 px-6 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98]"
-            style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
-          >
-            {generating ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
-            ) : file?.name.endsWith(".json") || file?.type === "application/json" ? (
-              <><FileText className="w-5 h-5" /> Load MCQs from JSON</>
-            ) : (
-              <><Brain className="w-5 h-5" /> Extract ALL Questions</>
-            )}
-          </button>
-
-          {generating && file && !file.name.endsWith(".json") && (
-            <div className="space-y-3 text-center">
-              <p className="text-sm text-muted-foreground animate-pulse">
-                Gemini is reading and extracting your PDF... 
-                {totalQuestions > 0 && ` (Extracted ${questions.length} of ${totalQuestions} questions)`}
-              </p>
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-purple-500 transition-all duration-500"
-                  style={{ width: totalQuestions > 0 ? `${(questions.length / totalQuestions) * 100}%` : "10%" }}
+            <div className="space-y-2 relative z-10">
+              <label className="text-sm font-bold text-[#2C2A28] ml-1">Quiz Title *</label>
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Chapter 3: Cell Biology"
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/50 border-2 border-transparent focus:bg-white/80 focus:border-[#8C5D3E]/30 text-[#2C2A28] placeholder-[#918B80] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 outline-none font-medium peer"
                 />
               </div>
             </div>
-          )}
+
+            <div className="space-y-2 relative z-10">
+              <label className="text-sm font-bold text-[#2C2A28] ml-1">Description (optional)</label>
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief description of the quiz content"
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/50 border-2 border-transparent focus:bg-white/80 focus:border-[#8C5D3E]/30 text-[#2C2A28] placeholder-[#918B80] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 outline-none font-medium peer"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 relative z-10">
+              <label className="text-sm font-bold text-[#2C2A28] ml-1">PDF File *</label>
+              <UploadZone
+                onFileSelect={setFile}
+                selectedFile={file}
+                onClear={() => setFile(null)}
+                disabled={generating}
+              />
+            </div>
+
+            {generateError && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm relative z-10 shadow-sm font-medium">
+                {generateError}
+              </div>
+            )}
+
+            <button
+              onClick={handleGenerate}
+              disabled={!file || !title.trim() || generating}
+              className="w-full py-4 px-6 rounded-xl font-bold text-[#FDFBFA] bg-[#2C2A28] hover:bg-[#1A1816] shadow-[0_8px_20px_rgba(44,42,40,0.2)] hover:shadow-[0_12px_24px_rgba(44,42,40,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_4px_10px_rgba(44,42,40,0.2)] flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none relative z-10 tracking-wide"
+            >
+              {generating ? (
+                <><Loader2 className="w-5 h-5 animate-spin text-[#8C5D3E]" /> Processing...</>
+              ) : file?.name.endsWith(".json") || file?.type === "application/json" ? (
+                <><FileText className="w-5 h-5" /> Load MCQs from JSON</>
+              ) : (
+                <><Brain className="w-5 h-5" /> Extract ALL Questions</>
+              )}
+            </button>
+
+            {generating && file && !file.name.endsWith(".json") && (
+              <div className="space-y-3 text-center relative z-10 pt-2">
+                <p className="text-sm text-[#918B80] font-medium animate-pulse">
+                  Gemini is reading and extracting your PDF... 
+                  {totalQuestions > 0 && ` (Extracted ${questions.length} of ${totalQuestions} questions)`}
+                </p>
+                <div className="w-full h-2 bg-black/5 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className="h-full bg-[#8C5D3E] transition-all duration-500 rounded-full"
+                    style={{ width: totalQuestions > 0 ? `${(questions.length / totalQuestions) * 100}%` : "10%" }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

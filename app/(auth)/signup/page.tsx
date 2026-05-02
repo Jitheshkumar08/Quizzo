@@ -7,26 +7,18 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#0A0A0B]">
-      {/* Grid overlay for texture */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+    <div className="flex-1 flex items-center justify-center p-4 xl:p-8 relative overflow-hidden bg-[#FCF9F2] w-full min-h-[calc(100vh-4rem)]">
+      {/* Delicate background texture */}
+      <div className="absolute inset-0 transition-opacity bg-[radial-gradient(#E8E3DA_1px,transparent_1px)] [background-size:24px_24px] opacity-60 pointer-events-none" />
 
-      {/* Animated ambient background blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div className="absolute w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDuration: '9s' }} />
-        <div className="absolute w-[500px] h-[500px] bg-cyan-600/20 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2" />
-        <div className="absolute w-[400px] h-[400px] bg-pink-600/10 rounded-full blur-[80px] -translate-x-1/3 -translate-y-1/3" />
+      {/* Colorful mesh blob animation slightly visible */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-40">
+        <div className="absolute w-[600px] h-[600px] bg-teal-300/30 rounded-[40%_60%_70%_30%] blur-[90px] animate-[spin_16s_linear_infinite] -translate-x-1/4 -translate-y-1/4" />
+        <div className="absolute w-[500px] h-[500px] bg-amber-300/40 rounded-[60%_40%_30%_70%] blur-[80px] animate-[spin_12s_linear_infinite_reverse] translate-x-1/4 translate-y-1/3" />
+        <div className="absolute w-[450px] h-[450px] bg-rose-300/30 rounded-[50%_50%_40%_60%] blur-[70px] animate-[spin_19s_linear_infinite] -translate-x-1/3 translate-y-1/4" />
       </div>
 
       <div className="relative z-10 w-full animate-fade-in-up">
-        {/* Logo */}
-        <div className="text-center mb-8 flex flex-col items-center">
-          <div className="h-12 w-12 rounded-xl mb-4 flex items-center justify-center bg-white/5 border border-white/10 shadow-xl shadow-purple-500/20 backdrop-blur-md">
-            <span className="text-2xl font-black gradient-text tracking-tight">M</span>
-          </div>
-          <span className="text-3xl font-black text-white tracking-tight">MCQify</span>
-        </div>
         <SignupForm />
       </div>
     </div>

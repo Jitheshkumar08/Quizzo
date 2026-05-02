@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
+import ScrollToTop from "@/components/layout/ScrollToTop";
+import ProfileDropdown from "@/components/layout/ProfileDropdown";
 
 export default async function DashboardLayout({
   children,
@@ -13,32 +15,43 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#0A0A0B] relative overflow-hidden text-white">
-      {/* Grid overlay for texture */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none z-0" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none z-0" />
+  // Capitalize format
+  const roleName = session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1).toLowerCase();
 
-      {/* Subtle ambient background blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-0 opacity-40">
-        <div className="absolute w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDuration: '15s' }} />
-        <div className="absolute w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[100px] -translate-x-1/3 -translate-y-1/2" />
+  return (
+    <div className="flex h-screen bg-[#FDFBFA] relative overflow-hidden text-[#1A1A1A]">
+      {/* Warm Ambient background blobs to match new auth theme */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] rounded-full bg-[#E5D8C5]/30 blur-[120px] mix-blend-multiply border border-white/20" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#D4C5B0]/30 blur-[100px] mix-blend-multiply border border-white/20" />
+        <div className="absolute top-[40%] left-[20%] w-[900px] h-[900px] rounded-full bg-[#E8DFD3]/40 blur-[150px] mix-blend-multiply" />
       </div>
+      
+      {/* Texture Layer */}
+      <div className="absolute inset-0 bg-[radial-gradient(#D6C9B3_1px,transparent_1px)] [background-size:24px_24px] opacity-40 z-0 pointer-events-none"></div>
 
       <Sidebar role={session.user.role} userName={session.user.name} />
       
-      <main className="flex-1 flex flex-col min-w-0 relative z-10">
+      <main className="flex-1 flex flex-col min-w-0 relative z-10 w-full">
         {/* Top bar */}
-        <header className="h-16 bg-[#121214]/60 backdrop-blur-xl border-b border-white/[0.05] flex items-center px-8 flex-shrink-0 sticky top-0 z-20">
-          <p className="text-sm text-white/50 ml-auto">
-            Signed in as <span className="text-white font-medium">{session.user.name}</span>
-          </p>
-        </header>
-        {/* Content */}
-        <div className="flex-1 p-8 overflow-auto">
-          <div className="max-w-6xl mx-auto">
-            {children}
+        <header className="h-[88px] bg-[#F4EFE6]/40 backdrop-blur-2xl border-b border-white/80 flex items-center px-10 flex-shrink-0 sticky top-0 z-20 shadow-[0_4px_20px_rgba(163,149,126,0.05)]">
+          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none"></div>
+
+          <div className="ml-auto relative z-10 flex items-center">
+            <ProfileDropdown user={session.user} roleName={roleName} />
           </div>
+        </header>
+
+        {/* Scrolling Content Zone */}
+        <div id="dashboard-scroll-area" className="flex-1 overflow-x-hidden overflow-y-auto scroll-smooth p-6 md:p-10 relative">
+          <div className="max-w-6xl mx-auto rounded-[32px] bg-[#F4EFE6]/70 backdrop-blur-2xl border border-white/80 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.05)] p-8 relative overflow-hidden">
+            {/* White glossy rim for inner container */}
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-[32px] z-0"></div>
+            <div className="relative z-10">
+              {children}
+            </div>
+          </div>
+          <ScrollToTop />
         </div>
       </main>
     </div>
