@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { generateQuestionsFromText } from "@/lib/gemini";
+import { generateMoreQuestionsFromText } from "@/lib/gemini";
 
 export const maxDuration = 60;
 
@@ -11,17 +11,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { fullText, startIndex, endIndex } = await req.json();
+    const { fullText, lastQuestionText, limit } = await req.json();
 
-    if (!fullText || !startIndex || !endIndex) {
-      return NextResponse.json({ error: "Missing required parameters (fullText, startIndex, endIndex)" }, { status: 400 });
+    if (!fullText || !lastQuestionText) {
+      return NextResponse.json({ error: "Missing required parameters (fullText, lastQuestionText)" }, { status: 400 });
     }
 
-    // Step 2: Generate specific range of questions from full context
-    const questions = await generateQuestionsFromText(fullText, startIndex, endIndex);
+    // Step 2: Generate specific range of questions from full context using the Anchor
+    const fetchLimit = limit || 25;
+    const questions = await generateMoreQuestionsFromText(fullText, lastQuestionText, fetchLimit);
 
     if (!questions.length) {
-      return NextResponse.json({ error: "AI failed to generate more questions from this range" }, { status: 500 });
+      return NextResponse.json({ error: "AI failed to generate more questions using the anchor text" }, { status: 500 });
     }
 
     return NextResponse.json({ questions }, { status: 200 });

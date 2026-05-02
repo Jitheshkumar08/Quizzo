@@ -15,8 +15,11 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
   const [error, setError] = useState("");
 
   function validateFile(file: File): boolean {
-    if (file.type !== "application/pdf") {
-      setError("Only PDF files are allowed");
+    const isPDF = file.type === "application/pdf" || file.name.endsWith(".pdf");
+    const isJSON = file.type === "application/json" || file.name.endsWith(".json");
+
+    if (!isPDF && !isJSON) {
+      setError("Only PDF or JSON files are allowed");
       return false;
     }
     if (file.size > 20 * 1024 * 1024) {
@@ -77,12 +80,12 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
             ? "border-purple-500 bg-purple-500/10"
             : "border-white/10 hover:border-purple-500/50 hover:bg-white/3"
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-        onClick={() => !disabled && document.getElementById("pdf-input")?.click()}
+        onClick={() => !disabled && document.getElementById("file-input")?.click()}
       >
         <input
-          id="pdf-input"
+          id="file-input"
           type="file"
-          accept=".pdf"
+          accept=".pdf,.json"
           onChange={handleFileInput}
           className="hidden"
           disabled={disabled}
@@ -91,7 +94,7 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
           style={{ background: "linear-gradient(135deg, hsl(262 80% 65% / 0.2), hsl(199 89% 48% / 0.2))" }}>
           <Upload className="w-8 h-8 text-purple-400" />
         </div>
-        <p className="font-semibold text-lg mb-1">Drop your PDF here</p>
+        <p className="font-semibold text-lg mb-1">Drop your PDF or JSON here</p>
         <p className="text-sm text-muted-foreground">or click to browse — Max 20MB</p>
       </div>
       {error && (

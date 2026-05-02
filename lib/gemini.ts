@@ -108,3 +108,78 @@ export async function generateQuestionsFromText(
 
   return questions;
 }
+
+export async function generateMoreQuestionsFromText(
+  text: string,
+  anchorText: string,
+  limit: number
+): Promise<GeneratedQuestion[]> {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-flash-latest",
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.2,
+      maxOutputTokens: 8192,
+    },
+  });
+
+  const MCQ_PROMPT_CONTINUE = `You are a strict data extraction engine. I am providing you with the text of an exam paper or quiz document.
+
+Your task is to find the following specific question in the text:
+"${anchorText}"
+
+Once you find that question, start reading immediately AFTER it, and EXTRACT THE NEXT ${limit} multiple-choice questions.
+
+CRITICAL RULES:
+1. DO NOT INVENT OR GENERATE new questions. Only extract the ones that actually exist in the text.
+2. VERBATIM EXTRACTION: Extract the exact wording of the question and the exact wording of the 4 options (A, B, C, D) letter-for-letter, space-for-space.
+3. If there are fewer than ${limit} questions left in the document, just extract whatever is left until the end.
+4. If the text provides the correct answer, use it. If not, deduce it to the best of your ability.
+5. EXPLANATIONS MUST BE AN EMPTY STRING (""). Do not generate explanations! This is critical to save tokens.
+6. Output ONLY a valid JSON array.
+
+Output format (strictly):
+[
+  {
+    "question": "Exact text of the question...",
+    "options": { "A": "Exact text...", "B": "Exact text...", "C": "Exact text...", "D": "Exact text..." },
+    "correct_answer": "A",
+    "explanation": ""
+  }
+]
+
+Text:
+`;
+
+  const result = await model.generateContent(MCQ_PROMPT_CONTINUE + text.slice(0, 48000));
+  const responseText = result.response.text();
+
+  let questions: GeneratedQuestion[];
+  try {
+    questions = JSON.parse(responseText);
+  } catch {
+    let cleanedText = responseText.trim();
+    if (cleanedText.startsWith("```json")) {
+      cleanedText = cleanedText.replace(/^```json/, "").replace(/```$/, "").trim();
+    }
+    if (!cleanedText.endsWith("]")) {
+      const lastBraceIndex = cleanedText.lastIndexOf("}");
+      if (lastBraceIndex !== -1) {
+        cleanedText = cleanedText.substring(0, lastBraceIndex + 1) + "\n]";
+      } else {
+        throw new Error("Failed to parse AI response: Output completely malformed.");
+      }
+    }
+    try {
+      questions = JSON.parse(cleanedText);
+    } catch (innerError) {
+      throw new Error("Failed to parse AI response as JSON even after repair attempt.");
+    }
+  }
+
+  if (!Array.isArray(questions)) {
+    throw new Error("AI did not return an array of questions");
+  }
+
+  return questions;
+}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
-import { Brain, Plus, Send, Loader2, Save, Eye } from "lucide-react";
+import { Brain, Plus, Send, Loader2, Save, Eye, FileText } from "lucide-react";
 
 type Step = "upload" | "edit" | "publishing";
 
@@ -29,6 +29,39 @@ export default function InstructorUploadPage() {
     setGenerateError("");
 
     try {
+      // Direct JSON parsing logic
+      if (file.name.endsWith(".json") || file.type === "application/json") {
+        const text = await file.text();
+        let parsedData;
+        try {
+          parsedData = JSON.parse(text);
+        } catch (e) {
+          throw new Error("Invalid JSON format. Could not parse file.");
+        }
+
+        // Handle both simple arrays and wrapped objects
+        const questionsArray = Array.isArray(parsedData) ? parsedData : parsedData.questions || [];
+        if (!Array.isArray(questionsArray) || questionsArray.length === 0) {
+          throw new Error("JSON must contain an array of questions.");
+        }
+
+        const mapped: QuestionData[] = questionsArray.map((q: any, i: number) => ({
+          questionText: q.question || q.questionText || "",
+          options: q.options || { A: "", B: "", C: "", D: "" },
+          correctAnswer: q.correct_answer || q.correctAnswer || "A",
+          explanation: q.explanation || "",
+          order: i,
+        }));
+
+        setQuestions(mapped);
+        setFullText("");
+        setTotalQuestions(mapped.length);
+        setJsonBlobUrl("");
+        setStep("edit");
+        return;
+      }
+
+      // PDF AI Generation logic
       const formData = new FormData();
       formData.append("pdf", file);
       formData.append("title", title);
@@ -56,6 +89,8 @@ export default function InstructorUploadPage() {
       setTotalQuestions(data.totalQuestions || 0);
       setJsonBlobUrl(data.jsonBlobUrl || undefined);
       setStep("edit");
+    } catch (error: any) {
+      setGenerateError(error.message || "An unexpected error occurred");
     } finally {
       setGenerating(false);
     }
@@ -65,14 +100,14 @@ export default function InstructorUploadPage() {
     if (!fullText) return;
     setFetchingMore(true);
 
-    const startIndex = questions.length + 1;
-    const endIndex = Math.min(startIndex + 24, totalQuestions); // fetch 25 more
+    const lastQuestionText = questions[questions.length - 1]?.questionText;
+    const limit = Math.min(25, totalQuestions - questions.length);
 
     try {
       const res = await fetch("/api/quiz/generate-more", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullText, startIndex, endIndex }),
+        body: JSON.stringify({ fullText, lastQuestionText, limit }),
       });
       const data = await res.json();
 
@@ -199,13 +234,15 @@ export default function InstructorUploadPage() {
             style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
           >
             {generating ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Generating questions with AI...</>
+              <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
+            ) : file?.name.endsWith(".json") || file?.type === "application/json" ? (
+              <><FileText className="w-5 h-5" /> Load MCQs from JSON</>
             ) : (
               <><Brain className="w-5 h-5" /> Generate MCQs with AI</>
             )}
           </button>
 
-          {generating && (
+          {generating && file && !file.name.endsWith(".json") && (
             <p className="text-center text-sm text-muted-foreground animate-pulse">
               This may take 15–30 seconds. Gemini is reading your PDF...
             </p>
