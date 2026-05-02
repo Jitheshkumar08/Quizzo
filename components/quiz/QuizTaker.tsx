@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import ProgressSidebar from "@/components/quiz/ProgressSidebar";
-import QuestionCard from "@/components/quiz/QuestionCard";
+import ProgressSidebar from "./ProgressSidebar";
+import QuestionCard from "./QuestionCard";
 import { Clock, Send, AlertTriangle, X } from "lucide-react";
 
 interface Question {
@@ -18,6 +18,7 @@ interface QuizTakerProps {
   quizTitle: string;
   questions: Question[];
 }
+
 
 const QUESTIONS_PER_PAGE = 5;
 

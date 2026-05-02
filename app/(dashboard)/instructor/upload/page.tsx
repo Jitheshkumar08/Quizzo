@@ -160,7 +160,7 @@ export default function InstructorUploadPage() {
         body: JSON.stringify({
           title,
           description,
-          jsonBlobUrl,
+          jsonBlobUrl: jsonBlobUrl || undefined,
           publish,
           questions,
         }),
