@@ -181,7 +181,7 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
       {/* Right Sidebar Portal */}
       {mounted && createPortal(
         <div 
-          className={`fixed right-0 top-[88px] bottom-0 z-40 transition-transform duration-300 ease-in-out flex items-start ${
+          className={`fixed right-0 top-[88px] bottom-0 z-40 transition-transform duration-300 ease-in-out flex items-start py-6 ${
             sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%-24px)]"
           }`}
           style={{ width: "260px" }}
@@ -197,7 +197,7 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
           </div>
 
           {/* Sidebar Content Container */}
-          <div className="w-full h-full bg-white rounded-tl-3xl border-l border-black/10 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] p-4 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-black/20">
+          <div className="w-full h-full bg-white rounded-l-3xl border border-r-0 border-black/10 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] p-4 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-black/20">
             <ProgressSidebar
               questions={questions}
               answers={answers}
