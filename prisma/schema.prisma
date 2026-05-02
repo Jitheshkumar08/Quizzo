@@ -7,8 +7,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  /// App / Prisma Client (Supabase pooler :6543 is OK)
+  url       = env("DATABASE_URL")
+  /// Migrations & introspection — must be direct Postgres (:5432), not PgBouncer
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -38,6 +41,13 @@ model Quiz {
   createdById String
   createdBy   User       @relation(fields: [createdById], references: [id])
   jsonBlobUrl String?
+  /// When set (with scheduledEnd), quiz is only available in this window (UTC).
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  /// Bcrypt hash; null means no password required to open the quiz.
+  accessPasswordHash String?
+  /// If false, each student may submit only once. If true, unlimited attempts.
+  allowMultipleAttempts Boolean @default(false)
   questions   Question[]
   results     Result[]
 }

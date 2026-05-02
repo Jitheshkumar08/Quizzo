@@ -96,6 +96,7 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
       const res = await fetch(`/api/quiz/${quizId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ userAnswers: answers, timeTaken: elapsed }),
       });
       const data = await res.json();

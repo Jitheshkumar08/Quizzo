@@ -29,5 +29,13 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
     redirect("/instructor/quizzes");
   }
 
-  return <EditQuizClient quiz={quiz} />;
+  const { accessPasswordHash, ...rest } = quiz;
+  return (
+    <EditQuizClient
+      quiz={{
+        ...rest,
+        hasAccessPassword: !!accessPasswordHash,
+      }}
+    />
+  );
 }

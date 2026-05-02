@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
 import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw } from "lucide-react";
+import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 
 type Step = "upload" | "edit" | "publishing";
 
@@ -25,6 +26,12 @@ export default function InstructorUploadPage() {
   const [fetchingMore, setFetchingMore] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [globalCollapsed, setGlobalCollapsed] = useState(false);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledStart, setScheduledStart] = useState("");
+  const [scheduledEnd, setScheduledEnd] = useState("");
+  const [requireQuizPassword, setRequireQuizPassword] = useState(false);
+  const [quizAccessPassword, setQuizAccessPassword] = useState("");
+  const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(false);
 
   async function handleGenerate() {
     if (!file || !title.trim()) return;
@@ -243,6 +250,12 @@ export default function InstructorUploadPage() {
           jsonBlobUrl: jsonBlobUrl || undefined,
           publish,
           questions,
+          scheduleEnabled,
+          scheduledStart: scheduleEnabled && scheduledStart ? new Date(scheduledStart).toISOString() : null,
+          scheduledEnd: scheduleEnabled && scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+          requireQuizPassword,
+          quizAccessPassword: quizAccessPassword.trim() || undefined,
+          allowMultipleAttempts,
         }),
       });
 
@@ -479,6 +492,22 @@ export default function InstructorUploadPage() {
               </div>
             </div>
           </div>
+
+          <QuizAccessSettings
+            variant="glass"
+            scheduleEnabled={scheduleEnabled}
+            onScheduleEnabled={setScheduleEnabled}
+            scheduledStart={scheduledStart}
+            scheduledEnd={scheduledEnd}
+            onScheduledStart={setScheduledStart}
+            onScheduledEnd={setScheduledEnd}
+            requireQuizPassword={requireQuizPassword}
+            onRequireQuizPassword={setRequireQuizPassword}
+            quizAccessPassword={quizAccessPassword}
+            onQuizAccessPassword={setQuizAccessPassword}
+            allowMultipleAttempts={allowMultipleAttempts}
+            onAllowMultipleAttempts={setAllowMultipleAttempts}
+          />
 
           {/* Questions */}
           <div className="space-y-3">

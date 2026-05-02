@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
 
 export const maxDuration = 60;
 
@@ -29,7 +30,6 @@ export async function POST(
       timeTaken?: number;
     };
 
-    // Fetch quiz with questions from DB (never trust client for correct answers)
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId, isPublished: true },
       include: { questions: { orderBy: { order: "asc" } } },
@@ -37,6 +37,20 @@ export async function POST(
 
     if (!quiz) {
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+    }
+
+    const block = await getStudentQuizBlock(req, quiz, session);
+    if (block) {
+      const messages: Record<string, string> = {
+        NOT_STARTED: "This quiz is not available yet.",
+        ENDED: "This quiz has ended.",
+        MAX_ATTEMPTS: "You have already completed this quiz.",
+        PASSWORD_REQUIRED: "Quiz password required.",
+      };
+      return NextResponse.json(
+        { error: messages[block.code] ?? "Cannot submit", code: block.code },
+        { status: 403 }
+      );
     }
 
     // Server-side scoring

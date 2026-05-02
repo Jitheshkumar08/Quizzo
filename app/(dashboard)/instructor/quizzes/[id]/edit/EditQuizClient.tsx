@@ -10,6 +10,8 @@ import {
   Trash2, EyeOff, Eye, BarChart2, X, Clock, Award, User
 } from "lucide-react";
 import Link from "next/link";
+import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
+import { toDatetimeLocalValue } from "@/lib/datetime-local";
 
 interface EditQuizClientProps {
   quiz: {
@@ -18,6 +20,10 @@ interface EditQuizClientProps {
     description: string | null;
     isPublished: boolean;
     questions: any[];
+    scheduledStart: Date | null;
+    scheduledEnd: Date | null;
+    allowMultipleAttempts: boolean;
+    hasAccessPassword: boolean;
   };
 }
 
@@ -49,6 +55,17 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
+  const initialSchedule =
+    !!(quiz.scheduledStart && quiz.scheduledEnd);
+  const [scheduleEnabled, setScheduleEnabled] = useState(initialSchedule);
+  const [scheduledStart, setScheduledStart] = useState(
+    toDatetimeLocalValue(quiz.scheduledStart)
+  );
+  const [scheduledEnd, setScheduledEnd] = useState(toDatetimeLocalValue(quiz.scheduledEnd));
+  const [requireQuizPassword, setRequireQuizPassword] = useState(quiz.hasAccessPassword);
+  const [quizAccessPassword, setQuizAccessPassword] = useState("");
+  const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(quiz.allowMultipleAttempts);
+
   async function handleSave(publish: boolean) {
     setSaving(true);
     setSaved(false);
@@ -62,6 +79,12 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           description,
           publish,
           questions,
+          scheduleEnabled,
+          scheduledStart: scheduleEnabled && scheduledStart ? new Date(scheduledStart).toISOString() : null,
+          scheduledEnd: scheduleEnabled && scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+          requireQuizPassword,
+          quizAccessPassword: quizAccessPassword.trim() || undefined,
+          allowMultipleAttempts,
         }),
       });
 
@@ -359,6 +382,23 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           />
         </div>
       </div>
+
+      <QuizAccessSettings
+        variant="light"
+        scheduleEnabled={scheduleEnabled}
+        onScheduleEnabled={setScheduleEnabled}
+        scheduledStart={scheduledStart}
+        scheduledEnd={scheduledEnd}
+        onScheduledStart={setScheduledStart}
+        onScheduledEnd={setScheduledEnd}
+        requireQuizPassword={requireQuizPassword}
+        onRequireQuizPassword={setRequireQuizPassword}
+        quizAccessPassword={quizAccessPassword}
+        onQuizAccessPassword={setQuizAccessPassword}
+        hasExistingPassword={quiz.hasAccessPassword}
+        allowMultipleAttempts={allowMultipleAttempts}
+        onAllowMultipleAttempts={setAllowMultipleAttempts}
+      />
 
       {/* Toolbar */}
       <div className="bg-white rounded-2xl border border-black/5 shadow-sm p-4 flex items-center gap-3 flex-wrap">

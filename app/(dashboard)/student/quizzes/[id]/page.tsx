@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import QuizTaker from "@/components/quiz/QuizTaker";
+import QuizGate from "@/components/quiz/QuizGate";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -13,25 +13,16 @@ export default async function TakeQuizPage({ params }: Props) {
 
   const { id } = await params;
 
-  const quiz = await prisma.quiz.findUnique({
+  const exists = await prisma.quiz.findFirst({
     where: { id, isPublished: true },
-    include: {
-      questions: {
-        orderBy: { order: "asc" },
-        select: { id: true, questionText: true, options: true, order: true },
-      },
-    },
+    select: { id: true },
   });
 
-  if (!quiz) redirect("/student/quizzes");
+  if (!exists) redirect("/student/quizzes");
 
   return (
     <div>
-      <QuizTaker
-        quizId={quiz.id}
-        quizTitle={quiz.title}
-        questions={quiz.questions as { id: string; questionText: string; options: { A: string; B: string; C: string; D: string }; order: number }[]}
-      />
+      <QuizGate quizId={id} />
     </div>
   );
 }

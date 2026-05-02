@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { BookOpen, Clock, Users, ArrowRight, Search } from "lucide-react";
+import { BookOpen, Clock, Users, ArrowRight, Lock, CalendarRange } from "lucide-react";
+import { getScheduleStatus } from "@/lib/quiz-student-access";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
@@ -10,7 +11,7 @@ export default async function StudentQuizzesPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const quizzes = await prisma.quiz.findMany({
+  const quizRows = await prisma.quiz.findMany({
     where: { isPublished: true },
     include: {
       createdBy: { select: { fullName: true } },
@@ -18,6 +19,13 @@ export default async function StudentQuizzesPage() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const quizzes = quizRows.map(({ accessPasswordHash, ...quiz }) => ({
+    ...quiz,
+    passwordProtected: !!accessPasswordHash,
+  }));
+
+  const now = new Date();
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -36,7 +44,12 @@ export default async function StudentQuizzesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {quizzes.map((quiz) => (
+          {quizzes.map((quiz) => {
+            const hasSchedule = !!(quiz.scheduledStart && quiz.scheduledEnd);
+            const sched = hasSchedule
+              ? getScheduleStatus(now, quiz.scheduledStart, quiz.scheduledEnd)
+              : "none";
+            return (
             <Link
               key={quiz.id}
               href={`/student/quizzes/${quiz.id}`}
@@ -54,6 +67,28 @@ export default async function StudentQuizzesPage() {
 
               {/* Content */}
               <div className="flex-1 relative z-10">
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {quiz.passwordProtected && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-100">
+                      <Lock className="w-3 h-3" /> Password
+                    </span>
+                  )}
+                  {hasSchedule && sched === "upcoming" && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-800 border border-blue-100">
+                      <CalendarRange className="w-3 h-3" /> Upcoming
+                    </span>
+                  )}
+                  {hasSchedule && sched === "ended" && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-600 border border-gray-200">
+                      Ended
+                    </span>
+                  )}
+                  {!quiz.allowMultipleAttempts && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-50 text-slate-700 border border-slate-100">
+                      1 attempt
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors duration-300 line-clamp-2">
                   {quiz.title}
                 </h3>
@@ -81,7 +116,8 @@ export default async function StudentQuizzesPage() {
                 </div>
               </div>
             </Link>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>
