@@ -43,60 +43,62 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
   }
 
   return (
-    <div className="glass rounded-2xl border border-white/5 transition-all duration-200 hover:border-purple-500/20 relative">
+    <div className="bg-white rounded-2xl border border-black/5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-purple-200">
       {/* Header */}
       <div
-        className={`sticky top-[75px] z-40 flex items-center gap-3 p-4 cursor-pointer select-none transition-all ${
-          !collapsed ? "border-b border-black/5 bg-[#FAF9F6]/95 backdrop-blur-xl dark:bg-[#121212]/95 dark:border-white/5 rounded-t-2xl shadow-sm" : ""
-        }`}
+        className="flex items-center gap-3 p-4 cursor-pointer select-none rounded-2xl"
         onClick={() => setCollapsed(!collapsed)}
       >
-        <span className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 text-sm font-bold flex-shrink-0">
+        <span className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-bold flex-shrink-0">
           {index + 1}
         </span>
-        <p className="flex-1 text-sm font-medium truncate text-foreground">
-          {question.questionText || "New question..."}
+        <p className="flex-1 text-sm font-medium truncate text-gray-800">
+          {question.questionText || <span className="text-gray-400">New question...</span>}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 font-semibold">
             {question.correctAnswer}
           </span>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(index); }}
-            className="text-muted-foreground hover:text-red-400 transition-colors p-1"
+            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
           >
             <Trash2 className="w-4 h-4" />
           </button>
-          {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+          {collapsed ? (
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          ) : (
+            <ChevronUp className="w-4 h-4 text-gray-400" />
+          )}
         </div>
       </div>
 
       {!collapsed && (
-        <div className="px-4 pb-4 space-y-4 pt-4">
+        <div className="px-4 pb-5 space-y-4 border-t border-black/5 pt-4">
           {/* Question text */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Question</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Question</label>
             <textarea
               value={question.questionText}
               onChange={(e) => update({ questionText: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground resize-none focus:outline-none focus:border-purple-500/50 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-black/5 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/30 focus:border-purple-300 transition-all placeholder-gray-400"
               placeholder="Enter question text..."
             />
           </div>
 
           {/* Options */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Options</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Options</label>
             {OPTION_KEYS.map((key) => (
               <div key={key} className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => update({ correctAnswer: key })}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-200 border ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-150 border ${
                     question.correctAnswer === key
-                      ? "bg-green-500/20 border-green-500/40 text-green-400"
-                      : "bg-white/5 border-white/10 text-muted-foreground hover:border-white/20"
+                      ? "bg-green-100 border-green-300 text-green-600 shadow-sm"
+                      : "bg-gray-100 border-black/5 text-gray-500 hover:border-gray-300"
                   }`}
                 >
                   {question.correctAnswer === key ? <Check className="w-4 h-4" /> : key}
@@ -105,7 +107,7 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
                   type="text"
                   value={question.options[key]}
                   onChange={(e) => updateOption(key, e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground focus:outline-none focus:border-purple-500/50 transition-colors"
+                  className="flex-1 px-3 py-2 rounded-xl bg-gray-50 border border-black/5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400/30 focus:border-purple-300 transition-all placeholder-gray-400"
                   placeholder={`Option ${key}...`}
                 />
               </div>
@@ -114,12 +116,12 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
 
           {/* Explanation */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Explanation</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Explanation</label>
             <textarea
               value={question.explanation}
               onChange={(e) => update({ explanation: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground resize-none focus:outline-none focus:border-purple-500/50 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-black/5 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/30 focus:border-purple-300 transition-all placeholder-gray-400"
               placeholder="Why is this the correct answer?"
             />
           </div>
