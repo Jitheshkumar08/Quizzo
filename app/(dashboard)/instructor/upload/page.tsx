@@ -17,8 +17,10 @@ export default function InstructorUploadPage() {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
   const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const [remainingText, setRemainingText] = useState("");
   const [jsonBlobUrl, setJsonBlobUrl] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [fetchingMore, setFetchingMore] = useState(false);
 
   async function handleGenerate() {
     if (!file || !title.trim()) return;
@@ -38,22 +40,59 @@ export default function InstructorUploadPage() {
         return;
       }
 
-      // Map AI response to our QuestionData format
       const mapped: QuestionData[] = data.questions.map(
-        (q: { question: string; options: { A: string; B: string; C: string; D: string }; correct_answer: "A" | "B" | "C" | "D"; explanation: string }, i: number) => ({
+        (q: any, i: number) => ({
           questionText: q.question,
           options: q.options,
           correctAnswer: q.correct_answer,
-          explanation: q.explanation,
+          explanation: q.explanation || "",
           order: i,
         })
       );
 
       setQuestions(mapped);
+      setRemainingText(data.remainingText || "");
       setJsonBlobUrl(data.jsonBlobUrl || undefined);
       setStep("edit");
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function handleFetchMore() {
+    if (!remainingText) return;
+    setFetchingMore(true);
+
+    try {
+      const res = await fetch("/api/quiz/generate-more", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remainingText }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to fetch more questions");
+        return;
+      }
+
+      const mapped: QuestionData[] = data.questions.map(
+        (q: any, i: number) => ({
+          questionText: q.question,
+          options: q.options,
+          correctAnswer: q.correct_answer,
+          explanation: q.explanation || "",
+          order: questions.length + i,
+        })
+      );
+
+      setQuestions((prev) => [...prev, ...mapped]);
+      setRemainingText(data.remainingText || "");
+    } catch (e) {
+      console.error(e);
+      alert("Error fetching more questions.");
+    } finally {
+      setFetchingMore(false);
     }
   }
 
@@ -213,12 +252,28 @@ export default function InstructorUploadPage() {
           </div>
 
           {/* Add question */}
-          <button
-            onClick={handleAddQuestion}
-            className="w-full py-3 rounded-xl border-2 border-dashed border-white/10 text-muted-foreground hover:border-purple-500/40 hover:text-purple-400 transition-all flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" /> Add Question
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleAddQuestion}
+              className="flex-1 py-3 rounded-xl border-2 border-dashed border-white/10 text-muted-foreground hover:border-purple-500/40 hover:text-purple-400 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" /> Add Custom Question
+            </button>
+
+            {remainingText && (
+              <button
+                onClick={handleFetchMore}
+                disabled={fetchingMore}
+                className="flex-1 py-3 rounded-xl border-2 border-dashed border-purple-500/30 text-purple-400 hover:border-purple-500 hover:bg-purple-500/10 transition-all flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+              >
+                {fetchingMore ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Fetching more...</>
+                ) : (
+                  <><Brain className="w-4 h-4" /> Fetch More Questions from PDF</>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

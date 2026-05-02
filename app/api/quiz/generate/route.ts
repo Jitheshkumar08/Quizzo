@@ -39,17 +39,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 3: Generate questions with Gemini
-    const questions = await generateQuestionsFromText(text);
+    // Step 3: Chunk text to prevent 503 errors and token limits
+    const CHUNK_SIZE = 12000;
+    const initialText = text.slice(0, CHUNK_SIZE);
+    const remainingText = text.length > CHUNK_SIZE ? text.slice(CHUNK_SIZE) : "";
+
+    // Generate questions with Gemini for the first chunk
+    const questions = await generateQuestionsFromText(initialText);
 
     if (!questions.length) {
       return NextResponse.json({ error: "AI failed to generate questions" }, { status: 500 });
     }
 
-    // Step 4: Upload JSON to Vercel Blob
+    // Step 4: Upload JSON to Vercel Blob (Initial batch)
     const jsonBlobUrl = await uploadJsonToBlob(title, questions);
 
-    return NextResponse.json({ questions, jsonBlobUrl }, { status: 200 });
+    return NextResponse.json({ questions, jsonBlobUrl, remainingText }, { status: 200 });
   } catch (error) {
     console.error("[GENERATE ERROR]", error);
     return NextResponse.json(
