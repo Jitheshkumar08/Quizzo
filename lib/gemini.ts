@@ -1,6 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const openai = new OpenAI({
+  apiKey: process.env.NVIDIA_API_KEY || process.env.GEMINI_API_KEY, // Fallback if they didn't rename it yet
+  baseURL: "https://integrate.api.nvidia.com/v1",
+});
+
+const MODEL = "meta/llama-3.1-70b-instruct";
 
 export interface GeneratedQuestion {
   question: string;
@@ -9,48 +14,53 @@ export interface GeneratedQuestion {
   explanation: string;
 }
 
-const MCQ_PROMPT_TEMPLATE = (start: number, end: number) => `You are a strict data extraction engine. I am providing you with the text of an exam paper or quiz document that ALREADY CONTAINS multiple-choice questions.
+const MCQ_PROMPT_TEMPLATE = (start: number, end: number) => `You are a strict data extraction engine. 
+I am providing you with the text of an exam paper or quiz document that ALREADY CONTAINS multiple-choice questions.
 
-Your single task is to EXTRACT ONLY questions ${start} through ${end} from this text and format it into a JSON array. 
+Your task is to EXTRACT ONLY questions ${start} through ${end} from the provided text and format them into a JSON array.
 
 CRITICAL RULES:
 1. DO NOT INVENT OR GENERATE new questions. Only extract the ones that actually exist in the text.
-2. VERBATIM EXTRACTION: You must extract the exact wording of the question and the exact wording of the 4 options (A, B, C, D) letter-for-letter, space-for-space. Do not alter, rephrase, or "clean up" the text.
-3. EXTRACT EXACTLY THE REQUESTED RANGE. You must start at question number ${start} and stop exactly after extracting question number ${end}. If the document ends before question ${end}, just extract until the end.
-4. If the text provides the correct answer, use it. If the correct answer is NOT provided, deduce it to the best of your ability.
-5. EXPLANATIONS MUST BE AN EMPTY STRING (""). Do not generate explanations! This is critical to save tokens.
-6. Output ONLY a valid JSON array — no markdown blocks (\`\`\`json), no preamble, no trailing text.
+2. VERBATIM EXTRACTION: You must extract the exact wording of the question and the exact wording of the 4 options (A, B, C, D) letter-for-letter, space-for-space.
+3. EXTRACT EXACTLY THE REQUESTED RANGE. You must start at question number ${start} and stop exactly after extracting question number ${end}.
+4. Output ONLY a valid JSON array. No preamble, no markdown formatting blocks, no trailing text.
+5. EXPLANATIONS MUST BE AN EMPTY STRING ("").
 
-Output format (strictly):
-[
-  {
-    "question": "Exact text of the question...",
-    "options": { "A": "Exact text...", "B": "Exact text...", "C": "Exact text...", "D": "Exact text..." },
-    "correct_answer": "A",
-    "explanation": ""
-  }
-]
+Output format (strictly a JSON object with a "questions" array):
+{
+  "questions": [
+    {
+      "question": "Exact text...",
+      "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
+      "correct_answer": "A",
+      "explanation": ""
+    }
+  ]
+}
 
 Text:
 `;
 
 export async function getTotalQuestionsCount(text: string): Promise<number> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-flash-latest",
-    generationConfig: { temperature: 0.1 },
-  });
+  try {
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "user",
+          content: `Quickly scan the following text and count the EXACT total number of multiple-choice questions present. Output ONLY a valid JSON object with the count. Example: {"count": 10}\n\nText:\n${text.slice(0, 40000)}`,
+        },
+      ],
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+    });
 
-  const prompt = `Quickly scan the following text (which is a quiz or exam) and count the EXACT total number of multiple-choice questions present. 
-Output ONLY a single integer representing the total count. Do not output any text, letters, or punctuation. Just the number.
-
-Text:
-${text.slice(0, 48000)}`;
-
-  const result = await model.generateContent(prompt);
-  const responseText = result.response.text().trim();
-  const count = parseInt(responseText, 10);
-  
-  return isNaN(count) ? 0 : count;
+    const parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
+    return parsed.count || 0;
+  } catch (error) {
+    console.error("[NVIDIA COUNT ERROR]", error);
+    return 0;
+  }
 }
 
 export async function generateQuestionsFromText(
@@ -58,55 +68,41 @@ export async function generateQuestionsFromText(
   start: number,
   end: number
 ): Promise<GeneratedQuestion[]> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-flash-latest",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.2,
-      maxOutputTokens: 8192,
-    },
-  });
-
-  const result = await model.generateContent(MCQ_PROMPT_TEMPLATE(start, end) + text.slice(0, 48000));
-  const responseText = result.response.text();
-
-  let questions: GeneratedQuestion[];
   try {
-    questions = JSON.parse(responseText);
-  } catch {
-    // If JSON parsing fails, it's likely because the output hit the 8192 token limit and was truncated.
-    // We will attempt to repair the truncated JSON array by closing the last complete object.
-    let cleanedText = responseText.trim();
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "user",
+          content: MCQ_PROMPT_TEMPLATE(start, end) + text.slice(0, 40000),
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 4096,
+      response_format: { type: "json_object" },
+    });
 
-    // Strip markdown formatting if the model ignored responseMimeType
-    if (cleanedText.startsWith("```json")) {
-      cleanedText = cleanedText.replace(/^```json/, "").replace(/```$/, "").trim();
-    }
-
-    if (!cleanedText.endsWith("]")) {
-      console.warn("[JSON REPAIR] Output truncated. Attempting to repair...");
-      const lastBraceIndex = cleanedText.lastIndexOf("}");
-      if (lastBraceIndex !== -1) {
-        // Cut off the incomplete trailing part and close the array
-        cleanedText = cleanedText.substring(0, lastBraceIndex + 1) + "\n]";
-      } else {
-        throw new Error("Failed to parse AI response: Output completely malformed.");
-      }
-    }
-
+    let responseText = response.choices[0]?.message?.content?.trim() || "[]";
+    
+    // NVIDIA sometimes wraps json in an object if response_format is used
+    // or it might just be the array. Let's be safe.
+    let questions: any;
     try {
-      questions = JSON.parse(cleanedText);
-    } catch (innerError) {
-      console.error("[JSON REPAIR FAILED]", cleanedText);
-      throw new Error("Failed to parse AI response as JSON even after repair attempt.");
+      const parsed = JSON.parse(responseText);
+      questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
+    } catch (e) {
+      // Fallback: cleaning markdown
+      if (responseText.includes("```json")) {
+        responseText = responseText.split("```json")[1].split("```")[0].trim();
+      }
+      questions = JSON.parse(responseText);
     }
-  }
 
-  if (!Array.isArray(questions)) {
-    throw new Error("AI did not return an array of questions");
+    return Array.isArray(questions) ? questions : [];
+  } catch (error) {
+    console.error("[NVIDIA EXTRACTION ERROR]", error);
+    throw error;
   }
-
-  return questions;
 }
 
 export async function generateMoreQuestionsFromText(
@@ -114,72 +110,45 @@ export async function generateMoreQuestionsFromText(
   anchorText: string,
   limit: number
 ): Promise<GeneratedQuestion[]> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-flash-latest",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.2,
-      maxOutputTokens: 8192,
-    },
-  });
-
-  const MCQ_PROMPT_CONTINUE = `You are a strict data extraction engine. I am providing you with the text of an exam paper or quiz document.
-
-Your task is to find the following specific question in the text:
+  try {
+    const prompt = `You are a strict data extraction engine. Find this specific question in the text:
 "${anchorText}"
 
-Once you find that question, start reading immediately AFTER it, and EXTRACT THE NEXT ${limit} multiple-choice questions.
-
-CRITICAL RULES:
-1. DO NOT INVENT OR GENERATE new questions. Only extract the ones that actually exist in the text.
-2. VERBATIM EXTRACTION: Extract the exact wording of the question and the exact wording of the 4 options (A, B, C, D) letter-for-letter, space-for-space.
-3. If there are fewer than ${limit} questions left in the document, just extract whatever is left until the end.
-4. If the text provides the correct answer, use it. If not, deduce it to the best of your ability.
-5. EXPLANATIONS MUST BE AN EMPTY STRING (""). Do not generate explanations! This is critical to save tokens.
-6. Output ONLY a valid JSON array.
-
-Output format (strictly):
-[
-  {
-    "question": "Exact text of the question...",
-    "options": { "A": "Exact text...", "B": "Exact text...", "C": "Exact text...", "D": "Exact text..." },
-    "correct_answer": "A",
-    "explanation": ""
-  }
-]
+Once found, start reading immediately AFTER it and EXTRACT THE NEXT ${limit} multiple-choice questions in verbatim JSON format.
+EXPLANATIONS MUST BE "". 
+Output ONLY a JSON object with a "questions" array.
 
 Text:
-`;
+` + text.slice(0, 40000);
 
-  const result = await model.generateContent(MCQ_PROMPT_CONTINUE + text.slice(0, 48000));
-  const responseText = result.response.text();
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 4096,
+      response_format: { type: "json_object" },
+    });
 
-  let questions: GeneratedQuestion[];
-  try {
-    questions = JSON.parse(responseText);
-  } catch {
-    let cleanedText = responseText.trim();
-    if (cleanedText.startsWith("```json")) {
-      cleanedText = cleanedText.replace(/^```json/, "").replace(/```$/, "").trim();
-    }
-    if (!cleanedText.endsWith("]")) {
-      const lastBraceIndex = cleanedText.lastIndexOf("}");
-      if (lastBraceIndex !== -1) {
-        cleanedText = cleanedText.substring(0, lastBraceIndex + 1) + "\n]";
-      } else {
-        throw new Error("Failed to parse AI response: Output completely malformed.");
-      }
-    }
+    let responseText = response.choices[0]?.message?.content?.trim() || "[]";
+    let questions: any;
     try {
-      questions = JSON.parse(cleanedText);
-    } catch (innerError) {
-      throw new Error("Failed to parse AI response as JSON even after repair attempt.");
+      const parsed = JSON.parse(responseText);
+      questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
+    } catch (e) {
+      if (responseText.includes("```json")) {
+        responseText = responseText.split("```json")[1].split("```")[0].trim();
+      }
+      questions = JSON.parse(responseText);
     }
-  }
 
-  if (!Array.isArray(questions)) {
-    throw new Error("AI did not return an array of questions");
+    return Array.isArray(questions) ? questions : [];
+  } catch (error) {
+    console.error("[NVIDIA MORE EXTRACTION ERROR]", error);
+    throw error;
   }
-
-  return questions;
 }

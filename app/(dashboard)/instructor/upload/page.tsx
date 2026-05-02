@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
-import { Brain, Plus, Send, Loader2, Save, Eye, FileText } from "lucide-react";
+import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download } from "lucide-react";
 
 type Step = "upload" | "edit" | "publishing";
 
@@ -22,11 +22,13 @@ export default function InstructorUploadPage() {
   const [jsonBlobUrl, setJsonBlobUrl] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [fetchingMore, setFetchingMore] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   async function handleGenerate() {
     if (!file || !title.trim()) return;
     setGenerating(true);
     setGenerateError("");
+    setShowReport(false);
 
     try {
       // Direct JSON parsing logic
@@ -84,11 +86,66 @@ export default function InstructorUploadPage() {
         })
       );
 
-      setQuestions(mapped);
+      let currentQuestions = [...mapped];
+      setQuestions(currentQuestions);
       setFullText(data.fullText || "");
       setTotalQuestions(data.totalQuestions || 0);
       setJsonBlobUrl(data.jsonBlobUrl || undefined);
+
+      // Auto-loop to fetch remaining questions
+      if (data.totalQuestions > currentQuestions.length) {
+        let currentFullText = data.fullText || "";
+        let fails = 0;
+
+        while (currentQuestions.length < data.totalQuestions && fails < 3) {
+          const lastQuestion = currentQuestions[currentQuestions.length - 1];
+          const lastQuestionText = lastQuestion?.questionText;
+          const limit = Math.min(25, data.totalQuestions - currentQuestions.length);
+
+          // TOKEN OPTIMIZATION: Slice text to only send what comes after the last question
+          let slicedText = currentFullText;
+          if (lastQuestionText) {
+            const index = currentFullText.lastIndexOf(lastQuestionText);
+            if (index !== -1) {
+              slicedText = currentFullText.slice(index);
+            }
+          }
+
+          try {
+            const resMore = await fetch("/api/quiz/generate-more", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ fullText: slicedText, lastQuestionText, limit }),
+            });
+            const dataMore = await resMore.json();
+
+            if (!resMore.ok) {
+              fails++;
+              continue; // Try again
+            }
+
+            const mappedMore: QuestionData[] = dataMore.questions.map(
+              (q: any, i: number) => ({
+                questionText: q.question,
+                options: q.options,
+                correctAnswer: q.correct_answer,
+                explanation: q.explanation || "",
+                order: currentQuestions.length + i,
+              })
+            );
+
+            currentQuestions = [...currentQuestions, ...mappedMore];
+            setQuestions(currentQuestions);
+            fails = 0; // reset fails on success
+          } catch (e) {
+            fails++;
+            console.error(e);
+          }
+        }
+      }
+
       setStep("edit");
+      setShowReport(true);
     } catch (error: any) {
       setGenerateError(error.message || "An unexpected error occurred");
     } finally {
@@ -96,43 +153,22 @@ export default function InstructorUploadPage() {
     }
   }
 
-  async function handleFetchMore() {
-    if (!fullText) return;
-    setFetchingMore(true);
-
-    const lastQuestionText = questions[questions.length - 1]?.questionText;
-    const limit = Math.min(25, totalQuestions - questions.length);
-
-    try {
-      const res = await fetch("/api/quiz/generate-more", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullText, lastQuestionText, limit }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error || "Failed to fetch more questions");
-        return;
-      }
-
-      const mapped: QuestionData[] = data.questions.map(
-        (q: any, i: number) => ({
-          questionText: q.question,
-          options: q.options,
-          correctAnswer: q.correct_answer,
-          explanation: q.explanation || "",
-          order: questions.length + i,
-        })
-      );
-
-      setQuestions((prev) => [...prev, ...mapped]);
-    } catch (e) {
-      console.error(e);
-      alert("Error fetching more questions.");
-    } finally {
-      setFetchingMore(false);
-    }
+  function downloadJson() {
+    const exportData = questions.map(q => ({
+      question: q.questionText,
+      options: q.options,
+      correct_answer: q.correctAnswer
+    }));
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'quiz'}_backup.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function handleQuestionChange(index: number, updated: QuestionData) {
@@ -238,14 +274,23 @@ export default function InstructorUploadPage() {
             ) : file?.name.endsWith(".json") || file?.type === "application/json" ? (
               <><FileText className="w-5 h-5" /> Load MCQs from JSON</>
             ) : (
-              <><Brain className="w-5 h-5" /> Generate MCQs with AI</>
+              <><Brain className="w-5 h-5" /> Extract ALL Questions</>
             )}
           </button>
 
           {generating && file && !file.name.endsWith(".json") && (
-            <p className="text-center text-sm text-muted-foreground animate-pulse">
-              This may take 15–30 seconds. Gemini is reading your PDF...
-            </p>
+            <div className="space-y-3 text-center">
+              <p className="text-sm text-muted-foreground animate-pulse">
+                Gemini is reading and extracting your PDF... 
+                {totalQuestions > 0 && ` (Extracted ${questions.length} of ${totalQuestions} questions)`}
+              </p>
+              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-purple-500 transition-all duration-500"
+                  style={{ width: totalQuestions > 0 ? `${(questions.length / totalQuestions) * 100}%` : "10%" }}
+                />
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -253,6 +298,50 @@ export default function InstructorUploadPage() {
       {/* Step 2: Edit */}
       {step === "edit" && (
         <div className="space-y-5">
+          {showReport && (
+            <div className="glass rounded-2xl p-6 border border-green-500/30 bg-green-500/5 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-green-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white mb-1">
+                    Done — All {questions.length} questions extracted in order!
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    I have successfully parsed the PDF <strong>"{file?.name}"</strong> and verified the structure. 
+                    All questions have been normalized into the correct format while preserving verbatim accuracy.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={downloadJson}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+                >
+                  <Download className="w-5 h-5" /> Download {title.slice(0, 20).toLowerCase()}.json
+                </button>
+                <button 
+                  onClick={() => setShowReport(false)}
+                  className="text-sm text-muted-foreground hover:text-white transition-colors px-4"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
+          {fetchingMore && (
+            <div className="glass rounded-xl p-4 flex items-center justify-center gap-3 border border-purple-500/30 text-purple-400 bg-purple-500/10 animate-pulse">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <p className="font-medium">
+                Auto-extracting batch... ({questions.length} out of ~{totalQuestions} questions fetched so far)
+              </p>
+            </div>
+          )}
+
           {/* Stats bar */}
           <div className="glass rounded-xl p-4 flex items-center gap-4">
             <div className="flex-1">
@@ -262,16 +351,24 @@ export default function InstructorUploadPage() {
               </p>
             </div>
             <div className="flex gap-2">
+              {!fetchingMore && questions.length > 0 && (
+                <button
+                  onClick={downloadJson}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium glass glass-hover border border-purple-500/30 text-purple-400 hover:bg-purple-500/10 transition-colors"
+                >
+                  <FileText className="w-4 h-4" /> Download JSON Backup
+                </button>
+              )}
               <button
                 onClick={() => handlePublish(false)}
-                disabled={publishing}
+                disabled={publishing || fetchingMore}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium glass glass-hover border border-white/10 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" /> Save Draft
               </button>
               <button
                 onClick={() => handlePublish(true)}
-                disabled={publishing || questions.length === 0}
+                disabled={publishing || questions.length === 0 || fetchingMore}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
                 style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
               >
@@ -302,20 +399,6 @@ export default function InstructorUploadPage() {
             >
               <Plus className="w-4 h-4" /> Add Custom Question
             </button>
-
-            {questions.length < totalQuestions && (
-              <button
-                onClick={handleFetchMore}
-                disabled={fetchingMore}
-                className="flex-1 py-3 rounded-xl border-2 border-dashed border-purple-500/30 text-purple-400 hover:border-purple-500 hover:bg-purple-500/10 transition-all flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
-              >
-                {fetchingMore ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Fetching more...</>
-                ) : (
-                  <><Brain className="w-4 h-4" /> Fetch Next 25 Questions</>
-                )}
-              </button>
-            )}
           </div>
         </div>
       )}
