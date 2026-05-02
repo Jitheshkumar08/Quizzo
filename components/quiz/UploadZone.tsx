@@ -52,16 +52,16 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
 
   if (selectedFile) {
     return (
-      <div className="glass rounded-2xl p-6 flex items-center gap-4 border border-purple-500/20">
-        <div className="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center flex-shrink-0">
-          <FileText className="w-6 h-6 text-purple-400" />
+      <div className="bg-white/50 backdrop-blur-xl border border-white/80 shadow-[0_4px_16px_rgba(44,42,40,0.04),inset_0_1px_2px_rgba(255,255,255,0.8)] rounded-2xl p-6 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-[#8C5D3E]/10 flex items-center justify-center flex-shrink-0 text-[#8C5D3E]">
+          <FileText className="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{selectedFile.name}</p>
-          <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+          <p className="font-bold text-[#2C2A28] text-sm truncate">{selectedFile.name}</p>
+          <p className="text-xs text-[#918B80] font-medium">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
         </div>
         {!disabled && (
-          <button onClick={onClear} className="text-muted-foreground hover:text-red-400 transition-colors p-1">
+          <button onClick={onClear} className="text-[#918B80] hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-all">
             <X className="w-5 h-5" />
           </button>
         )}
@@ -75,11 +75,11 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
         onDragOver={(e) => { e.preventDefault(); if (!disabled) setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
-        className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 p-12 text-center cursor-pointer ${
+        className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 p-12 text-center cursor-pointer ${
           isDragOver
-            ? "border-purple-500 bg-purple-500/10"
-            : "border-white/10 hover:border-purple-500/50 hover:bg-white/3"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            ? "border-[#8C5D3E] bg-[#8C5D3E]/5"
+            : "border-[#2C2A28]/10 hover:border-[#8C5D3E]/40 hover:bg-white/40 focus:outline-none"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "bg-white/30 backdrop-blur-sm"}`}
         onClick={() => !disabled && document.getElementById("file-input")?.click()}
       >
         <input
@@ -90,15 +90,14 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
           className="hidden"
           disabled={disabled}
         />
-        <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, hsl(262 80% 65% / 0.2), hsl(199 89% 48% / 0.2))" }}>
-          <Upload className="w-8 h-8 text-purple-400" />
+        <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-[#8C5D3E]/10 text-[#8C5D3E] shadow-sm">
+          <Upload className="w-8 h-8" />
         </div>
-        <p className="font-semibold text-lg mb-1">Drop your PDF or JSON here</p>
-        <p className="text-sm text-muted-foreground">or click to browse — Max 20MB</p>
+        <p className="font-bold text-[#2C2A28] text-lg mb-1">Drop your PDF or JSON here</p>
+        <p className="text-sm font-medium text-[#918B80]">or click to browse — Max 20MB</p>
       </div>
       {error && (
-        <div className="flex items-center gap-2 text-red-400 text-sm p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+        <div className="flex items-center gap-2 text-red-600 font-medium text-sm p-4 rounded-xl bg-red-50 border border-red-100 shadow-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>

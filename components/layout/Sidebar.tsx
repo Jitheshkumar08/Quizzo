@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
-  Upload,
+  FilePlus,
   BookOpen,
   Users,
   ClipboardList,
@@ -13,6 +13,8 @@ import {
   LogOut,
   Brain,
   ChevronRight,
+  Settings,
+  ShieldAlert
 } from "lucide-react";
 
 interface NavItem {
@@ -20,16 +22,17 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   roles: string[];
+  group?: string;
 }
 
 const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"] },
-  { href: "/instructor/upload", label: "Upload PDF", icon: Upload, roles: ["INSTRUCTOR", "ADMIN"] },
-  { href: "/instructor/quizzes", label: "My Quizzes", icon: BookOpen, roles: ["INSTRUCTOR", "ADMIN"] },
-  { href: "/student/quizzes", label: "Browse Quizzes", icon: ClipboardList, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"] },
-  { href: "/student/results", label: "My Results", icon: History, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"] },
-  { href: "/admin/users", label: "Manage Users", icon: Users, roles: ["ADMIN"] },
-  { href: "/admin/quizzes", label: "All Quizzes", icon: BookOpen, roles: ["ADMIN"] },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"], group: "Main" },
+  { href: "/instructor/upload", label: "Set a Quiz", icon: FilePlus, roles: ["INSTRUCTOR", "ADMIN"], group: "Main" },
+  { href: "/instructor/quizzes", label: "My Quizzes", icon: BookOpen, roles: ["INSTRUCTOR", "ADMIN"], group: "Main" },
+  { href: "/student/quizzes", label: "Browse Quizzes", icon: ClipboardList, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"], group: "Main" },
+  { href: "/student/results", label: "My Results", icon: History, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"], group: "Main" },
+  { href: "/admin/users", label: "Manage Users", icon: Users, roles: ["ADMIN"], group: "Admin" },
+  { href: "/admin/quizzes", label: "All Quizzes", icon: ShieldAlert, roles: ["ADMIN"], group: "Admin" },
 ];
 
 interface SidebarProps {
@@ -40,65 +43,80 @@ interface SidebarProps {
 export default function Sidebar({ role, userName }: SidebarProps) {
   const pathname = usePathname();
 
-  const filteredNav = navItems.filter((item) => item.roles.includes(role));
-
-  const roleColors: Record<string, string> = {
-    ADMIN: "text-red-400 bg-red-400/10",
-    INSTRUCTOR: "text-cyan-400 bg-cyan-400/10",
-    STUDENT: "text-purple-400 bg-purple-400/10",
-  };
+  const mainNav = navItems.filter((item) => item.roles.includes(role) && item.group === "Main");
+  const adminNav = navItems.filter((item) => item.roles.includes(role) && item.group === "Admin");
 
   return (
-    <aside className="w-64 min-h-screen bg-[#121214]/60 backdrop-blur-xl border-r border-white/[0.05] flex flex-col relative z-20">
-      {/* Logo */}
-      <div className="p-6 border-b border-white/[0.05]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.2)]"
-            style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}>
-            <Brain className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-tight">MCQify</span>
-        </div>
-      </div>
+    <aside className="w-[260px] flex-shrink-0 h-screen bg-[#F4EFE6]/70 backdrop-blur-2xl border-r border-white/80 flex flex-col relative z-20 shadow-[4px_0_24px_rgba(163,149,126,0.1)]">
+      {/* Glossy highlight */}
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/40 to-transparent pointer-events-none"></div>
 
-      {/* User info */}
-      <div className="p-4 mx-4 mt-6 rounded-xl bg-black/20 border border-white/[0.05] backdrop-blur-sm">
-        <p className="font-medium text-sm text-white/90 truncate">{userName}</p>
-        <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block ${roleColors[role] || "text-white/40 bg-white/5"}`}>
-          {role}
-        </span>
+      {/* Logo - precisely h-[88px] to align mathematically with the main TopBar */}
+      <div className="h-[88px] flex items-center border-b border-[#E9E4DC]/60 relative z-10 px-6">
+        <Link href="/" className="flex items-center gap-3 group px-1">
+          <div className="w-10 h-10 rounded-full bg-[#2C2A28] text-[#FDFBFA] flex items-center justify-center shadow-[0_4px_12px_rgba(44,42,40,0.2)] transition-transform group-hover:scale-105 duration-300">
+            <span className="font-bold text-xl">M</span>
+          </div>
+          <span className="font-bold text-[22px] tracking-tight text-[#2C2A28]">
+            MCQify
+          </span>
+        </Link>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-        {filteredNav.map((item) => {
+      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto relative z-10 overflow-x-hidden">
+        <div className="mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest">Main Menu</div>
+        {mainNav.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${
                 isActive
-                  ? "bg-gradient-to-r from-purple-500/10 to-cyan-500/10 text-white border border-white/[0.08] shadow-[0_4px_20px_-4px_rgba(139,92,246,0.1)]"
-                  : "text-white/50 hover:text-white/90 hover:bg-white/[0.04]"
+                  ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
+                  : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
               }`}
             >
-              <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive ? "text-purple-400" : "group-hover:text-cyan-400"}`} />
+              <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#8C5D3E]" : "group-hover:text-[#2C2A28]"}`} />
               <span className="flex-1">{item.label}</span>
-              {isActive && <ChevronRight className="w-3.5 h-3.5 text-cyan-400 opacity-70" />}
             </Link>
           );
         })}
+
+        {adminNav.length > 0 && (
+          <>
+            <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">Admin Controls</div>
+            {adminNav.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${
+                    isActive
+                      ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
+                      : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-white" : "group-hover:text-[#2C2A28]"}`} />
+                  <span className="flex-1">{item.label}</span>
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t border-white/[0.05]">
+      <div className="p-5 border-t border-[#E9E4DC]/60 relative z-10">
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-400/10 hover:shadow-[0_0_15px_rgba(248,113,113,0.1)] transition-all duration-300 border border-transparent hover:border-red-400/20"
+          className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-[15px] font-bold text-[#918B80] hover:text-[#D94F4F] hover:bg-red-50 hover:border-red-100 transition-all duration-300 border border-transparent"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-5 h-5" />
           Sign out
         </button>
       </div>
