@@ -42,17 +42,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // 1. Initial Sign In
       if (user) {
         token.id = user.id;
-        token.role = (user as { role: string }).role;
+        token.role = (user as any).role;
       }
+      
+      // 2. Client-side update trigger handling
+      if (trigger === "update" && session) {
+        token = { ...token, ...session };
+      }
+
+      // 3. Dynamic Database Check (Always keep role & user details fresh!)
+      if (token.id) {
+        try {
+          const freshUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true, username: true, fullName: true, email: true },
+          });
+          
+          if (freshUser) {
+            token.role = freshUser.role;
+            token.username = freshUser.username;
+            token.name = freshUser.fullName;
+            token.email = freshUser.email;
+          }
+        } catch (error) {
+          console.error("Failed to fetch fresh session data", error);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.username = token.username as string;
       }
       return session;
     },

@@ -35,44 +35,50 @@ export default async function StudentQuizzesPage() {
           <p className="text-sm text-muted-foreground mt-1">Check back soon — instructors are creating quizzes for you</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {quizzes.map((quiz) => (
             <Link
               key={quiz.id}
               href={`/student/quizzes/${quiz.id}`}
-              className="glass glass-hover rounded-2xl p-5 space-y-4 group flex flex-col"
+              className="relative overflow-hidden rounded-3xl p-6 space-y-5 group flex flex-col transition-all duration-300 border border-black/5 hover:border-purple-500/30 bg-white shadow-sm hover:shadow-xl hover:shadow-purple-500/10"
             >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, hsl(262 80% 65% / 0.2), hsl(199 89% 48% / 0.2))" }}>
-                <BookOpen className="w-6 h-6 text-purple-400" />
+              {/* Header */}
+              <div className="flex items-start justify-between relative z-10">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-purple-500/10 text-purple-600 group-hover:scale-110 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div className="px-3 py-1 rounded-full bg-purple-50 text-xs font-semibold text-purple-600 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                  <Clock className="w-3.5 h-3.5" /> Start
+                </div>
               </div>
 
               {/* Content */}
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground group-hover:text-purple-300 transition-colors line-clamp-2">
+              <div className="flex-1 relative z-10">
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors duration-300 line-clamp-2">
                   {quiz.title}
                 </h3>
                 {quiz.description && (
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{quiz.description}</p>
+                  <p className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">{quiz.description}</p>
                 )}
               </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <BookOpen className="w-3 h-3" /> {quiz._count.questions} Qs
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {quiz._count.results} attempts
-                </span>
-              </div>
+              {/* Stats & Footer */}
+              <div className="pt-5 border-t border-gray-100 relative z-10 mt-auto">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-600 border border-gray-100">
+                    <BookOpen className="w-3.5 h-3.5 text-purple-500" /> {quiz._count.questions} Qs
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-600 border border-gray-100">
+                    <Users className="w-3.5 h-3.5 text-cyan-500" /> {quiz._count.results} plays
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                <span className="text-xs text-muted-foreground">by {quiz.createdBy.fullName}</span>
-                <span className="flex items-center gap-1 text-purple-400 text-xs font-medium group-hover:gap-2 transition-all">
-                  Start Quiz <ArrowRight className="w-3 h-3" />
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-500">by {quiz.createdBy.fullName}</span>
+                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300">
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </div>
               </div>
             </Link>
           ))}

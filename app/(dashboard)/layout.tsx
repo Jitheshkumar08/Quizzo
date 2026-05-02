@@ -44,7 +44,7 @@ export default async function DashboardLayout({
 
         {/* Scrolling Content Zone */}
         <div id="dashboard-scroll-area" className="flex-1 overflow-x-hidden overflow-y-auto scroll-smooth p-6 md:p-10 relative">
-          <div className="max-w-6xl mx-auto rounded-[32px] bg-[#F4EFE6]/70 backdrop-blur-2xl border border-white/80 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.05)] p-8 relative overflow-hidden">
+          <div className="max-w-6xl mx-auto rounded-[32px] bg-[#F4EFE6]/70 backdrop-blur-2xl border border-white/80 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.05)] p-8 relative">
             {/* White glossy rim for inner container */}
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-[32px] z-0"></div>
             <div className="relative z-10">

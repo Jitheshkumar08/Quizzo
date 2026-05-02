@@ -39,10 +39,16 @@ export default async function InstructorQuizzesPage() {
         </div>
         <Link
           href="/instructor/upload"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
+          className="animated-button shadow-sm"
         >
-          <Plus className="w-4 h-4" /> New Quiz
+          <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+          </svg>
+          <span className="text">NEW QUIZ</span>
+          <span className="circle"></span>
+          <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+          </svg>
         </Link>
       </div>
 
@@ -52,9 +58,15 @@ export default async function InstructorQuizzesPage() {
           <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <p className="font-semibold text-lg">No quizzes yet</p>
           <p className="text-muted-foreground text-sm mt-1">Upload a PDF to generate your first quiz</p>
-          <Link href="/instructor/upload" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}>
-            <Plus className="w-4 h-4" /> Create First Quiz
+          <Link href="/instructor/upload" className="animated-button shadow-sm mt-6 inline-flex">
+            <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+            </svg>
+            <span className="text">CREATE QUIZ</span>
+            <span className="circle"></span>
+            <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+            </svg>
           </Link>
         </div>
       ) : (
