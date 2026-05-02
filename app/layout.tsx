@@ -1,0 +1,31 @@
+import type { Metadata } from "next";
+import { Inter, Geist } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+
+export const metadata: Metadata = {
+  title: "MCQify — AI-Powered Quiz Platform",
+  description:
+    "Upload PDFs and let AI generate comprehensive multiple-choice quizzes instantly. Built for instructors, loved by students.",
+  keywords: ["quiz", "MCQ", "AI", "education", "pdf", "exam"],
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={cn("dark", "font-sans", geist.variable)}>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  );
+}
