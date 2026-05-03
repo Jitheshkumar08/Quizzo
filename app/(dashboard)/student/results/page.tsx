@@ -72,36 +72,38 @@ export default async function StudentResultsPage() {
               <Link
                 key={result.id}
                 href={`/student/results/${result.id}`}
-                className="bg-white hover:bg-gray-50/50 transition-all duration-300 rounded-[28px] p-4 flex items-center gap-6 border border-black/5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+                className="bg-white hover:bg-gray-50/50 transition-all duration-300 rounded-[28px] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 border border-black/5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
               >
-                {/* Score badge */}
-                <div className={`w-[84px] h-[84px] rounded-[20px] flex flex-col items-center justify-center flex-shrink-0 border ${bgColor} transition-transform duration-300 group-hover:scale-105`}>
-                  <span className={`text-[26px] font-black ${color}`}>{pct}%</span>
-                </div>
+                <div className="flex items-start sm:items-center gap-4 sm:gap-6 flex-1 min-w-0">
+                  {/* Score badge */}
+                  <div className={`w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-[18px] sm:rounded-[20px] flex flex-col items-center justify-center flex-shrink-0 border ${bgColor} transition-transform duration-300 group-hover:scale-105`}>
+                    <span className={`text-[22px] sm:text-[26px] font-black ${color}`}>{pct}%</span>
+                  </div>
 
-                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-bold text-[19px] text-gray-900 group-hover:text-[#A881FF] transition-colors truncate mb-2">
-                    {result.quiz.title}
-                  </h3>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h3 className="font-bold text-[17px] sm:text-[19px] text-gray-900 group-hover:text-[#A881FF] transition-colors break-words line-clamp-2 mb-2 sm:truncate sm:line-clamp-none">
+                      {result.quiz.title}
+                    </h3>
 
-                  <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-[14px] text-gray-700 font-semibold">
-                    <span className="flex items-center gap-1.5">
-                      <Trophy className="w-[16px] h-[16px] text-yellow-500 fill-yellow-500/20" />
-                      {result.score}/{result.total} correct
-                    </span>
-                    {result.timeTaken && (
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="w-[16px] h-[16px] text-blue-500" />
-                        {formatTime(result.timeTaken)}
+                    <div className="flex items-center flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-[13px] sm:text-[14px] text-gray-700 font-semibold">
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        <Trophy className="w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] text-yellow-500 fill-yellow-500/20" />
+                        {result.score}/{result.total} correct
                       </span>
-                    )}
-                    <span className="text-gray-600 font-medium">
-                      {formatDateTime(new Date(result.createdAt))}
-                    </span>
+                      {result.timeTaken && (
+                        <span className="flex items-center gap-1.5 whitespace-nowrap">
+                          <Clock className="w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] text-blue-500" />
+                          {formatTime(result.timeTaken)}
+                        </span>
+                      )}
+                      <span className="text-gray-500 sm:text-gray-600 font-medium whitespace-nowrap w-full sm:w-auto">
+                        {formatDateTime(new Date(result.createdAt))}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 pl-4 pr-2">
+                <div className="flex-shrink-0 self-end sm:self-auto sm:pl-4 sm:pr-2">
                   <ViewAnalyticsButton />
                 </div>
               </Link>

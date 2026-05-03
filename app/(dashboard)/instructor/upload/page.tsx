@@ -353,7 +353,7 @@ export default function InstructorUploadPage() {
       {/* Step 1: Upload */}
       {step === "upload" && (
         <div className="space-y-6">
-          <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_16px_32px_rgba(44,42,40,0.06),0_2px_6px_rgba(44,42,40,0.04),inset_0_1px_2px_rgba(255,255,255,0.8)] rounded-[24px] p-8 space-y-6 relative overflow-hidden">
+          <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_16px_32px_rgba(44,42,40,0.06),0_2px_6px_rgba(44,42,40,0.04),inset_0_1px_2px_rgba(255,255,255,0.8)] rounded-2xl sm:rounded-[24px] p-5 sm:p-8 space-y-5 sm:space-y-6 relative overflow-hidden">
             {/* Inner top gradient */}
             <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none"></div>
 
@@ -479,48 +479,49 @@ export default function InstructorUploadPage() {
           )}
 
           {/* Header & Stats bar */}
-          <div className="glass rounded-xl p-6 flex flex-col gap-6 border border-white/20">
+          <div className="glass rounded-xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 border border-white/20">
             <div className="flex flex-col gap-1">
-              <h2 className="font-bold text-2xl text-[#2C2A28]">{title}</h2>
-              {description && <p className="text-[#918B80] font-medium">{description}</p>}
-              <p className="text-sm font-semibold text-[#8b5cf6] mt-2 bg-[#8b5cf6]/10 w-fit px-3 py-1.5 rounded-full">
+              <h2 className="font-bold text-xl sm:text-2xl text-[#2C2A28] truncate">{title}</h2>
+              {description && <p className="text-[#918B80] font-medium text-sm sm:text-base line-clamp-2">{description}</p>}
+              <p className="text-xs sm:text-sm font-semibold text-[#8b5cf6] mt-2 bg-[#8b5cf6]/10 w-fit px-3 py-1.5 rounded-full">
                 {questions.length} {totalQuestions > 0 ? `out of ~${totalQuestions}` : ""} questions extracted
               </p>
             </div>
 
-            <div className="flex items-center gap-3 pt-5 border-t border-black/5 w-full overflow-x-auto hide-scrollbar pb-2">
+            <div className="flex flex-col xl:flex-row xl:items-center gap-4 pt-5 border-t border-black/5 w-full">
               {/* Tool Group */}
-              <div className="flex border border-black/10 bg-white rounded-full overflow-hidden shadow-sm flex-shrink-0">
+              <div className="flex flex-wrap sm:flex-nowrap border border-black/10 bg-white rounded-xl sm:rounded-full overflow-hidden shadow-sm flex-shrink-0">
                 <button
                   onClick={() => setGlobalCollapsed((prev) => !prev)}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0"
                   title="Toggle all questions"
                 >
                   {globalCollapsed ? <UnfoldVertical className="w-4 h-4" /> : <FoldVertical className="w-4 h-4" />}
-                  {globalCollapsed ? "Expand All" : "Collapse All"}
+                  <span className="hidden sm:inline">{globalCollapsed ? "Expand All" : "Collapse All"}</span>
+                  <span className="sm:hidden">{globalCollapsed ? "Expand" : "Collapse"}</span>
                 </button>
-                <div className="w-[1px] bg-black/10"></div>
+                <div className="w-full h-[1px] sm:w-[1px] sm:h-auto bg-black/10 hidden sm:block"></div>
                 <button
                   onClick={handleShuffleQuestions}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
                   title="Shuffle question order"
                 >
                   <Shuffle className="w-4 h-4" />
                   Mix Qs
                 </button>
-                <div className="w-[1px] bg-black/10"></div>
+                <div className="w-full h-[1px] sm:w-[1px] sm:h-auto bg-black/10 hidden sm:block"></div>
                 <button
                   onClick={handleShuffleOptions}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
                   title="Shuffle A/B/C/D options"
                 >
                   <Shuffle className="w-4 h-4" />
-                  Mix Options
+                  <span className="hidden sm:inline">Mix Options</span><span className="sm:hidden">Options</span>
                 </button>
-                <div className="w-[1px] bg-black/10"></div>
+                <div className="w-full h-[1px] sm:w-[1px] sm:h-auto bg-black/10 hidden sm:block"></div>
                 <button
                   onClick={handleResetShuffles}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-red-400 hover:text-red-500 hover:bg-red-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  className="px-4 py-2.5 text-[13px] font-semibold text-red-400 hover:text-red-500 hover:bg-red-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
                   title="Restore original question order and options"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -528,7 +529,9 @@ export default function InstructorUploadPage() {
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex-1 hidden xl:block" />
+
+              <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0 justify-end flex-wrap xl:flex-shrink-0">
                 {!fetchingMore && questions.length > 0 && (
                   <button
                     onClick={downloadJson}
@@ -541,25 +544,27 @@ export default function InstructorUploadPage() {
                 <button
                   onClick={() => handlePublish(false)}
                   disabled={publishing || fetchingMore}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold border border-black/10 bg-white text-[#111827] hover:bg-black/5 transition-colors disabled:opacity-50 shadow-sm"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold border border-black/10 bg-white text-[#111827] hover:bg-black/5 transition-colors disabled:opacity-50 shadow-sm flex-1 sm:flex-none justify-center"
                 >
                   <Save className="w-4 h-4" /> Save Draft
                 </button>
                 
-                <button
-                  onClick={() => handlePublish(true)}
-                  disabled={publishing || questions.length === 0 || fetchingMore}
-                  className="animated-button shadow-sm ml-1"
-                >
-                  <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
-                  </svg>
-                  <span className="text">{publishing ? "PUBLISHING" : "PUBLISH QUIZ"}</span>
-                  <span className="circle"></span>
-                  <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
-                  </svg>
-                </button>
+                <div className="w-full sm:w-auto flex justify-end">
+                  <button
+                    onClick={() => handlePublish(true)}
+                    disabled={publishing || questions.length === 0 || fetchingMore}
+                    className="animated-button shadow-sm w-full sm:w-auto"
+                  >
+                    <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+                    </svg>
+                    <span className="text">{publishing ? "PUBLISHING" : "PUBLISH QUIZ"}</span>
+                    <span className="circle"></span>
+                    <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

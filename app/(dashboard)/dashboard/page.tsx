@@ -37,10 +37,10 @@ export default async function DashboardPage() {
     <div className="space-y-10 animate-fade-in-up">
       {/* Greeting */}
       <div>
-        <h1 className="text-[36px] font-black text-[#2C2A28] tracking-tight">
+        <h1 className="text-[28px] md:text-[36px] font-black text-[#2C2A28] tracking-tight leading-tight">
           Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8C5D3E] to-[#D98A5B]">{name?.split(" ")[0]}</span> 👋
         </h1>
-        <p className="text-[#918B80] mt-2 text-[16px] font-medium">
+        <p className="text-[#918B80] mt-2 text-[14px] md:text-[16px] font-medium">
           {role === "ADMIN" && "You have full platform access."}
           {role === "INSTRUCTOR" && "Create and manage your quizzes below."}
           {role === "STUDENT" && "Ready to test your knowledge?"}

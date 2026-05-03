@@ -66,7 +66,7 @@ export default function ReviewSidebarClientWrapper({
       {/* Same pattern as QuizTaker: transition-all on padding-right, no cascade */}
       <div
         className={`min-h-[calc(100vh-8rem)] transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "pr-[260px]" : "pr-0"
+          sidebarOpen ? "lg:pr-[260px] pr-0" : "pr-0"
         }`}
       >
         <div className="flex-1 min-w-0 flex flex-col gap-6 animate-fade-in-up">

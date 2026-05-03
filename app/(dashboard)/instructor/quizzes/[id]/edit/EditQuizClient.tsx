@@ -301,23 +301,25 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
       </Link>
 
       {/* Page title + action buttons */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-          <BookOpen className="w-5 h-5 text-purple-600" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-gray-900">Edit Quiz</h1>
-          <p className="text-sm text-gray-500">
-            {isPublished ? (
-              <span className="text-green-600 font-semibold">● Published</span>
-            ) : (
-              <span className="text-amber-500 font-semibold">● Draft</span>
-            )}
-            {" · "}{questions.length} questions
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-3 bg-white p-4 sm:p-0 rounded-2xl sm:rounded-none sm:bg-transparent border border-black/5 sm:border-none shadow-sm sm:shadow-none">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+            <BookOpen className="w-5 h-5 text-purple-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-gray-900 truncate">Edit Quiz</h1>
+            <p className="text-sm text-gray-500 truncate">
+              {isPublished ? (
+                <span className="text-green-600 font-semibold">● Published</span>
+              ) : (
+                <span className="text-amber-500 font-semibold">● Draft</span>
+              )}
+              {" · "}{questions.length} questions
+            </p>
+          </div>
         </div>
         {/* Header action buttons */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleViewAnalytics}
             className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
@@ -410,43 +412,44 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
       />
 
       {/* Toolbar */}
-      <div className="bg-white rounded-2xl border border-black/5 shadow-sm p-4 flex items-center gap-3 flex-wrap">
+      <div className="bg-white rounded-2xl border border-black/5 shadow-sm p-4 flex flex-col xl:flex-row xl:items-center gap-4">
         {/* Tools */}
-        <div className="flex border border-black/10 rounded-full overflow-hidden shadow-sm flex-shrink-0">
+        <div className="flex flex-wrap sm:flex-nowrap border border-black/10 rounded-xl sm:rounded-full overflow-hidden shadow-sm flex-shrink-0">
           <button
             onClick={() => setGlobalCollapsed((prev) => !prev)}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0"
           >
             {globalCollapsed ? <UnfoldVertical className="w-4 h-4" /> : <FoldVertical className="w-4 h-4" />}
-            {globalCollapsed ? "Expand All" : "Collapse All"}
+            <span className="hidden sm:inline">{globalCollapsed ? "Expand All" : "Collapse All"}</span>
+            <span className="sm:hidden">{globalCollapsed ? "Expand" : "Collapse"}</span>
           </button>
-          <div className="w-px bg-black/10" />
+          <div className="w-full h-px sm:w-px sm:h-auto bg-black/10 hidden sm:block" />
           <button
             onClick={handleShuffleQuestions}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
           >
             <Shuffle className="w-4 h-4" /> Mix Qs
           </button>
-          <div className="w-px bg-black/10" />
+          <div className="w-full h-px sm:w-px sm:h-auto bg-black/10 hidden sm:block" />
           <button
             onClick={handleShuffleOptions}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
           >
-            <Shuffle className="w-4 h-4" /> Mix Options
+            <Shuffle className="w-4 h-4" /> <span className="hidden sm:inline">Mix Options</span><span className="sm:hidden">Options</span>
           </button>
-          <div className="w-px bg-black/10" />
+          <div className="w-full h-px sm:w-px sm:h-auto bg-black/10 hidden sm:block" />
           <button
             onClick={handleResetShuffles}
-            className="px-4 py-2 text-[13px] font-semibold text-red-400 hover:text-red-600 hover:bg-red-50 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2 text-[13px] font-semibold text-red-400 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
           >
             <RotateCcw className="w-4 h-4" /> Reset
           </button>
         </div>
 
-        <div className="flex-1" />
+        <div className="flex-1 hidden xl:block" />
 
         {/* Save actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap xl:flex-shrink-0 justify-end sm:justify-start">
           {saved && (
             <span className="flex items-center gap-1.5 text-green-600 text-xs font-semibold">
               <CheckCircle2 className="w-4 h-4" /> Saved!

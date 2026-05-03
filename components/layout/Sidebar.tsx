@@ -14,8 +14,11 @@ import {
   Brain,
   ChevronRight,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Menu,
+  X
 } from "lucide-react";
+import { useState } from "react";
 
 interface NavItem {
   href: string;
@@ -45,9 +48,37 @@ export default function Sidebar({ role, userName }: SidebarProps) {
 
   const mainNav = navItems.filter((item) => item.roles.includes(role) && item.group === "Main");
   const adminNav = navItems.filter((item) => item.roles.includes(role) && item.group === "Admin");
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <aside className="w-[260px] flex-shrink-0 h-screen bg-[#F4EFE6]/70 backdrop-blur-2xl border-r border-white/80 flex flex-col relative z-20 shadow-[4px_0_24px_rgba(163,149,126,0.1)]">
+    <>
+      {/* Mobile Hamburger Button */}
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="md:hidden fixed top-7 left-5 z-[60] p-2 bg-[#F4EFE6]/90 backdrop-blur-md rounded-xl shadow-sm border border-white/80 text-[#2C2A28]"
+        aria-label="Open Menu"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-[#2C2A28]/20 backdrop-blur-sm z-[70] transition-opacity duration-300"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Content */}
+      <aside className={`w-[260px] flex-shrink-0 h-screen bg-[#F4EFE6]/90 backdrop-blur-2xl border-r border-white/80 flex flex-col fixed md:relative z-[80] md:z-20 shadow-[4px_0_24px_rgba(163,149,126,0.1)] transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+        {/* Mobile Close Button */}
+        <button 
+          onClick={() => setIsOpen(false)}
+          className="md:hidden absolute top-7 right-4 p-2 text-[#918B80] hover:bg-black/5 rounded-lg z-50 transition-colors"
+          aria-label="Close Menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       {/* Glossy highlight */}
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/40 to-transparent pointer-events-none"></div>
 
@@ -121,5 +152,6 @@ export default function Sidebar({ role, userName }: SidebarProps) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

@@ -308,45 +308,47 @@ export default function QuizTaker({
         100% { height: 3.3em; }
       }
     `}</style>
-      <div className={`min-h-[calc(100vh-8rem)] transition-all duration-300 ease-in-out ${sidebarOpen ? "pr-[220px]" : "pr-0"}`}>
+      <div className={`min-h-[calc(100vh-8rem)] transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:pr-[240px] pr-0" : "pr-0"}`}>
 
         {/* Main Content */}
         <div className="flex-1 min-w-0 flex flex-col gap-4 transition-all duration-300">
           {/* Top bar */}
-          <div className="bg-white rounded-2xl p-4 flex items-center gap-4 border border-black/5 shadow-sm">
-            <div className="flex-1 min-w-0">
+          <div className="bg-white rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 border border-black/5 shadow-sm">
+            <div className="flex-1 min-w-0 w-full">
               <h1 className="font-bold text-sm truncate text-gray-900">{quizTitle}</h1>
-              <p className="text-xs text-gray-500 font-medium">
+              <p className="text-xs text-gray-500 font-medium mt-0.5">
                 {answeredCount}/{questions.length} answered
               </p>
             </div>
-            {hasTimer && remainingSec !== null ? (
-              <div
-                className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-1.5 rounded-lg border ${remainingSec <= 60
-                  ? "text-red-700 bg-red-50 border-red-200"
-                  : remainingSec <= 300
-                    ? "text-amber-800 bg-amber-50 border-amber-200"
-                    : "text-purple-700 bg-purple-50 border-purple-100"
-                  }`}
+            <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+              {hasTimer && remainingSec !== null ? (
+                <div
+                  className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-1.5 rounded-lg border ${remainingSec <= 60
+                    ? "text-red-700 bg-red-50 border-red-200"
+                    : remainingSec <= 300
+                      ? "text-amber-800 bg-amber-50 border-amber-200"
+                      : "text-purple-700 bg-purple-50 border-purple-100"
+                    }`}
+                >
+                  <Timer className="w-4 h-4 flex-shrink-0" />
+                  <span>Left {formatTime(remainingSec)}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm font-mono font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
+                  <Clock className="w-4 h-4" />
+                  {formatTime(elapsed)}
+                </div>
+              )}
+              <button
+                onClick={() => setShowConfirm(true)}
+                className="group relative inline-flex items-center justify-center px-5 sm:px-6 py-2 rounded-full text-sm font-bold text-green-600 bg-transparent shadow-[0_0_0_2px_rgba(34,197,94,0.2)] hover:shadow-[0_0_0_5px_rgba(34,197,94,0.3)] hover:text-white active:scale-95 transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden"
               >
-                <Timer className="w-4 h-4 flex-shrink-0" />
-                <span>Left {formatTime(remainingSec)}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-sm font-mono font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
-                <Clock className="w-4 h-4" />
-                {formatTime(elapsed)}
-              </div>
-            )}
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="group relative inline-flex items-center justify-center px-6 py-2 rounded-full text-sm font-bold text-green-600 bg-transparent shadow-[0_0_0_2px_rgba(34,197,94,0.2)] hover:shadow-[0_0_0_5px_rgba(34,197,94,0.3)] hover:text-white active:scale-95 transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <Send className="w-4 h-4" /> Submit
-              </span>
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-green-500 rounded-full opacity-0 group-hover:w-40 group-hover:h-40 group-hover:opacity-100 transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] z-0"></span>
-            </button>
+                <span className="relative z-10 flex items-center gap-2">
+                  <Send className="w-4 h-4" /> Submit
+                </span>
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-green-500 rounded-full opacity-0 group-hover:w-40 group-hover:h-40 group-hover:opacity-100 transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] z-0"></span>
+              </button>
+            </div>
           </div>
 
           {/* Questions */}

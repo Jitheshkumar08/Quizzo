@@ -30,7 +30,7 @@ export default async function InstructorQuizzesPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold gradient-text">
             {session.user.role === "ADMIN" ? "All Quizzes" : "My Quizzes"}
@@ -72,45 +72,47 @@ export default async function InstructorQuizzesPage() {
       ) : (
         <div className="grid gap-4">
           {quizzes.map((quiz) => (
-            <div key={quiz.id} className="glass glass-hover rounded-2xl p-5 flex items-start gap-4">
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-6 h-6 text-purple-400" />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2 flex-wrap">
-                  <h3 className="font-semibold text-foreground">{quiz.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
-                    quiz.isPublished
-                      ? "text-green-400 bg-green-400/10 border-green-400/20"
-                      : "text-yellow-400 bg-yellow-400/10 border-yellow-400/20"
-                  }`}>
-                    {quiz.isPublished ? "Published" : "Draft"}
-                  </span>
+            <div key={quiz.id} className="glass glass-hover rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
+              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                {/* Icon */}
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                 </div>
-                {quiz.description && (
-                  <p className="text-sm text-muted-foreground mt-0.5 truncate">{quiz.description}</p>
-                )}
-                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /> {quiz._count.questions} questions</span>
-                  <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {quiz._count.results} attempts</span>
-                  {session.user.role === "ADMIN" && (
-                    <span>by {quiz.createdBy.fullName}</span>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <h3 className="font-semibold text-foreground break-words line-clamp-2">{quiz.title}</h3>
+                    <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap mt-0.5 ${
+                      quiz.isPublished
+                        ? "text-green-400 bg-green-400/10 border-green-400/20"
+                        : "text-yellow-400 bg-yellow-400/10 border-yellow-400/20"
+                    }`}>
+                      {quiz.isPublished ? "Published" : "Draft"}
+                    </span>
+                  </div>
+                  {quiz.description && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{quiz.description}</p>
                   )}
-                  <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-[10px] sm:text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /> {quiz._count.questions} questions</span>
+                    <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {quiz._count.results} attempts</span>
+                    {session.user.role === "ADMIN" && (
+                      <span className="truncate">by {quiz.createdBy.fullName}</span>
+                    )}
+                    <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 sm:flex-shrink-0 mt-2 sm:mt-0 ml-[52px] sm:ml-0">
                 {quiz.jsonBlobUrl && (
                   <a
                     href={quiz.jsonBlobUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-lg text-muted-foreground hover:text-cyan-400 hover:bg-cyan-400/10 transition-all"
+                    className="p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-cyan-400 hover:bg-cyan-400/10 transition-all"
                     title="Download JSON"
                   >
                     <FileJson className="w-4 h-4" />
@@ -118,7 +120,7 @@ export default async function InstructorQuizzesPage() {
                 )}
                 <Link
                   href={`/instructor/quizzes/${quiz.id}/edit`}
-                  className="px-3 py-1.5 rounded-lg text-sm text-purple-400 hover:bg-purple-400/10 transition-all border border-purple-400/20"
+                  className="px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium text-purple-400 hover:bg-purple-400/10 transition-all border border-purple-400/20 w-full sm:w-auto text-center"
                 >
                   Edit
                 </Link>

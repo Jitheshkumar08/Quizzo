@@ -64,47 +64,49 @@ export default async function ResultDetailPage({ params }: Props) {
       </Link>
 
       {/* Score card */}
-      <div className={`glass rounded-2xl p-8 border bg-gradient-to-br ${pctBg} text-center space-y-2`}>
-        <Trophy className={`w-12 h-12 mx-auto ${pctColor}`} />
-        <h1 className="text-2xl font-bold">{result.quiz.title}</h1>
-        <div className={`text-6xl font-black ${pctColor}`}>{pct}%</div>
-        <p className="text-lg text-muted-foreground">
+      <div className={`glass rounded-2xl p-6 sm:p-8 border bg-gradient-to-br ${pctBg} text-center space-y-2`}>
+        <Trophy className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto ${pctColor}`} />
+        <h1 className="text-xl sm:text-2xl font-bold break-words">{result.quiz.title}</h1>
+        <div className={`text-5xl sm:text-6xl font-black ${pctColor}`}>{pct}%</div>
+        <p className="text-base sm:text-lg text-muted-foreground">
           You scored <strong className="text-foreground">{result.score}</strong> out of{" "}
           <strong className="text-foreground">{result.total}</strong>
         </p>
         {result.timeTaken && (
-          <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+          <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center justify-center gap-1">
             <Clock className="w-4 h-4" /> Time taken: {formatTime(result.timeTaken)}
           </p>
         )}
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { icon: CheckCircle2, label: "Correct", value: correct, color: "text-green-400 bg-green-400/10 border-green-400/20" },
           { icon: XCircle, label: "Incorrect", value: incorrect, color: "text-red-400 bg-red-400/10 border-red-400/20" },
           { icon: MinusCircle, label: "Unattempted", value: unattempted, color: "text-muted-foreground bg-white/5 border-white/10" },
         ].map(({ icon: Icon, label, value, color }) => (
-          <div key={label} className={`glass rounded-xl p-4 text-center border ${color.split(" ").slice(1).join(" ")}`}>
-            <Icon className={`w-6 h-6 mx-auto mb-1 ${color.split(" ")[0]}`} />
-            <div className={`text-2xl font-bold ${color.split(" ")[0]}`}>{value}</div>
-            <div className="text-xs text-muted-foreground">{label}</div>
+          <div key={label} className={`glass rounded-xl p-4 sm:p-5 text-center border flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-3 sm:gap-0 ${color.split(" ").slice(1).join(" ")}`}>
+            <div className="flex items-center gap-2 sm:gap-0 sm:flex-col sm:mb-1">
+              <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color.split(" ")[0]}`} />
+              <div className="text-sm font-semibold sm:text-xs text-muted-foreground sm:order-last sm:mt-1">{label}</div>
+            </div>
+            <div className={`text-xl sm:text-2xl font-bold ${color.split(" ")[0]}`}>{value}</div>
           </div>
         ))}
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Link
           href={`/student/quizzes/${result.quizId}`}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium glass glass-hover"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-medium glass glass-hover w-full sm:w-auto"
         >
           <RotateCcw className="w-4 h-4" /> Retake Quiz
         </Link>
         <Link
           href="/student/quizzes"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-semibold text-white w-full sm:w-auto"
           style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
         >
           Browse More Quizzes

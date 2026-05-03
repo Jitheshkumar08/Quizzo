@@ -77,7 +77,7 @@ export default async function StudentQuizzesPage() {
                       scheduledEnd={quiz.scheduledEnd}
                     />
                   ) : (
-                    <div className="px-3 py-1 rounded-full bg-purple-100 text-xs font-bold uppercase tracking-wider text-purple-700 border border-purple-200 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                    <div className="px-3 py-1 rounded-full bg-purple-50 text-xs font-bold uppercase tracking-wider text-purple-600 border border-purple-100 shadow-sm min-w-max">
                       Start
                     </div>
                   )}
