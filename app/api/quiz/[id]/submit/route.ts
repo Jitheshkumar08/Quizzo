@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
-import { sessionDeadline } from "@/lib/quiz-session";
+import { sessionDeadline, finalizeExpiredOpenSession } from "@/lib/quiz-session";
 
 export const maxDuration = 60;
 
@@ -40,8 +40,13 @@ export async function POST(
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
+    const open = await prisma.quizSession.findFirst({
+      where: { quizId, studentId: session.user.id, submittedAt: null },
+    });
+
     const block = await getStudentQuizBlock(req, quiz, session);
-    if (block) {
+    // Explicitly allow submitting if blocked ONLY by 'ENDED' but they have an active session within grace period
+    if (block && !(block.code === "ENDED" && open)) {
       const messages: Record<string, string> = {
         NOT_STARTED: "This quiz is not available yet.",
         ENDED: "This quiz has ended.",
@@ -54,10 +59,7 @@ export async function POST(
       );
     }
 
-    if (quiz.timeLimitMinutes) {
-      const open = await prisma.quizSession.findFirst({
-        where: { quizId, studentId: session.user.id, submittedAt: null },
-      });
+    if (quiz.timeLimitMinutes || quiz.scheduledEnd) {
       if (!open) {
         return NextResponse.json(
           {
@@ -67,12 +69,30 @@ export async function POST(
           { status: 403 }
         );
       }
-      const deadline = sessionDeadline(open.startedAt, quiz.timeLimitMinutes);
+      const deadline = sessionDeadline(open.startedAt, quiz.timeLimitMinutes, quiz.scheduledEnd);
       const graceMs = 120_000;
-      if (Date.now() > deadline.getTime() + graceMs) {
+      if (deadline && Date.now() > deadline.getTime() + graceMs) {
+        const finalized = await finalizeExpiredOpenSession({
+          quizId,
+          studentId: session.user.id,
+          timeLimitMinutes: quiz.timeLimitMinutes,
+          scheduledEnd: quiz.scheduledEnd,
+          totalQuestions: quiz.questions.length,
+        });
+
+        // Even if not finalized just now, if they were timed out they might already have a result from background check!
+        const latResult = await prisma.result.findFirst({
+          where: { quizId, studentId: session.user.id },
+          orderBy: { createdAt: "desc" },
+        });
+
+        if (latResult) {
+          return NextResponse.json({ resultId: latResult.id });
+        }
+
         return NextResponse.json(
           {
-            error: "The time limit for this attempt has passed. Refresh the page to see your status.",
+            error: "The time limit for this attempt has passed and it was auto-graded. Go to your results.",
             code: "TIME_EXPIRED",
           },
           { status: 403 }

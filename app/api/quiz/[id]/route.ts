@@ -44,6 +44,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       quizId,
       studentId: session.user.id,
       timeLimitMinutes: quiz.timeLimitMinutes,
+      scheduledEnd: quiz.scheduledEnd,
       totalQuestions: quiz.questions.length,
     });
 
@@ -73,6 +74,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
         quizId,
         studentId: session.user.id,
         timeLimitMinutes: quiz.timeLimitMinutes,
+        scheduledEnd: quiz.scheduledEnd,
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
@@ -80,11 +82,17 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
           quizId,
           studentId: session.user.id,
           timeLimitMinutes: quiz.timeLimitMinutes,
+          scheduledEnd: quiz.scheduledEnd,
         });
       } else {
         throw e;
       }
     }
+
+    const openSession = await prisma.quizSession.findFirst({
+      where: { quizId, studentId: session.user.id, submittedAt: null },
+      select: { currentAnswers: true },
+    });
 
     const { accessPasswordHash: _omit, ...safe } = quiz;
     return NextResponse.json({
@@ -92,6 +100,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       attemptDeadline: timing.attemptDeadline,
       serverNow: timing.serverNow,
       attemptStartedAt: timing.attemptStartedAt,
+      savedAnswers: (openSession?.currentAnswers as Record<string, string>) || {},
     });
   } catch (error) {
     console.error("[GET QUIZ ERROR]", error);
