@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Users, Loader2, Shield } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check } from "lucide-react";
 
 interface User {
   id: string;
@@ -15,11 +15,150 @@ interface User {
 
 const ROLES = ["STUDENT", "INSTRUCTOR", "ADMIN"] as const;
 
-const roleStyles: Record<string, string> = {
-  ADMIN: "text-red-400 bg-red-400/10 border-red-400/20",
-  INSTRUCTOR: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-  STUDENT: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+const roleConfig: Record<string, {
+  gradient: string;
+  pill: string;
+  avatarBg: string;
+  avatarText: string;
+  dropdownHover: string;
+  checkColor: string;
+  label: string;
+}> = {
+  ADMIN: {
+    gradient: "from-rose-500 to-red-600",
+    pill: "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-rose-200",
+    avatarBg: "bg-rose-100",
+    avatarText: "text-rose-600",
+    dropdownHover: "hover:bg-rose-50 hover:text-rose-700",
+    checkColor: "text-rose-600",
+    label: "Admin",
+  },
+  INSTRUCTOR: {
+    gradient: "from-sky-500 to-blue-600",
+    pill: "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sky-200",
+    avatarBg: "bg-sky-100",
+    avatarText: "text-sky-600",
+    dropdownHover: "hover:bg-sky-50 hover:text-sky-700",
+    checkColor: "text-sky-600",
+    label: "Instructor",
+  },
+  STUDENT: {
+    gradient: "from-violet-500 to-purple-600",
+    pill: "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-violet-200",
+    avatarBg: "bg-violet-100",
+    avatarText: "text-violet-600",
+    dropdownHover: "hover:bg-violet-50 hover:text-violet-700",
+    checkColor: "text-violet-600",
+    label: "Student",
+  },
 };
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  return { date, time };
+}
+
+function Avatar({ name, role }: { name: string; role: string }) {
+  const cfg = roleConfig[role];
+  return (
+    <div className={`w-10 h-10 rounded-xl ${cfg.avatarBg} flex items-center justify-center flex-shrink-0 font-black text-base ${cfg.avatarText} shadow-sm border border-white/80`}>
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function RolePill({ role, isYou }: { role: string; isYou?: boolean }) {
+  const cfg = roleConfig[role];
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm ${cfg.pill}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+      {cfg.label}{isYou ? " (you)" : ""}
+    </span>
+  );
+}
+
+function RoleDropdown({
+  role,
+  userId,
+  updating,
+  onChange,
+}: {
+  role: string;
+  userId: string;
+  updating: string | null;
+  onChange: (userId: string, role: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const cfg = roleConfig[role];
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  if (updating === userId) {
+    return (
+      <div className={`inline-flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full font-bold shadow-sm ${cfg.pill}`}>
+        <Loader2 className="w-3 h-3 animate-spin" />
+        Saving…
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="relative inline-block">
+      {/* Trigger button — looks exactly like the pill */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 ${cfg.pill}`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+        {cfg.label}
+        <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div className="absolute left-0 top-full mt-2 z-50 w-40 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#E8E2D9] py-1.5 overflow-hidden">
+          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#B0A89E] px-3 pt-1.5 pb-2">Change Role</p>
+          {ROLES.map((r) => {
+            const rcfg = roleConfig[r];
+            const isActive = r === role;
+            return (
+              <button
+                key={r}
+                onClick={() => {
+                  setOpen(false);
+                  if (r !== role) onChange(userId, r);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-bold transition-colors duration-100 ${
+                  isActive
+                    ? "bg-[#F5EDE2] text-[#2C2A28]"
+                    : `text-[#4A4744] ${rcfg.dropdownHover}`
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full bg-gradient-to-br ${rcfg.gradient}`} />
+                  {rcfg.label}
+                </span>
+                {isActive && <Check className={`w-3.5 h-3.5 ${rcfg.checkColor}`} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function UserTable({ currentUserId }: { currentUserId: string }) {
   const [users, setUsers] = useState<User[]>([]);
@@ -56,69 +195,163 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        <p className="text-sm text-[#918B80] font-medium">Loading users…</p>
       </div>
     );
   }
 
   return (
-    <div className="glass rounded-2xl overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/5">
-              {["User", "Email", "Role", "Quizzes", "Attempts", "Joined"].map((h) => (
-                <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-white/2 transition-colors">
-                <td className="px-5 py-4">
-                  <div>
-                    <p className="font-medium text-sm">{user.fullName}</p>
-                    <p className="text-xs text-muted-foreground">@{user.username}</p>
+    <div>
+      {/* ── MOBILE: Card list ─────────────────────────── */}
+      <div className="md:hidden grid gap-5">
+        {users.map((user) => {
+          const { date, time } = formatDate(user.createdAt);
+          const isYou = user.id === currentUserId;
+          return (
+            <div key={user.id} className="glass rounded-[22px] p-5 space-y-4 border border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar name={user.fullName} role={user.role} />
+                  <div className="min-w-0">
+                    <p className="font-bold text-[15px] text-[#1E1C1A] leading-tight truncate">{user.fullName}</p>
+                    <p className="text-[11px] font-semibold text-[#A09890] mt-0.5">@{user.username}</p>
                   </div>
-                </td>
-                <td className="px-5 py-4 text-sm text-muted-foreground">{user.email}</td>
-                <td className="px-5 py-4">
-                  {user.id === currentUserId ? (
-                    <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${roleStyles[user.role]}`}>
-                      {user.role} (you)
-                    </span>
-                  ) : (
-                    <div className="relative">
-                      {updating === user.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
-                      ) : (
-                        <select
-                          value={user.role}
-                          onChange={(e) => changeRole(user.id, e.target.value)}
-                          className={`text-xs px-2.5 py-1 rounded-full border font-medium bg-transparent cursor-pointer focus:outline-none ${roleStyles[user.role]}`}
-                        >
-                          {ROLES.map((r) => (
-                            <option key={r} value={r} className="bg-gray-900 text-white">
-                              {r}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  )}
-                </td>
-                <td className="px-5 py-4 text-sm text-center">{user._count.quizzes}</td>
-                <td className="px-5 py-4 text-sm text-center">{user._count.results}</td>
-                <td className="px-5 py-4 text-sm text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
+                </div>
+                {isYou ? (
+                  <RolePill role={user.role} isYou />
+                ) : (
+                  <RoleDropdown role={user.role} userId={user.id} updating={updating} onChange={changeRole} />
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 bg-[#EDE8E0]/60 rounded-xl px-3 py-2.5 border border-[#E0D9CF]">
+                <Mail className="w-3.5 h-3.5 text-[#A09890] flex-shrink-0" />
+                <span className="text-[12px] font-semibold text-[#4A4744] truncate">{user.email}</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="bg-white/60 rounded-2xl px-2 py-3 text-center border border-[#E8E2D9] shadow-sm">
+                  <BookOpen className="w-3.5 h-3.5 text-sky-500 mx-auto mb-1" />
+                  <p className="text-[10px] font-black uppercase text-[#B0A89E] tracking-widest">Quizzes</p>
+                  <p className="font-black text-[#1E1C1A] text-base mt-0.5">{user._count.quizzes}</p>
+                </div>
+                <div className="bg-white/60 rounded-2xl px-2 py-3 text-center border border-[#E8E2D9] shadow-sm">
+                  <BarChart3 className="w-3.5 h-3.5 text-violet-500 mx-auto mb-1" />
+                  <p className="text-[10px] font-black uppercase text-[#B0A89E] tracking-widest">Attempts</p>
+                  <p className="font-black text-[#1E1C1A] text-base mt-0.5">{user._count.results}</p>
+                </div>
+                <div className="bg-white/60 rounded-2xl px-2 py-3 text-center border border-[#E8E2D9] shadow-sm">
+                  <Calendar className="w-3.5 h-3.5 text-rose-400 mx-auto mb-1" />
+                  <p className="text-[10px] font-black uppercase text-[#B0A89E] tracking-widest">Joined</p>
+                  <p className="font-black text-[#1E1C1A] text-[11px] mt-0.5 leading-tight">{date}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── DESKTOP: Premium Table ─────────────────────── */}
+      <div className="hidden md:block">
+        <div className="glass rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
+                {["User", "Email", "Role", "Quizzes", "Attempts", "Joined"].map((h) => (
+                  <th key={h} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((user, i) => {
+                const { date, time } = formatDate(user.createdAt);
+                const isYou = user.id === currentUserId;
+                return (
+                  <tr
+                    key={user.id}
+                    className={`
+                      group transition-colors duration-150 border-b border-[#EDE8E0] last:border-0
+                      ${i % 2 === 0 ? "bg-white/20" : "bg-[#FAF7F3]/40"}
+                      hover:bg-[#F5EDE2]/60
+                    `}
+                  >
+                    {/* User */}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={user.fullName} role={user.role} />
+                        <div>
+                          <p className="font-bold text-[14px] text-[#1E1C1A] leading-snug">{user.fullName}</p>
+                          <p className="text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Email */}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-[#C4BAB0] flex-shrink-0" />
+                        <span className="text-[13px] font-semibold text-[#3D3A37]">{user.email}</span>
+                      </div>
+                    </td>
+
+                    {/* Role */}
+                    <td className="px-5 py-4">
+                      {isYou ? (
+                        <RolePill role={user.role} isYou />
+                      ) : (
+                        <RoleDropdown role={user.role} userId={user.id} updating={updating} onChange={changeRole} />
+                      )}
+                    </td>
+
+                    {/* Quizzes */}
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center justify-center bg-sky-50 border border-sky-100 text-sky-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
+                        {user._count.quizzes}
+                      </span>
+                    </td>
+
+                    {/* Attempts */}
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center justify-center bg-violet-50 border border-violet-100 text-violet-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
+                        {user._count.results}
+                      </span>
+                    </td>
+
+                    {/* Joined */}
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] font-bold text-[#3D3A37]">{date}</span>
+                        <span className="text-[11px] font-semibold text-[#A09890]">{time}</span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Footer legend */}
+          <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">
+            <p className="text-[11px] font-bold text-[#A09890] uppercase tracking-widest">
+              {users.length} user{users.length !== 1 ? "s" : ""} total
+            </p>
+            <div className="flex items-center gap-4 text-[11px] font-bold text-[#6B6357]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-500 to-red-600" />Admin
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-sky-500 to-blue-600" />Instructor
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-violet-500 to-purple-600" />Student
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

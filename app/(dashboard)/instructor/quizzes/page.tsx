@@ -70,57 +70,57 @@ export default async function InstructorQuizzesPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6 pb-10">
           {quizzes.map((quiz) => (
-            <div key={quiz.id} className="glass glass-hover rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
-              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+            <div key={quiz.id} className="glass glass-hover rounded-[24px] p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 border border-white/10 shadow-sm hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300">
+              <div className="flex items-start gap-4 flex-1 min-w-0">
                 {/* Icon */}
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/15 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center flex-shrink-0 border border-purple-500/10">
+                  <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-purple-500" />
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2 flex-wrap">
-                    <h3 className="font-semibold text-foreground break-words line-clamp-2">{quiz.title}</h3>
-                    <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap mt-0.5 ${
+                  <div className="flex items-start gap-2 flex-wrap mb-1">
+                    <h3 className="font-bold text-base sm:text-lg text-[#2C2A28] leading-tight break-words">{quiz.title}</h3>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${
                       quiz.isPublished
-                        ? "text-green-400 bg-green-400/10 border-green-400/20"
-                        : "text-yellow-400 bg-yellow-400/10 border-yellow-400/20"
+                        ? "text-green-500 bg-green-500/10 border-green-500/20"
+                        : "text-amber-500 bg-amber-500/10 border-amber-500/20"
                     }`}>
                       {quiz.isPublished ? "Published" : "Draft"}
                     </span>
                   </div>
                   {quiz.description && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{quiz.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{quiz.description}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-[10px] sm:text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /> {quiz._count.questions} questions</span>
-                    <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {quiz._count.results} attempts</span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs font-medium text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><BarChart3 className="w-3.5 h-3.5 text-blue-400" /> {quiz._count.questions} Questions</span>
+                    <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-cyan-400" /> {quiz._count.results} Attempts</span>
                     {session.user.role === "ADMIN" && (
-                      <span className="truncate">by {quiz.createdBy.fullName}</span>
+                      <span className="bg-black/5 px-2 py-0.5 rounded-md">by {quiz.createdBy.fullName}</span>
                     )}
-                    <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
+                    <span className="opacity-70">{new Date(quiz.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 sm:flex-shrink-0 mt-2 sm:mt-0 ml-[52px] sm:ml-0">
+              <div className="flex items-center gap-3 self-end sm:self-center ml-auto sm:ml-0">
                 {quiz.jsonBlobUrl && (
                   <a
                     href={quiz.jsonBlobUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-cyan-400 hover:bg-cyan-400/10 transition-all"
+                    className="p-2.5 rounded-xl text-muted-foreground hover:text-cyan-600 hover:bg-cyan-50 border border-transparent hover:border-cyan-100 transition-all"
                     title="Download JSON"
                   >
-                    <FileJson className="w-4 h-4" />
+                    <FileJson className="w-5 h-5" />
                   </a>
                 )}
                 <Link
                   href={`/instructor/quizzes/${quiz.id}/edit`}
-                  className="px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium text-purple-400 hover:bg-purple-400/10 transition-all border border-purple-400/20 w-full sm:w-auto text-center"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold text-purple-600 bg-purple-50 border border-purple-100 hover:bg-purple-100 transition-all shadow-sm"
                 >
                   Edit
                 </Link>
