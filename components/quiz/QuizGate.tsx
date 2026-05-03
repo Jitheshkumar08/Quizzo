@@ -19,6 +19,7 @@ interface QuizPayload {
   timeLimitMinutes: number | null;
   attemptDeadline: string | null;
   serverNow: string | null;
+  savedAnswers?: Record<string, string>;
 }
 
 interface BlockPayload {
@@ -53,6 +54,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
           timeLimitMinutes: data.timeLimitMinutes ?? null,
           attemptDeadline: data.attemptDeadline ?? null,
           serverNow: data.serverNow ?? null,
+          savedAnswers: data.savedAnswers || {},
         });
         setBlock(null);
       } else {
@@ -114,6 +116,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
         timeLimitMinutes={quiz.timeLimitMinutes}
         attemptDeadline={quiz.attemptDeadline}
         serverNow={quiz.serverNow}
+        savedAnswers={quiz.savedAnswers}
       />
     );
   }

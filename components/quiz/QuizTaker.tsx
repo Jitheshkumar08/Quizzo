@@ -21,6 +21,7 @@ interface QuizTakerProps {
   timeLimitMinutes?: number | null;
   attemptDeadline?: string | null;
   serverNow?: string | null;
+  savedAnswers?: Record<string, string>;
 }
 
 const QUESTIONS_PER_PAGE = 5;
@@ -32,9 +33,10 @@ export default function QuizTaker({
   timeLimitMinutes,
   attemptDeadline,
   serverNow,
+  savedAnswers = {},
 }: QuizTakerProps) {
   const router = useRouter();
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>(savedAnswers);
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [visited, setVisited] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(0);
@@ -44,8 +46,8 @@ export default function QuizTaker({
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [animating, setAnimating] = useState(false);
-  const [remainingSec, setRemainingSec] = useState<number | null>(null);
-  const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
+  const [remainingSec, setRemainingSec] = useState<number | null>(null); const [isTimeUp, setIsTimeUp] = useState(false); const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
+  const [errorPopup, setErrorPopup] = useState<{ message: string, code?: string } | null>(null);
 
   const answersRef = useRef(answers);
   const elapsedRef = useRef(0);
@@ -54,13 +56,23 @@ export default function QuizTaker({
   const submitLock = useRef(false);
   const autoSubmitFired = useRef(false);
 
-  const hasTimer = !!(timeLimitMinutes && attemptDeadline && serverNow);
+  const hasTimer = !!(attemptDeadline && serverNow);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     answersRef.current = answers;
-  }, [answers]);
+
+    // Autosave answers to backend
+    if (Object.keys(answers).length > 0) {
+      fetch(`/api/quiz/${quizId}/autosave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userAnswers: answers }),
+      }).catch(err => console.error("Failed to autosave:", err));
+    }
+  }, [answers, quizId]);
 
   useEffect(() => {
     elapsedRef.current = elapsed;
@@ -193,9 +205,13 @@ export default function QuizTaker({
       });
       const data = await res.json();
       if (res.ok) {
-        router.push(`/student/results/${data.resultId}`);
+        if (data.resultId) {
+          router.push(`/student/results/${data.resultId}`);
+        } else {
+          router.push(`/student/quizzes`);
+        }
       } else {
-        alert(data.error || "Submission failed");
+        setErrorPopup({ message: data.error || "Submission failed", code: data.code });
       }
     } finally {
       submitLock.current = false;
@@ -207,6 +223,7 @@ export default function QuizTaker({
     if (!hasTimer || remainingSec === null || remainingSec > 0) return;
     if (autoSubmitFired.current || submitLock.current) return;
     autoSubmitFired.current = true;
+    setIsTimeUp(true);
     void runSubmit();
   }, [hasTimer, remainingSec, runSubmit]);
 
@@ -306,10 +323,10 @@ export default function QuizTaker({
             {hasTimer && remainingSec !== null ? (
               <div
                 className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-1.5 rounded-lg border ${remainingSec <= 60
-                    ? "text-red-700 bg-red-50 border-red-200"
-                    : remainingSec <= 300
-                      ? "text-amber-800 bg-amber-50 border-amber-200"
-                      : "text-purple-700 bg-purple-50 border-purple-100"
+                  ? "text-red-700 bg-red-50 border-red-200"
+                  : remainingSec <= 300
+                    ? "text-amber-800 bg-amber-50 border-amber-200"
+                    : "text-purple-700 bg-purple-50 border-purple-100"
                   }`}
               >
                 <Timer className="w-4 h-4 flex-shrink-0" />
@@ -406,8 +423,26 @@ export default function QuizTaker({
           document.body
         )}
 
+        {isTimeUp && mounted && createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10001] p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full border border-black/5 shadow-2xl text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto animate-pulse">
+                <Timer className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="font-bold text-2xl text-gray-900">Time&apos;s Up!</h3>
+              <p className="text-gray-500 text-sm pb-2">
+                Your time has expired. We are automatically submitting your saved answers...
+              </p>
+              <div className="flex justify-center">
+                <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
         {/* Confirm modal */}
-        {showConfirm && mounted && createPortal(
+        {showConfirm && !isTimeUp && mounted && createPortal(
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl p-8 max-w-sm w-full border border-black/5 shadow-2xl space-y-6">
               <div className="flex items-start gap-4">
@@ -450,6 +485,40 @@ export default function QuizTaker({
                   <span className="loader-container">
                     <span className="loader"></span>
                   </span>
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Error / Info popup centered */}
+        {errorPopup && mounted && createPortal(
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full border border-black/5 shadow-2xl space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-gray-900">Notice</h3>
+                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                    {errorPopup.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end pt-2">
+                <button
+                  onClick={() => {
+                    setErrorPopup(null);
+                    if (errorPopup.code === "ENDED" || errorPopup.code === "TIME_EXPIRED") {
+                      router.push("/student/quizzes");
+                    }
+                  }}
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+                >
+                  OK
                 </button>
               </div>
             </div>

@@ -33,9 +33,15 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 bg-white/60 px-5 py-2.5 rounded-full border border-white/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] backdrop-blur-md cursor-pointer hover:bg-white/80 transition-all duration-300 relative z-10"
       >
-        <span className="text-[14px] font-bold text-[#2C2A28] tracking-wide">
-          {roleName}
-        </span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[14px] font-bold text-[#2C2A28] tracking-wide">
+            {user.name}
+          </span>
+          <div className="w-[3px] h-[3px] rounded-full bg-[#918B80]/50"></div>
+          <span className="text-[13px] font-bold text-[#8C5D3E]">
+            {roleName}
+          </span>
+        </div>
         <div className="w-8 h-8 rounded-full bg-[#2C2A28] text-white flex items-center justify-center shadow-sm">
           <UserCircle2 className="w-5 h-5 text-[#FDFBFA]" strokeWidth={2} />
         </div>

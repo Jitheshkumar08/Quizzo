@@ -61,9 +61,8 @@ export default function ProgressSidebar({
             <button
               key={q.id}
               onClick={() => onJump(i)}
-              className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 ${statusStyles[status]} ${
-                isOnCurrentPage ? "ring-2 ring-purple-500/30 ring-offset-1" : "hover:brightness-95"
-              }`}
+              className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 ${statusStyles[status]} ${isOnCurrentPage ? "ring-2 ring-purple-600/60 ring-offset-1" : "hover:brightness-95"
+                }`}
               title={`Question ${i + 1}: ${status}`}
             >
               {i + 1}
