@@ -1,13 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
-import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw } from "lucide-react";
+import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw, Info, X, AlertTriangle, Copy, Check } from "lucide-react";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 
 type Step = "upload" | "edit" | "publishing";
+
+const PROMPT_TEXT = `I will upload a PDF that contains MCQ questions and an answer key / highlighted correct answers.
+
+Your task:
+Convert ALL questions from the PDF into a valid JSON file.
+
+Output requirement:
+Create and give me a downloadable \`.json\` file. Do not paste the full JSON in chat unless I ask.
+
+Important rules:
+1. Do not miss any question.
+2. Keep all questions in the exact same order as the PDF.
+3. Use the exact question text from the PDF.
+4. Use the exact option text from the PDF.
+5. Each question must have exactly 4 options: A, B, C, and D.
+6. Add the correct answer as only the option letter: "A", "B", "C", or "D".
+7. Do not add explanations inside the JSON.
+8. Do not change the meaning of any question or option.
+9. If the PDF has formatting mistakes, fix only the option labels, but keep the actual text unchanged.
+10. Make sure the final file is valid JSON.
+
+Required JSON structure:
+
+[
+  {
+    "question": "Exact question text",
+    "options": {
+      "A": "Exact option A text",
+      "B": "Exact option B text",
+      "C": "Exact option C text",
+      "D": "Exact option D text"
+    },
+    "correct_answer": "A"
+  }
+]
+
+Token-saving rule:
+Do not print the full JSON in the chat. Only create the JSON file and reply with:
+- total number of questions converted
+- downloadable JSON file link
+- any small note if a formatting issue was fixed
+
+Before creating the file, carefully cross-check:
+- total number of questions
+- question order
+- all options A-D
+- correct answer for every question
+- valid JSON syntax`;
 
 export default function InstructorUploadPage() {
   const router = useRouter();
@@ -34,6 +83,19 @@ export default function InstructorUploadPage() {
   const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(false);
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
   const [timeLimitMinutesVal, setTimeLimitMinutesVal] = useState(30);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  function handleCopyPrompt() {
+    navigator.clipboard.writeText(PROMPT_TEXT);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleGenerate() {
     if (!file || !title.trim()) return;
@@ -278,9 +340,14 @@ export default function InstructorUploadPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div>
-        <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF</h1>
-        <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF</h1>
+          <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
+        </div>
+        <button onClick={() => setShowDisclaimer(true)} className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl font-bold border border-orange-200 hover:bg-orange-100 transition-colors self-start md:self-auto text-sm shadow-sm group">
+          <Info className="w-4 h-4 group-hover:scale-110 transition-transform" /> Upload Guide
+        </button>
       </div>
 
       {/* Step 1: Upload */}
@@ -541,6 +608,97 @@ export default function InstructorUploadPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Disclaimer Modal - Rendered via Portal to guarantee perfect center screen positioning regardless of parent CSS transforms */}
+      {showDisclaimer && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" style={{ isolation: 'isolate' }}>
+          {/* Deep Blur Backdrop */}
+          <div 
+            className="fixed inset-0 bg-[#2C2A28]/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
+            onClick={() => setShowDisclaimer(false)}
+          ></div>
+          
+          {/* Modal Content */}
+          <div className="relative w-full max-w-2xl bg-white/90 backdrop-blur-2xl rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/60 flex flex-col overflow-hidden max-h-[90vh] animate-in fade-in zoom-in-95 duration-300 z-10">
+            
+            {/* Header */}
+            <div className="p-6 sm:p-8 flex items-center justify-between flex-shrink-0 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center shadow-inner">
+                  <Info className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-[20px] font-bold text-[#2C2A28] leading-tight">Upload Guide</h2>
+                  <p className="text-[13px] font-medium text-[#918B80] mt-0.5">Best practices for perfect JSON extraction</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowDisclaimer(false)} 
+                className="w-10 h-10 rounded-full bg-[#2C2A28]/5 hover:bg-[#2C2A28]/10 text-[#2C2A28]/60 hover:text-[#2C2A28] flex items-center justify-center transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="px-6 sm:px-8 pb-8 overflow-y-auto custom-scrollbar flex-1 relative z-10 space-y-6">
+              
+              {/* Warning Card */}
+              <div className="bg-gradient-to-r from-orange-50 to-orange-50/30 border border-orange-200/60 rounded-[20px] p-5 flex gap-4 shadow-[inset_0_1px_1px_rgba(255,255,255,1)]">
+                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-orange-900">Slow PDF Conversion Notice</h3>
+                  <p className="text-orange-800/80 text-[14px] mt-1.5 leading-relaxed font-medium">
+                    Direct PDF conversion may take a while as we are on a free-tier API. For instant, perfectly formatted results, use an advanced AI (like ChatGPT or Claude) to extract the questions first, then upload the <code className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded-md text-[13px] font-bold mx-0.5">.json</code> file here directly!
+                  </p>
+                </div>
+              </div>
+
+              {/* Code Section */}
+              <div className="space-y-3">
+                 <h3 className="font-bold text-[#2C2A28] text-[15px] px-1">Use this exact prompt for flawless results:</h3>
+                 
+                 <div className="relative group rounded-[24px] overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.15)] border border-[#2C2A28] bg-[#1A1816]">
+                   {/* MacOS style terminal header */}
+                   <div className="absolute top-0 left-0 w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between z-10 backdrop-blur-md">
+                     <div className="flex items-center gap-2">
+                       <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                       <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                       <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                     </div>
+                     <button 
+                       onClick={handleCopyPrompt} 
+                       className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[13px] font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                     >
+                       {copied ? <><Check className="w-3.5 h-3.5 text-green-400" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                     </button>
+                   </div>
+                   
+                   {/* Scrollable code block */}
+                   <pre className="text-gray-300 p-6 text-[13px] overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-[320px] overflow-y-auto custom-scrollbar pt-16 selection:bg-[#8b5cf6] selection:text-white">
+                     {PROMPT_TEXT}
+                   </pre>
+                 </div>
+              </div>
+
+            </div>
+            
+            {/* Footer */}
+            <div className="p-6 sm:px-8 sm:py-6 border-t border-black/5 bg-[#FDFBFA]/50 backdrop-blur-xl flex justify-end flex-shrink-0 relative z-10">
+              <button 
+                onClick={() => setShowDisclaimer(false)} 
+                className="px-8 py-3 rounded-full bg-[#2C2A28] text-white text-[15px] font-bold hover:bg-black transition-all hover:-translate-y-0.5 shadow-[0_8px_16px_rgba(44,42,40,0.2)] active:translate-y-0 active:shadow-none"
+              >
+                I Understand
+              </button>
+            </div>
+            
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
