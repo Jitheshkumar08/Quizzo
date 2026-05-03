@@ -32,6 +32,8 @@ export default function InstructorUploadPage() {
   const [requireQuizPassword, setRequireQuizPassword] = useState(false);
   const [quizAccessPassword, setQuizAccessPassword] = useState("");
   const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(false);
+  const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
+  const [timeLimitMinutesVal, setTimeLimitMinutesVal] = useState(30);
 
   async function handleGenerate() {
     if (!file || !title.trim()) return;
@@ -256,6 +258,8 @@ export default function InstructorUploadPage() {
           requireQuizPassword,
           quizAccessPassword: quizAccessPassword.trim() || undefined,
           allowMultipleAttempts,
+          timeLimitEnabled,
+          timeLimitMinutes: timeLimitEnabled ? timeLimitMinutesVal : null,
         }),
       });
 
@@ -507,6 +511,10 @@ export default function InstructorUploadPage() {
             onQuizAccessPassword={setQuizAccessPassword}
             allowMultipleAttempts={allowMultipleAttempts}
             onAllowMultipleAttempts={setAllowMultipleAttempts}
+            timeLimitEnabled={timeLimitEnabled}
+            onTimeLimitEnabled={setTimeLimitEnabled}
+            timeLimitMinutes={timeLimitMinutesVal}
+            onTimeLimitMinutes={setTimeLimitMinutesVal}
           />
 
           {/* Questions */}

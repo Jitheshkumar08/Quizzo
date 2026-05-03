@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
+import { ensureOpenQuizSession, finalizeExpiredOpenSession } from "@/lib/quiz-session";
 
 function quizIdFromPathname(pathname: string): string | undefined {
   const m = pathname.match(/\/api\/quiz\/([^/]+)\/?$/);
@@ -38,6 +40,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
     if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
 
+    await finalizeExpiredOpenSession({
+      quizId,
+      studentId: session.user.id,
+      timeLimitMinutes: quiz.timeLimitMinutes,
+      totalQuestions: quiz.questions.length,
+    });
+
     const block = await getStudentQuizBlock(req, quiz, session);
     if (block) {
       const base = {
@@ -58,8 +67,32 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       return NextResponse.json(base, { status: 403 });
     }
 
+    let timing: Awaited<ReturnType<typeof ensureOpenQuizSession>>;
+    try {
+      timing = await ensureOpenQuizSession({
+        quizId,
+        studentId: session.user.id,
+        timeLimitMinutes: quiz.timeLimitMinutes,
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        timing = await ensureOpenQuizSession({
+          quizId,
+          studentId: session.user.id,
+          timeLimitMinutes: quiz.timeLimitMinutes,
+        });
+      } else {
+        throw e;
+      }
+    }
+
     const { accessPasswordHash: _omit, ...safe } = quiz;
-    return NextResponse.json(safe);
+    return NextResponse.json({
+      ...safe,
+      attemptDeadline: timing.attemptDeadline,
+      serverNow: timing.serverNow,
+      attemptStartedAt: timing.attemptStartedAt,
+    });
   } catch (error) {
     console.error("[GET QUIZ ERROR]", error);
     return NextResponse.json({ error: "Failed to fetch quiz" }, { status: 500 });

@@ -30,6 +30,8 @@ const SaveQuizSchema = z.object({
   requireQuizPassword: z.boolean().optional(),
   quizAccessPassword: z.string().optional(),
   allowMultipleAttempts: z.boolean().optional(),
+  timeLimitEnabled: z.boolean().optional(),
+  timeLimitMinutes: z.number().int().min(1).max(1440).optional().nullable(),
 });
 
 type QuestionInput = z.infer<typeof QuestionSchema>;
@@ -77,7 +79,17 @@ async function buildAccessUpdateData(
     }
   }
 
-  return { scheduledStart, scheduledEnd, accessPasswordHash, allowMultipleAttempts };
+  const timeLimitEnabled = parsed.timeLimitEnabled ?? false;
+  let timeLimitMinutes: number | null = null;
+  if (timeLimitEnabled) {
+    const m = parsed.timeLimitMinutes;
+    if (m == null || m < 1) {
+      throw new Error("Set a time limit (minutes) when the per-attempt timer is enabled");
+    }
+    timeLimitMinutes = m;
+  }
+
+  return { scheduledStart, scheduledEnd, accessPasswordHash, allowMultipleAttempts, timeLimitMinutes };
 }
 
 export async function POST(req: NextRequest) {

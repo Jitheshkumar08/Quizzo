@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
+import { sessionDeadline } from "@/lib/quiz-session";
 
 export const maxDuration = 60;
 
@@ -53,6 +54,32 @@ export async function POST(
       );
     }
 
+    if (quiz.timeLimitMinutes) {
+      const open = await prisma.quizSession.findFirst({
+        where: { quizId, studentId: session.user.id, submittedAt: null },
+      });
+      if (!open) {
+        return NextResponse.json(
+          {
+            error: "No active timed session. Open the quiz again to continue or start a new attempt.",
+            code: "NO_SESSION",
+          },
+          { status: 403 }
+        );
+      }
+      const deadline = sessionDeadline(open.startedAt, quiz.timeLimitMinutes);
+      const graceMs = 120_000;
+      if (Date.now() > deadline.getTime() + graceMs) {
+        return NextResponse.json(
+          {
+            error: "The time limit for this attempt has passed. Refresh the page to see your status.",
+            code: "TIME_EXPIRED",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Server-side scoring
     let score = 0;
     const breakdown = (quiz.questions as unknown as QuestionWithAnswer[]).map((q) => {
@@ -72,16 +99,26 @@ export async function POST(
 
     const total = quiz.questions.length;
 
-    // Save result to DB
-    const result = await prisma.result.create({
-      data: {
-        quizId,
-        studentId: session.user.id,
-        score,
-        total,
-        timeTaken: timeTaken ?? null,
-        userAnswers,
-      },
+    const capSec = quiz.timeLimitMinutes ? quiz.timeLimitMinutes * 60 : undefined;
+    const timeTakenCapped =
+      capSec != null && timeTaken != null ? Math.min(timeTaken, capSec) : (timeTaken ?? null);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const r = await tx.result.create({
+        data: {
+          quizId,
+          studentId: session.user.id,
+          score,
+          total,
+          timeTaken: timeTakenCapped,
+          userAnswers,
+        },
+      });
+      await tx.quizSession.updateMany({
+        where: { quizId, studentId: session.user.id, submittedAt: null },
+        data: { submittedAt: new Date() },
+      });
+      return r;
     });
 
     return NextResponse.json({
