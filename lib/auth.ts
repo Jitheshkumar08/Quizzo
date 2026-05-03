@@ -54,24 +54,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token = { ...token, ...session };
       }
 
-      // 3. Dynamic Database Check (Always keep role & user details fresh!)
-      if (token.id) {
-        try {
-          const freshUser = await prisma.user.findUnique({
-            where: { id: token.id as string },
-            select: { role: true, username: true, fullName: true, email: true },
-          });
-          
-          if (freshUser) {
-            token.role = freshUser.role;
-            token.username = freshUser.username;
-            token.name = freshUser.fullName;
-            token.email = freshUser.email;
-          }
-        } catch (error) {
-          console.error("Failed to fetch fresh session data", error);
-        }
-      }
+      // Removed Dynamic Database Check to prevent massive blocking latency on every page load.
+      // JWTs are designed to be stateless. If a role update is needed, the client should call update().
 
       return token;
     },
