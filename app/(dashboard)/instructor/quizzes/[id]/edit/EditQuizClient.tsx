@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
 import {
   Save, Send, Loader2, Plus, UnfoldVertical, FoldVertical,
   Shuffle, RotateCcw, ArrowLeft, BookOpen, CheckCircle2,
-  Trash2, EyeOff, Eye, BarChart2, X, Clock, Award, User
+  Trash2, EyeOff, Eye, BarChart2, X, Clock, Award, User,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
@@ -51,6 +52,13 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [toggling, setToggling] = useState(false);
   const [isPublished, setIsPublished] = useState(quiz.isPublished);
   const [globalCollapsed, setGlobalCollapsed] = useState(true);
+  const [activeQuestion, setActiveQuestion] = useState(0);
+  const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [expandedMap, setExpandedMap] = useState<Record<number, boolean>>({});
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -478,18 +486,120 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
       {/* Question list */}
       <div className="space-y-3">
         {questions.map((q, i) => (
-          <QuestionEditor
+          <div
             key={i}
-            question={q}
-            index={i}
-            globalCollapsed={globalCollapsed}
-            onChange={handleQuestionChange}
-            onDelete={handleDeleteQuestion}
-          />
+            ref={el => { questionRefs.current[i] = el; }}
+            id={`question-${i}`}
+          >
+            <QuestionEditor
+              question={q}
+              index={i}
+              globalCollapsed={activeQuestion === i ? false : (expandedMap[i] === true ? false : globalCollapsed)}
+              onChange={(idx, updated) => {
+                handleQuestionChange(idx, updated);
+              }}
+              onDelete={handleDeleteQuestion}
+            />
+          </div>
         ))}
       </div>
 
       {/* Add question */}
+      {/* ── Edit Sidebar (same slide-over as ReviewSidebar / QuizTaker) ── */}
+      {mounted && questions.length > 0 && createPortal(
+        <>
+          {/* Toggle tab */}
+          <div
+            className="fixed z-50"
+            style={{
+              right: sidebarOpen ? "260px" : "0px",
+              top: "calc(88px + 96px)",
+              transition: "right 300ms cubic-bezier(0.4,0,0.2,1)",
+              willChange: "right",
+            }}
+          >
+            <button
+              onClick={() => setSidebarOpen((o) => !o)}
+              className="w-8 h-14 bg-white border border-black/10 border-r-0 rounded-l-xl shadow-[-6px_0_12px_rgba(0,0,0,0.04)] flex items-center justify-center text-gray-400 hover:text-purple-600 transition-colors"
+              aria-label={sidebarOpen ? "Hide question panel" : "Show question panel"}
+            >
+              {sidebarOpen ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Sliding panel */}
+          <div
+            className="fixed right-0 top-[88px] bottom-0 z-40 flex items-start py-6"
+            style={{
+              width: "260px",
+              transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
+              transition: "transform 300ms cubic-bezier(0.4,0,0.2,1)",
+              willChange: "transform",
+            }}
+          >
+            <div className="w-[calc(100%-24px)] h-full bg-white/80 backdrop-blur-xl rounded-l-3xl border border-black/5 border-r-0 shadow-[-10px_0_30px_rgba(0,0,0,0.05)] overflow-y-auto px-5 py-6 no-scrollbar relative overflow-hidden">
+              <div className="space-y-4 relative z-10">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Questions</h3>
+
+                <div className="grid grid-cols-5 gap-1.5">
+                  {questions.map((q, i) => {
+                    const filled = !!q.questionText?.trim();
+                    const isActive = activeQuestion === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setActiveQuestion(i);
+                          setExpandedMap(prev => ({ ...prev, [i]: true }));
+                          setGlobalCollapsed(true);
+                          setSidebarOpen(false);
+                          setTimeout(() => {
+                            const el = document.getElementById(`question-${i}`);
+                            const scrollArea = document.getElementById("dashboard-scroll-area");
+                            if (el && scrollArea) {
+                              const scrollAreaRect = scrollArea.getBoundingClientRect();
+                              const elRect = el.getBoundingClientRect();
+                              scrollArea.scrollTo({ top: scrollArea.scrollTop + (elRect.top - scrollAreaRect.top) - 24, behavior: "smooth" });
+                            } else if (el) {
+                              el.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }
+                          }, 50);
+                        }}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 hover:scale-105 ${
+                          isActive
+                            ? "bg-purple-600 text-white border-purple-700 shadow-sm ring-2 ring-purple-400/40 ring-offset-1"
+                            : filled
+                            ? "bg-purple-100 text-purple-700 border-purple-200"
+                            : "bg-gray-100 text-gray-500 border-black/5"
+                        }`}
+                        title={`Question ${i + 1}: ${filled ? "filled" : "empty"}`}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-1.5 pt-4 border-t border-gray-100">
+                  {[
+                    { color: "bg-purple-600", label: `Active` },
+                    { color: "bg-purple-100 border border-purple-200", label: `Filled (${questions.filter(q => q.questionText?.trim()).length})` },
+                    { color: "bg-gray-200", label: `Empty (${questions.filter(q => !q.questionText?.trim()).length})` },
+                  ].map(({ color, label }) => (
+                    <div key={label} className="flex items-center gap-2">
+                      <span className={`w-3 h-3 rounded-sm flex-shrink-0 ${color} shadow-sm`} />
+                      <span className="text-xs text-gray-500 font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
       <button
         onClick={handleAddQuestion}
         className="w-full py-4 rounded-xl border-2 border-dashed border-black/10 text-gray-400 hover:border-purple-400/50 hover:text-purple-600 transition-all flex items-center justify-center gap-2 text-sm font-semibold bg-white/60 hover:bg-white"
