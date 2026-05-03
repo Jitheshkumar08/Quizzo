@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, KeyRound, Repeat } from "lucide-react";
+import { CalendarClock, KeyRound, Repeat, Timer } from "lucide-react";
 
 export interface QuizAccessSettingsProps {
   /** `light` = edit quiz white/gray cards; `glass` = instructor upload (warm gray + glass panel) */
@@ -18,6 +18,10 @@ export interface QuizAccessSettingsProps {
   hasExistingPassword?: boolean;
   allowMultipleAttempts: boolean;
   onAllowMultipleAttempts: (v: boolean) => void;
+  timeLimitEnabled: boolean;
+  onTimeLimitEnabled: (v: boolean) => void;
+  timeLimitMinutes: number;
+  onTimeLimitMinutes: (v: number) => void;
 }
 
 export default function QuizAccessSettings({
@@ -35,6 +39,10 @@ export default function QuizAccessSettings({
   hasExistingPassword,
   allowMultipleAttempts,
   onAllowMultipleAttempts,
+  timeLimitEnabled,
+  onTimeLimitEnabled,
+  timeLimitMinutes,
+  onTimeLimitMinutes,
 }: QuizAccessSettingsProps) {
   const isGlass = variant === "glass";
 
@@ -134,6 +142,40 @@ export default function QuizAccessSettings({
             className={inputClass}
           />
           {hasExistingPassword && <p className={subClass}>Students use this password to open the quiz (not their login).</p>}
+        </div>
+      )}
+
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={timeLimitEnabled}
+          onChange={(e) => onTimeLimitEnabled(e.target.checked)}
+          className="rounded border-[#C4BFB5] text-[#8b5cf6] focus:ring-[#8b5cf6]/40 w-4 h-4"
+        />
+        <span className={`${rowLabel} flex items-center gap-2`}>
+          <Timer className={`w-4 h-4 ${isGlass ? "text-[#8b5cf6]" : "text-gray-500"}`} />
+          Per-attempt time limit
+        </span>
+      </label>
+      {timeLimitEnabled && (
+        <div className="space-y-1 pl-7">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2">
+              <span className={labelUpper}>Minutes</span>
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={timeLimitMinutes}
+                onChange={(e) => onTimeLimitMinutes(Math.max(1, Math.min(1440, Number(e.target.value) || 1)))}
+                className={`${inputClass} w-24`}
+              />
+            </label>
+          </div>
+          <p className={subClass}>
+            Timer starts when a student first opens the quiz. They can leave and resume until time runs out or they submit.
+            If time expires, the attempt is submitted automatically with their current answers.
+          </p>
         </div>
       )}
 

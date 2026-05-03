@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import ProgressSidebar from "./ProgressSidebar";
 import QuestionCard from "./QuestionCard";
-import { Clock, Send, AlertTriangle, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Send, AlertTriangle, ChevronLeft, ChevronRight, Timer } from "lucide-react";
 
 interface Question {
   id: string;
@@ -18,12 +18,21 @@ interface QuizTakerProps {
   quizId: string;
   quizTitle: string;
   questions: Question[];
+  timeLimitMinutes?: number | null;
+  attemptDeadline?: string | null;
+  serverNow?: string | null;
 }
-
 
 const QUESTIONS_PER_PAGE = 5;
 
-export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerProps) {
+export default function QuizTaker({
+  quizId,
+  quizTitle,
+  questions,
+  timeLimitMinutes,
+  attemptDeadline,
+  serverNow,
+}: QuizTakerProps) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
@@ -35,20 +44,62 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [animating, setAnimating] = useState(false);
+  const [remainingSec, setRemainingSec] = useState<number | null>(null);
+  const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
+
+  const answersRef = useRef(answers);
+  const elapsedRef = useRef(0);
+  const remainingSecRef = useRef(0);
+  const serverSkewMs = useRef(0);
+  const submitLock = useRef(false);
+  const autoSubmitFired = useRef(false);
+
+  const hasTimer = !!(timeLimitMinutes && attemptDeadline && serverNow);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    elapsedRef.current = elapsed;
+  }, [elapsed]);
+
+  useEffect(() => {
+    remainingSecRef.current = remainingSec ?? 0;
+  }, [remainingSec]);
+
+  useEffect(() => {
+    if (!serverNow) return;
+    serverSkewMs.current = new Date(serverNow).getTime() - Date.now();
+  }, [serverNow]);
+
+  useEffect(() => {
+    if (!attemptDeadline) {
+      setRemainingSec(null);
+      return;
+    }
+    const tick = () => {
+      const end = new Date(attemptDeadline).getTime();
+      const now = Date.now() + serverSkewMs.current;
+      setRemainingSec(Math.max(0, Math.ceil((end - now) / 1000)));
+    };
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [attemptDeadline]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
   const pageQuestions = questions.slice(
     currentPage * QUESTIONS_PER_PAGE,
     (currentPage + 1) * QUESTIONS_PER_PAGE
   );
-
-  // Timer
-  useEffect(() => {
-    const interval = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Mark current page questions as visited
   useEffect(() => {
@@ -88,16 +139,57 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
 
   function jumpToQuestion(index: number) {
     setCurrentPage(Math.floor(index / QUESTIONS_PER_PAGE));
+    setTargetQuestionIndex(index);
   }
 
-  async function handleSubmit() {
+  function handlePageChange(newPage: number) {
+    setCurrentPage(newPage);
+    setTargetQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+  }
+
+  useEffect(() => {
+    if (targetQuestionIndex !== null) {
+      setTimeout(() => {
+        const el = document.getElementById(`question-${targetQuestionIndex}`);
+        const scrollArea = document.getElementById("dashboard-scroll-area");
+        if (el && scrollArea) {
+          const scrollAreaRect = scrollArea.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+
+          // Scroll so the target question is comfortably near the top of the view
+          scrollArea.scrollTo({
+            top: scrollArea.scrollTop + (elRect.top - scrollAreaRect.top) - 24,
+            behavior: 'smooth'
+          });
+        } else if (el) {
+          // Fallback if the layout changes
+          const y = el.getBoundingClientRect().top + window.scrollY - 120;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 50);
+      setTargetQuestionIndex(null);
+    }
+  }, [targetQuestionIndex, currentPage]);
+
+  const runSubmit = useCallback(async () => {
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
+    setShowConfirm(false);
     try {
+      const timeTakenSec =
+        hasTimer && timeLimitMinutes != null
+          ? Math.min(
+            timeLimitMinutes * 60,
+            Math.max(0, timeLimitMinutes * 60 - remainingSecRef.current)
+          )
+          : elapsedRef.current;
+
       const res = await fetch(`/api/quiz/${quizId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ userAnswers: answers, timeTaken: elapsed }),
+        body: JSON.stringify({ userAnswers: answersRef.current, timeTaken: timeTakenSec }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -106,9 +198,17 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
         alert(data.error || "Submission failed");
       }
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
-  }
+  }, [quizId, hasTimer, timeLimitMinutes, router]);
+
+  useEffect(() => {
+    if (!hasTimer || remainingSec === null || remainingSec > 0) return;
+    if (autoSubmitFired.current || submitLock.current) return;
+    autoSubmitFired.current = true;
+    void runSubmit();
+  }, [hasTimer, remainingSec, runSubmit]);
 
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = questions.length - answeredCount;
@@ -203,10 +303,24 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
                 {answeredCount}/{questions.length} answered
               </p>
             </div>
-            <div className="flex items-center gap-2 text-sm font-mono font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
-              <Clock className="w-4 h-4" />
-              {formatTime(elapsed)}
-            </div>
+            {hasTimer && remainingSec !== null ? (
+              <div
+                className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-1.5 rounded-lg border ${remainingSec <= 60
+                    ? "text-red-700 bg-red-50 border-red-200"
+                    : remainingSec <= 300
+                      ? "text-amber-800 bg-amber-50 border-amber-200"
+                      : "text-purple-700 bg-purple-50 border-purple-100"
+                  }`}
+              >
+                <Timer className="w-4 h-4 flex-shrink-0" />
+                <span>Left {formatTime(remainingSec)}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm font-mono font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
+                <Clock className="w-4 h-4" />
+                {formatTime(elapsed)}
+              </div>
+            )}
             <button
               onClick={() => setShowConfirm(true)}
               className="group relative inline-flex items-center justify-center px-6 py-2 rounded-full text-sm font-bold text-green-600 bg-transparent shadow-[0_0_0_2px_rgba(34,197,94,0.2)] hover:shadow-[0_0_0_5px_rgba(34,197,94,0.3)] hover:text-white active:scale-95 transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden"
@@ -240,7 +354,7 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
           {/* Pagination */}
           <div className="flex items-center justify-between mt-2">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+              onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
               disabled={currentPage === 0}
               className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-black/10 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-colors"
             >
@@ -250,7 +364,7 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
               Page {currentPage + 1} of {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
+              onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
               disabled={currentPage >= totalPages - 1}
               className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-black/10 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-colors"
             >
@@ -324,10 +438,12 @@ export default function QuizTaker({ quizId, quizTitle, questions }: QuizTakerPro
                   onClick={() => {
                     if (animating || submitting) return;
                     setAnimating(true);
-                    setTimeout(handleSubmit, 2100);
+                    setTimeout(() => {
+                      void runSubmit();
+                    }, 2100);
                   }}
                   disabled={submitting}
-                  className={`submit-quiz-btn ${animating ? 'is-animating' : ''}`}
+                  className={`submit-quiz-btn ${animating ? "is-animating" : ""}`}
                 >
                   <span className="txt">Submit</span>
                   <span className="txt2">Submitted!</span>

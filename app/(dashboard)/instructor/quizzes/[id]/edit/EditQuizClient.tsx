@@ -24,6 +24,7 @@ interface EditQuizClientProps {
     scheduledEnd: Date | null;
     allowMultipleAttempts: boolean;
     hasAccessPassword: boolean;
+    timeLimitMinutes: number | null;
   };
 }
 
@@ -65,6 +66,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [requireQuizPassword, setRequireQuizPassword] = useState(quiz.hasAccessPassword);
   const [quizAccessPassword, setQuizAccessPassword] = useState("");
   const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(quiz.allowMultipleAttempts);
+  const [timeLimitEnabled, setTimeLimitEnabled] = useState(!!quiz.timeLimitMinutes);
+  const [timeLimitMinutesVal, setTimeLimitMinutesVal] = useState(quiz.timeLimitMinutes ?? 30);
 
   async function handleSave(publish: boolean) {
     setSaving(true);
@@ -85,6 +88,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           requireQuizPassword,
           quizAccessPassword: quizAccessPassword.trim() || undefined,
           allowMultipleAttempts,
+          timeLimitEnabled,
+          timeLimitMinutes: timeLimitEnabled ? timeLimitMinutesVal : null,
         }),
       });
 
@@ -398,6 +403,10 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         hasExistingPassword={quiz.hasAccessPassword}
         allowMultipleAttempts={allowMultipleAttempts}
         onAllowMultipleAttempts={setAllowMultipleAttempts}
+        timeLimitEnabled={timeLimitEnabled}
+        onTimeLimitEnabled={setTimeLimitEnabled}
+        timeLimitMinutes={timeLimitMinutesVal}
+        onTimeLimitMinutes={setTimeLimitMinutesVal}
       />
 
       {/* Toolbar */}

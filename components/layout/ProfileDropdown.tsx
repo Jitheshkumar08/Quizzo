@@ -29,7 +29,7 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div 
+      <div
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 bg-white/60 px-5 py-2.5 rounded-full border border-white/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] backdrop-blur-md cursor-pointer hover:bg-white/80 transition-all duration-300 relative z-10"
       >
@@ -45,18 +45,18 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
         <div className="absolute right-0 mt-3 w-[300px] bg-[#FDFBFA]/95 backdrop-blur-2xl border border-white max-w-sm shadow-[0_12px_40px_rgba(0,0,0,0.08)] rounded-[24px] p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col px-4 py-3 border-b border-[#E9E4DC]">
             <p className="text-[16px] font-bold text-[#2C2A28] flex items-center gap-2">
-               {user.name}
+              {user.name}
             </p>
             <p className="text-[13px] font-bold text-[#8C5D3E] mt-0.5">
-               @{user.username || user.name?.split(' ')[0]}
+              @{(user as any).username || user.name?.split(' ')[0]}
             </p>
             <p className="text-[14px] font-medium text-[#918B80] truncate mt-0.5">
-               {user.email}
+              {user.email}
             </p>
           </div>
-          
+
           <div className="flex flex-col p-2">
-            <Link 
+            <Link
               href="/settings"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-[14px] text-[15px] font-bold text-[#2C2A28] hover:bg-white/80 hover:shadow-sm transition-all group"
