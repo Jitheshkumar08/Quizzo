@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw, ChevronDown } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw } from "lucide-react";
+import ReviewSidebarClientWrapper from "./ReviewSidebarClientWrapper";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -42,12 +43,23 @@ export default async function ResultDetailPage({ params }: Props) {
   const unattempted = result.quiz.questions.filter((q) => !userAnswers[q.id]).length;
 
   const pctColor = pct >= 75 ? "text-green-400" : pct >= 50 ? "text-yellow-400" : "text-red-400";
-  const pctBg = pct >= 75 ? "from-green-500/20 to-emerald-500/20 border-green-500/20" : pct >= 50 ? "from-yellow-500/20 to-amber-500/20 border-yellow-500/20" : "from-red-500/20 to-rose-500/20 border-red-500/20";
+  const pctBg =
+    pct >= 75
+      ? "from-green-500/20 to-emerald-500/20 border-green-500/20"
+      : pct >= 50
+      ? "from-yellow-500/20 to-amber-500/20 border-yellow-500/20"
+      : "from-red-500/20 to-rose-500/20 border-red-500/20";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
+    // Pass questions + userAnswers as props so the wrapper can render
+    // ReviewQuestionsClient (20/page) separately from the static children.
+    <ReviewSidebarClientWrapper questions={result.quiz.questions} userAnswers={userAnswers}>
+
       {/* Back */}
-      <Link href="/student/results" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <Link
+        href="/student/results"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
         <ArrowLeft className="w-4 h-4" /> Back to Results
       </Link>
 
@@ -84,72 +96,21 @@ export default async function ResultDetailPage({ params }: Props) {
 
       {/* Actions */}
       <div className="flex gap-3">
-        <Link href={`/student/quizzes/${result.quizId}`}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium glass glass-hover">
+        <Link
+          href={`/student/quizzes/${result.quizId}`}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium glass glass-hover"
+        >
           <RotateCcw className="w-4 h-4" /> Retake Quiz
         </Link>
-        <Link href="/student/quizzes"
+        <Link
+          href="/student/quizzes"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}>
+          style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
+        >
           Browse More Quizzes
         </Link>
       </div>
 
-      {/* Per-question review */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-bold">Question Review</h2>
-        {result.quiz.questions.map((q, i) => {
-          const selected = userAnswers[q.id];
-          const isCorrect = selected === q.correctAnswer;
-          const isUnattempted = !selected;
-          const options = q.options as Record<string, string>;
-
-          return (
-            <div key={q.id} className={`glass rounded-2xl p-5 space-y-3 border ${
-              isCorrect ? "border-green-500/20" : isUnattempted ? "border-white/5" : "border-red-500/20"
-            }`}>
-              <div className="flex items-start gap-3">
-                <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                  {i + 1}
-                </span>
-                <p className="font-medium flex-1 leading-relaxed">{q.questionText}</p>
-                {isCorrect ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
-                ) : isUnattempted ? (
-                  <MinusCircle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                )}
-              </div>
-
-              <div className="pl-11 space-y-1.5">
-                {(["A", "B", "C", "D"] as const).map((key) => {
-                  const isCorrectOption = key === q.correctAnswer;
-                  const isSelectedOption = key === selected;
-                  let optionStyle = "bg-white/3 border-white/5 text-muted-foreground";
-                  if (isCorrectOption) optionStyle = "bg-green-500/15 border-green-500/30 text-green-200";
-                  else if (isSelectedOption && !isCorrect) optionStyle = "bg-red-500/15 border-red-500/30 text-red-200";
-
-                  return (
-                    <div key={key} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border ${optionStyle}`}>
-                      <span className="w-5 h-5 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 bg-white/10">{key}</span>
-                      <span>{options[key]}</span>
-                      {isCorrectOption && <span className="ml-auto text-xs text-green-400">✓ Correct</span>}
-                      {isSelectedOption && !isCorrect && <span className="ml-auto text-xs text-red-400">✗ Your answer</span>}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {q.explanation && (
-                <div className="pl-11 p-3 rounded-xl bg-cyan-500/8 border border-cyan-500/15 text-sm text-cyan-200">
-                  <strong className="text-cyan-400">Explanation: </strong>{q.explanation}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    </ReviewSidebarClientWrapper>
   );
 }
