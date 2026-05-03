@@ -54,6 +54,7 @@ model Quiz {
   questions             Question[]
   results               Result[]
   quizSessions          QuizSession[]
+  updatedAt             DateTime @updatedAt @default(now())
 }
 
 model Question {
@@ -82,13 +83,14 @@ model Result {
 
 /// One row per timed attempt in progress (`submittedAt` null) or historical marker after submit/expiry.
 model QuizSession {
-  id          String    @id @default(uuid())
-  quizId      String
-  studentId   String
-  startedAt   DateTime  @default(now())
-  submittedAt DateTime?
-  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id             String    @id @default(uuid())
+  quizId         String
+  studentId      String
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  currentAnswers Json?
+  quiz           Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student        User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([quizId, studentId])
 }
