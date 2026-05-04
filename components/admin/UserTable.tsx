@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings } from "lucide-react";
 
 interface User {
   id: string;
@@ -207,7 +208,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
       {/* ── MOBILE: Card list ─────────────────────────── */}
       <div className="md:hidden grid gap-5">
         {users.map((user) => {
-          const { date, time } = formatDate(user.createdAt);
+          const { date } = formatDate(user.createdAt);
           const isYou = user.id === currentUserId;
           return (
             <div key={user.id} className="glass rounded-[22px] p-5 space-y-4 border border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
@@ -248,6 +249,15 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
                   <p className="font-black text-[#1E1C1A] text-[11px] mt-0.5 leading-tight">{date}</p>
                 </div>
               </div>
+
+              <Link
+                href={`/admin/users/${user.id}`}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-[#D8CFC3] bg-white/70 px-4 py-3 text-[12px] font-black text-[#3D3A37] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+              >
+                <Settings className="w-4 h-4 text-[#8C6D50]" />
+                Open Account
+                <ExternalLink className="w-3.5 h-3.5 text-[#A09890]" />
+              </Link>
             </div>
           );
         })}
@@ -259,7 +269,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
           <table className="w-full">
             <thead>
               <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
-                {["User", "Email", "Role", "Quizzes", "Attempts", "Joined"].map((h) => (
+                {["User", "Email", "Role", "Quizzes", "Attempts", "Joined", "Access"].map((h) => (
                   <th key={h} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
                     {h}
                   </th>
@@ -327,6 +337,18 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
                         <span className="text-[13px] font-bold text-[#3D3A37]">{date}</span>
                         <span className="text-[11px] font-semibold text-[#A09890]">{time}</span>
                       </div>
+                    </td>
+
+                    {/* Access */}
+                    <td className="px-5 py-4">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#D8CFC3] bg-white/70 px-3 py-2 text-[12px] font-black text-[#3D3A37] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md whitespace-nowrap"
+                      >
+                        <Settings className="w-3.5 h-3.5 text-[#8C6D50]" />
+                        Open
+                        <ExternalLink className="w-3.5 h-3.5 text-[#A09890]" />
+                      </Link>
                     </td>
                   </tr>
                 );
