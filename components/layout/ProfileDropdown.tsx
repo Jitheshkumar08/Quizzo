@@ -48,7 +48,7 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-[300px] bg-[#FDFBFA]/95 backdrop-blur-2xl border border-white max-w-sm shadow-[0_12px_40px_rgba(0,0,0,0.08)] rounded-[24px] p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 mt-3 w-[300px] bg-white/60 backdrop-blur-3xl border border-white/80 max-w-sm shadow-[0_12px_40px_rgba(0,0,0,0.08)] rounded-[24px] p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col px-4 py-3 border-b border-[#E9E4DC]">
             <p className="text-[16px] font-bold text-[#2C2A28] flex items-center gap-2">
               {user.name}
