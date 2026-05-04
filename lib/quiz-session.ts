@@ -88,14 +88,12 @@ export async function ensureOpenQuizSession(args: {
 }> {
   const serverNow = new Date();
 
-  if (!args.timeLimitMinutes && !args.scheduledEnd) {
-    return { attemptDeadline: null, serverNow: serverNow.toISOString(), attemptStartedAt: null };
-  }
-
+  // Find an existing open session
   let open = await prisma.quizSession.findFirst({
     where: { quizId: args.quizId, studentId: args.studentId, submittedAt: null },
   });
 
+  // If no open session exists, create one (this establishes the attempt start time)
   if (!open) {
     open = await prisma.quizSession.create({
       data: { quizId: args.quizId, studentId: args.studentId },

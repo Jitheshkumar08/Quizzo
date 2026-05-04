@@ -19,6 +19,7 @@ interface QuizPayload {
   timeLimitMinutes: number | null;
   attemptDeadline: string | null;
   serverNow: string | null;
+  attemptStartedAt: string | null;
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
   savedAnswers?: Record<string, string>;
@@ -56,6 +57,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
           timeLimitMinutes: data.timeLimitMinutes ?? null,
           attemptDeadline: data.attemptDeadline ?? null,
           serverNow: data.serverNow ?? null,
+          attemptStartedAt: data.attemptStartedAt ?? null,
           shuffleQuestions: !!data.shuffleQuestions,
           shuffleOptions: !!data.shuffleOptions,
           savedAnswers: data.savedAnswers || {},
@@ -120,6 +122,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
         timeLimitMinutes={quiz.timeLimitMinutes}
         attemptDeadline={quiz.attemptDeadline}
         serverNow={quiz.serverNow}
+        attemptStartedAt={quiz.attemptStartedAt}
         shuffleQuestions={quiz.shuffleQuestions}
         shuffleOptions={quiz.shuffleOptions}
         savedAnswers={quiz.savedAnswers}

@@ -22,6 +22,7 @@ interface QuizTakerProps {
   timeLimitMinutes?: number | null;
   attemptDeadline?: string | null;
   serverNow?: string | null;
+  attemptStartedAt?: string | null;
   shuffleQuestions?: boolean;
   shuffleOptions?: boolean;
   savedAnswers?: Record<string, string>;
@@ -36,6 +37,7 @@ export default function QuizTaker({
   timeLimitMinutes,
   attemptDeadline,
   serverNow,
+  attemptStartedAt,
   shuffleQuestions,
   shuffleOptions,
   savedAnswers = {},
@@ -45,7 +47,15 @@ export default function QuizTaker({
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [visited, setVisited] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed] = useState(() => {
+    if (attemptStartedAt && serverNow) {
+      const skew = new Date(serverNow).getTime() - Date.now();
+      const serverStart = new Date(attemptStartedAt).getTime();
+      const serverClockNow = Date.now() + skew;
+      return Math.max(0, Math.floor((serverClockNow - serverStart) / 1000));
+    }
+    return 0;
+  });
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [mounted, setMounted] = useState(false);
