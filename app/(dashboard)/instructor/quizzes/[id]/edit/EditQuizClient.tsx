@@ -57,7 +57,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [activeQuestion, setActiveQuestion] = useState(0);
   const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [expandedMap, setExpandedMap] = useState<Record<number, boolean>>({});
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -226,7 +226,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background-color: rgb(153, 27, 27);
+        background-color: rgb(177, 24, 24);
         border: none;
         font-weight: 600;
         display: flex;
@@ -241,6 +241,13 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         gap: 1px;
         flex-shrink: 0;
         scale:0.9;
+      }
+      .eq-delete-slot {
+        width: 120px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
       }
       .eq-delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
       .eq-delete-btn .eq-svgIcon { width: 12px; transition-duration: 0.3s; }
@@ -274,6 +281,123 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         opacity: 1;
         transform: translateY(35px);
       }
+
+      .eq-action-btn {
+        font-family: inherit;
+        padding: 0.5em 1.1em;
+        font-weight: 900;
+        font-size: 14px;
+        border: 3px solid currentColor;
+        border-radius: 0.4em;
+        box-shadow: 0.1em 0.1em;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      .eq-action-btn:hover {
+        transform: translate(-0.05em, -0.05em);
+        box-shadow: 0.15em 0.15em;
+      }
+
+      .eq-action-btn:active {
+        transform: translate(0.05em, 0.05em);
+        box-shadow: 0.05em 0.05em;
+      }
+
+      .eq-action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0.1em 0.1em;
+      }
+
+      .eq-action-btn-primary {
+        color: white;
+        border-color: #5b21b6;
+        background: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+        box-shadow: 0.12em 0.12em 0 #4c1d95, 0 10px 22px rgba(59, 130, 246, 0.28);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .eq-action-btn-primary::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -30%;
+        width: 46%;
+        height: 180%;
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.38), transparent);
+        transform: rotate(20deg);
+        pointer-events: none;
+      }
+
+      .eq-action-btn-primary:hover {
+        box-shadow: 0.16em 0.16em 0 #4c1d95, 0 14px 28px rgba(59, 130, 246, 0.35);
+        filter: saturate(1.06) brightness(1.03);
+      }
+
+      .eq-action-btn-primary:active {
+        box-shadow: 0.06em 0.06em 0 #4c1d95, 0 8px 16px rgba(59, 130, 246, 0.25);
+      }
+
+      .eq-delete-mobile-label {
+        display: none;
+      }
+
+      @media (max-width: 640px) {
+        .eq-delete-slot {
+          width: auto;
+        }
+
+        .eq-delete-btn {
+          width: auto;
+          height: auto;
+          min-height: 44px;
+          border-radius: 0.4em;
+          background-color: rgb(254, 242, 242);
+          color: rgb(185, 28, 28);
+          border: 3px solid currentColor;
+          box-shadow: 0.1em 0.1em;
+          padding: 0.5em 1.1em;
+          display: inline-flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          scale: 1;
+        }
+
+        .eq-delete-btn::before {
+          content: "";
+        }
+
+        .eq-delete-btn .eq-svgIcon {
+          display: none;
+        }
+
+        .eq-delete-mobile-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          font-size: 14px;
+          font-weight: 900;
+          line-height: 1;
+        }
+
+        .eq-delete-btn:not(:disabled):hover {
+          transform: translate(-0.05em, -0.05em);
+          box-shadow: 0.15em 0.15em;
+          background-color: rgb(254, 226, 226);
+          width: auto;
+          border-radius: 0.4em;
+        }
+
+        .eq-delete-btn:not(:disabled):active {
+          transform: translate(0.05em, 0.05em);
+          box-shadow: 0.05em 0.05em;
+        }
+      }
     `}</style>
       {/* Back nav */}
       <Link
@@ -302,50 +426,59 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           </div>
         </div>
         {/* Header action buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
           <button
             onClick={handleViewAnalytics}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+            className="eq-action-btn flex items-center gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100"
           >
             <BarChart2 className="w-4 h-4" /> View Analytics
           </button>
           <button
             onClick={handleTogglePublish}
             disabled={toggling || saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border transition-colors disabled:opacity-50"
+            className={`eq-action-btn flex items-center gap-2 transition-colors ${isPublished
+              ? "text-amber-700 bg-amber-50 hover:bg-amber-100"
+              : "text-green-700 bg-green-50 hover:bg-green-100"
+              }`}
             style={isPublished
-              ? { borderColor: "rgba(234,179,8,0.4)", color: "#a16207", background: "rgb(254,252,232)" }
-              : { borderColor: "rgba(34,197,94,0.3)", color: "#15803d", background: "rgb(240,253,244)" }
+              ? { color: "#a16207", background: "rgb(254,252,232)" }
+              : { color: "#15803d", background: "rgb(240,253,244)" }
             }
           >
             {toggling ? <Loader2 className="w-4 h-4 animate-spin" /> : isPublished ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             {isPublished ? "Unpublish" : "Republish"}
           </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            disabled={deleting}
-            className="eq-delete-btn"
-            title="Delete Quiz"
-          >
-            {deleting ? (
-              <Loader2 className="w-4 h-4 animate-spin text-white" />
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 14" className="eq-svgIcon eq-bin-top">
-                  <g clipPath="url(#eq-clip-top)">
-                    <path fill="black" d="M20.8232 2.62734L19.9948 4.21304C19.8224 4.54309 19.4808 4.75 19.1085 4.75H4.92857C2.20246 4.75 0 6.87266 0 9.5C0 12.1273 2.20246 14.25 4.92857 14.25H64.0714C66.7975 14.25 69 12.1273 69 9.5C69 6.87266 66.7975 4.75 64.0714 4.75H49.8915C49.5192 4.75 49.1776 4.54309 49.0052 4.21305L48.1768 2.62734C47.3451 1.00938 45.6355 0 43.7719 0H25.2281C23.3645 0 21.6549 1.00938 20.8232 2.62734ZM64.0023 20.0648C64.0397 19.4882 63.5822 19 63.0044 19H5.99556C5.4178 19 4.96025 19.4882 4.99766 20.0648L8.19375 69.3203C8.44018 73.0758 11.6746 76 15.5712 76H53.4288C57.3254 76 60.5598 73.0758 60.8062 69.3203L64.0023 20.0648Z" />
-                  </g>
-                  <defs><clipPath id="eq-clip-top"><rect fill="white" height="14" width="69" /></clipPath></defs>
-                </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 57" className="eq-svgIcon eq-bin-bottom">
-                  <g clipPath="url(#eq-clip-bottom)">
-                    <path fill="black" d="M20.8232 -16.3727L19.9948 -14.787C19.8224 -14.4569 19.4808 -14.25 19.1085 -14.25H4.92857C2.20246 -14.25 0 -12.1273 0 -9.5C0 -6.8727 2.20246 -4.75 4.92857 -4.75H64.0714C66.7975 -4.75 69 -6.8727 69 -9.5C69 -12.1273 66.7975 -14.25 64.0714 -14.25H49.8915C49.5192 -14.25 49.1776 -14.4569 49.0052 -14.787L48.1768 -16.3727C47.3451 -17.9906 45.6355 -19 43.7719 -19H25.2281C23.3645 -19 21.6549 -17.9906 20.8232 -16.3727ZM64.0023 1.0648C64.0397 0.4882 63.5822 0 63.0044 0H5.99556C5.4178 0 4.96025 0.4882 4.99766 1.0648L8.19375 50.3203C8.44018 54.0758 11.6746 57 15.5712 57H53.4288C57.3254 57 60.5598 54.0758 60.8062 50.3203L64.0023 1.0648Z" />
-                  </g>
-                  <defs><clipPath id="eq-clip-bottom"><rect fill="white" height="57" width="69" /></clipPath></defs>
-                </svg>
-              </>
-            )}
-          </button>
+          <div className="eq-delete-slot">
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={deleting}
+              className="eq-delete-btn"
+              title="Delete Quiz"
+            >
+              {deleting ? (
+                <Loader2 className="w-4 h-4 animate-spin text-red-600 sm:text-white" />
+              ) : (
+                <>
+                  <span className="eq-delete-mobile-label">
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 14" className="eq-svgIcon eq-bin-top">
+                    <g clipPath="url(#eq-clip-top)">
+                      <path fill="black" d="M20.8232 2.62734L19.9948 4.21304C19.8224 4.54309 19.4808 4.75 19.1085 4.75H4.92857C2.20246 4.75 0 6.87266 0 9.5C0 12.1273 2.20246 14.25 4.92857 14.25H64.0714C66.7975 14.25 69 12.1273 69 9.5C69 6.87266 66.7975 4.75 64.0714 4.75H49.8915C49.5192 4.75 49.1776 4.54309 49.0052 4.21305L48.1768 2.62734C47.3451 1.00938 45.6355 0 43.7719 0H25.2281C23.3645 0 21.6549 1.00938 20.8232 2.62734ZM64.0023 20.0648C64.0397 19.4882 63.5822 19 63.0044 19H5.99556C5.4178 19 4.96025 19.4882 4.99766 20.0648L8.19375 69.3203C8.44018 73.0758 11.6746 76 15.5712 76H53.4288C57.3254 76 60.5598 73.0758 60.8062 69.3203L64.0023 20.0648Z" />
+                    </g>
+                    <defs><clipPath id="eq-clip-top"><rect fill="white" height="14" width="69" /></clipPath></defs>
+                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 57" className="eq-svgIcon eq-bin-bottom">
+                    <g clipPath="url(#eq-clip-bottom)">
+                      <path fill="black" d="M20.8232 -16.3727L19.9948 -14.787C19.8224 -14.4569 19.4808 -14.25 19.1085 -14.25H4.92857C2.20246 -14.25 0 -12.1273 0 -9.5C0 -6.8727 2.20246 -4.75 4.92857 -4.75H64.0714C66.7975 -4.75 69 -6.8727 69 -9.5C69 -12.1273 66.7975 -14.25 64.0714 -14.25H49.8915C49.5192 -14.25 49.1776 -14.4569 49.0052 -14.787L48.1768 -16.3727C47.3451 -17.9906 45.6355 -19 43.7719 -19H25.2281C23.3645 -19 21.6549 -17.9906 20.8232 -16.3727ZM64.0023 1.0648C64.0397 0.4882 63.5822 0 63.0044 0H5.99556C5.4178 0 4.96025 0.4882 4.99766 1.0648L8.19375 50.3203C8.44018 54.0758 11.6746 57 15.5712 57H53.4288C57.3254 57 60.5598 54.0758 60.8062 50.3203L64.0023 1.0648Z" />
+                    </g>
+                    <defs><clipPath id="eq-clip-bottom"><rect fill="white" height="57" width="69" /></clipPath></defs>
+                  </svg>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -431,7 +564,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         <div className="flex-1 hidden xl:block" />
 
         {/* Save actions */}
-        <div className="flex items-center gap-2 flex-wrap xl:flex-shrink-0 justify-end sm:justify-start">
+        <div className="flex items-center gap-2 flex-wrap xl:flex-shrink-0 justify-center sm:justify-start">
           {saved && (
             <span className="flex items-center gap-1.5 text-green-600 text-xs font-semibold">
               <CheckCircle2 className="w-4 h-4" /> Saved!
@@ -440,7 +573,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           <button
             onClick={() => handleSave(false)}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-black/10 bg-white text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm cursor-pointer"
+            className="eq-action-btn flex items-center gap-2 text-gray-700 bg-white hover:bg-gray-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Draft
@@ -448,8 +581,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           <button
             onClick={() => handleSave(true)}
             disabled={saving || questions.length === 0}
-            className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
-            style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
+            className="eq-action-btn eq-action-btn-primary flex items-center gap-2"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {quiz.isPublished ? "Save & Publish" : "Publish Quiz"}
