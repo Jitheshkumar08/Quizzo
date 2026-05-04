@@ -65,13 +65,19 @@ export default async function ResultDetailPage({ params }: Props) {
   });
   const sessionId = sessionRecord?.id || null;
 
-  const pctColor = pct >= 75 ? "text-green-400" : pct >= 50 ? "text-yellow-400" : "text-red-400";
+  const pctColor = pct >= 75 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-rose-500";
+  const pctAccent =
+    pct >= 75
+      ? "from-emerald-400 to-teal-500 border-emerald-200 bg-emerald-50/80"
+      : pct >= 50
+      ? "from-amber-400 to-orange-500 border-amber-200 bg-amber-50/80"
+      : "from-rose-400 to-red-500 border-rose-200 bg-rose-50/80";
   const pctBg =
     pct >= 75
-      ? "from-green-500/20 to-emerald-500/20 border-green-500/20"
+      ? "from-emerald-50 via-white to-teal-50 border-emerald-100"
       : pct >= 50
-      ? "from-yellow-500/20 to-amber-500/20 border-yellow-500/20"
-      : "from-red-500/20 to-rose-500/20 border-red-500/20";
+      ? "from-amber-50 via-white to-orange-50 border-amber-100"
+      : "from-rose-50 via-white to-red-50 border-rose-100";
 
   return (
     // Pass questions + userAnswers as props so the wrapper can render
@@ -93,24 +99,27 @@ export default async function ResultDetailPage({ params }: Props) {
       </Link>
 
       {/* Score card */}
-      <div className={`glass rounded-2xl p-6 sm:p-8 border bg-gradient-to-br ${pctBg} text-center space-y-2`}>
-        <Trophy className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto ${pctColor}`} />
-        <h1 className="text-xl sm:text-2xl font-bold break-words">{result.quiz.title}</h1>
+      <div className={`relative overflow-hidden rounded-[24px] p-5 sm:p-7 border bg-gradient-to-br ${pctBg} text-center space-y-3 shadow-[0_14px_42px_rgba(15,23,42,0.07)]`}>
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
+        <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border bg-gradient-to-br ${pctAccent} shadow-[0_10px_25px_rgba(15,23,42,0.1)]`}>
+          <Trophy className="w-7 h-7 text-white drop-shadow-sm" />
+        </div>
+        <h1 className="text-xl sm:text-2xl font-black text-slate-950 break-words tracking-tight">{result.quiz.title}</h1>
         {isInstructorReview && (
-          <p className="text-sm font-semibold text-muted-foreground">
+          <p className="mx-auto inline-flex max-w-full items-center justify-center rounded-full border border-slate-200 bg-white/80 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-slate-600 shadow-sm">
             Reviewing {result.student.fullName}
             {result.student.username ? ` (@${result.student.username})` : ""}
           </p>
         )}
-        <div className={`text-5xl sm:text-6xl font-black ${pctColor}`}>{pct}%</div>
-        <p className="text-base sm:text-lg text-muted-foreground">
+        <div className={`text-5xl sm:text-6xl font-black ${pctColor} tracking-tight leading-none`}>{pct}%</div>
+        <p className="text-sm sm:text-lg text-slate-600 font-medium">
           {isInstructorReview ? `${result.student.fullName} scored` : "You scored"}{" "}
-          <strong className="text-foreground">{result.score}</strong> out of{" "}
-          <strong className="text-foreground">{result.total}</strong>
+          <strong className="text-slate-950 font-black">{result.score}</strong> out of{" "}
+          <strong className="text-slate-950 font-black">{result.total}</strong>
         </p>
         {result.timeTaken && (
-          <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center justify-center gap-1">
-            <Clock className="w-4 h-4" /> Time taken: {formatTime(result.timeTaken)}
+          <p className="mx-auto inline-flex flex-wrap items-center justify-center gap-2 rounded-full bg-white/75 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-500 ring-1 ring-slate-200/70">
+            <Clock className="w-3.5 h-3.5 text-slate-400" /> Time taken: {formatTime(result.timeTaken)}
           </p>
         )}
       </div>
@@ -118,16 +127,18 @@ export default async function ResultDetailPage({ params }: Props) {
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
-          { icon: CheckCircle2, label: "Correct", value: correct, color: "text-green-400 bg-green-400/10 border-green-400/20" },
-          { icon: XCircle, label: "Incorrect", value: incorrect, color: "text-red-400 bg-red-400/10 border-red-400/20" },
-          { icon: MinusCircle, label: "Unattempted", value: unattempted, color: "text-muted-foreground bg-white/5 border-white/10" },
-        ].map(({ icon: Icon, label, value, color }) => (
-          <div key={label} className={`glass rounded-xl p-4 sm:p-5 text-center border flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-3 sm:gap-0 ${color.split(" ").slice(1).join(" ")}`}>
-            <div className="flex items-center gap-2 sm:gap-0 sm:flex-col sm:mb-1">
-              <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color.split(" ")[0]}`} />
-              <div className="text-sm font-semibold sm:text-xs text-muted-foreground sm:order-last sm:mt-1">{label}</div>
+          { icon: CheckCircle2, label: "Correct", value: correct, color: "text-emerald-500", shell: "from-emerald-50 to-white border-emerald-100", iconBg: "bg-emerald-100 ring-emerald-200" },
+          { icon: XCircle, label: "Incorrect", value: incorrect, color: "text-rose-500", shell: "from-rose-50 to-white border-rose-100", iconBg: "bg-rose-100 ring-rose-200" },
+          { icon: MinusCircle, label: "Unattempted", value: unattempted, color: "text-slate-500", shell: "from-slate-50 to-white border-slate-200", iconBg: "bg-slate-100 ring-slate-200" },
+        ].map(({ icon: Icon, label, value, color, shell, iconBg }) => (
+          <div key={label} className={`rounded-[22px] p-4 sm:p-5 text-center border bg-gradient-to-br ${shell} flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-3 shadow-[0_10px_28px_rgba(15,23,42,0.055)]`}>
+            <div className="flex items-center gap-3 sm:gap-2 sm:flex-col sm:mb-0.5">
+              <span className={`flex h-9 w-9 items-center justify-center rounded-2xl ring-1 ${iconBg}`}>
+                <Icon className={`w-5 h-5 ${color}`} />
+              </span>
+              <div className="text-xs sm:text-sm font-black text-slate-600 sm:order-last sm:mt-1">{label}</div>
             </div>
-            <div className={`text-xl sm:text-2xl font-bold ${color.split(" ")[0]}`}>{value}</div>
+            <div className={`text-2xl sm:text-3xl font-black ${color} tracking-tight`}>{value}</div>
           </div>
         ))}
       </div>

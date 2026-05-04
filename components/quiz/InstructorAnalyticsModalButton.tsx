@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { MouseEvent } from "react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, BarChart2, X, Clock, ClipboardCheck } from "lucide-react";
+import { ArrowUpRight, BarChart2, CalendarDays, ClipboardCheck, Clock, Loader2, Sparkles, Trophy, UserRound, X } from "lucide-react";
 
 interface AnalyticsResult {
     id: string;
@@ -17,7 +17,13 @@ interface AnalyticsResult {
     submittedAt: string;
 }
 
-export default function InstructorAnalyticsModalButton({ quizId }: { quizId: string }) {
+export default function InstructorAnalyticsModalButton({
+    quizId,
+    compact = false,
+}: {
+    quizId: string;
+    compact?: boolean;
+}) {
     const [analyticsOpen, setAnalyticsOpen] = useState(false);
     const [analyticsData, setAnalyticsData] = useState<AnalyticsResult[]>([]);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -66,23 +72,46 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
     return (
         <>
             <style>{`
-                .review-attempt-button {
-                    background: #ffe68b;
-                    color: #111827;
+                .eq-action-btn-outline {
                     font-family: inherit;
-                    padding: 0.55em 1.15em;
+                    padding: 0.5em 1.1em;
                     font-weight: 900;
                     font-size: 14px;
-                    border: 3px solid black;
+                    border: 3px solid currentColor;
                     border-radius: 0.4em;
-                    box-shadow: 0.1em 0.1em black;
+                    box-shadow: 0.1em 0.1em currentColor;
                     cursor: pointer;
                     transition: transform 120ms ease, box-shadow 120ms ease;
                 }
 
+                .eq-action-btn-outline:hover {
+                    transform: translate(-0.05em, -0.05em);
+                    box-shadow: 0.15em 0.15em currentColor;
+                }
+
+                .eq-action-btn-outline:active {
+                    transform: translate(0.05em, 0.05em);
+                    box-shadow: 0.05em 0.05em currentColor;
+                }
+
+                .review-attempt-button {
+                    background: linear-gradient(180deg, #ffe98a 0%, #ffe06e 100%);
+                    color: #0f172a;
+                    font-family: inherit;
+                    padding: 0.62em 1.05em;
+                    font-weight: 900;
+                    font-size: 14px;
+                    border: 3px solid black;
+                    border-radius: 0.7em;
+                    box-shadow: 0.12em 0.12em black, inset 0 1px 0 rgba(255, 255, 255, 0.55);
+                    cursor: pointer;
+                    transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+                }
+
                 .review-attempt-button:hover {
                     transform: translate(-0.05em, -0.05em);
-                    box-shadow: 0.15em 0.15em black;
+                    box-shadow: 0.18em 0.18em black, inset 0 1px 0 rgba(255, 255, 255, 0.65);
+                    filter: saturate(1.08);
                 }
 
                 .review-attempt-button:active {
@@ -92,9 +121,10 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
             `}</style>
             <button
                 onClick={handleViewAnalytics}
-                className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100"
+                className={`eq-action-btn-outline flex items-center justify-center gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100 ${compact ? "h-[34px] text-[12px] px-2.5 py-1" : "h-[42px]"}`}
             >
-                <BarChart2 className="w-4 h-4" /> View Analytics
+                <BarChart2 className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
+                <span className="whitespace-nowrap">{compact ? "Analytics" : "View Analytics"}</span>
             </button>
 
             {mounted && analyticsOpen &&
@@ -189,75 +219,90 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                             </div>
 
                                             <div className="rounded-2xl border border-black/5 overflow-x-auto">
-                                                <table className="w-full text-sm">
+                                                <table className="w-full min-w-[780px] text-sm">
                                                     <thead>
-                                                        <tr className="bg-gray-50 border-b border-gray-100">
-                                                            <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                                Student
+                                                        <tr className="bg-slate-50/90 border-b border-slate-200/80">
+                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <UserRound className="w-4 h-4 text-slate-400" />
+                                                                    Student
+                                                                </span>
                                                             </th>
-                                                            <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                                Score
+                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <Trophy className="w-4 h-4 text-amber-500" />
+                                                                    Score
+                                                                </span>
                                                             </th>
-                                                            <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                                Duration
+                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <Clock className="w-4 h-4 text-blue-500" />
+                                                                    Duration
+                                                                </span>
                                                             </th>
-                                                            <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                                Submitted
+                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <CalendarDays className="w-4 h-4 text-violet-500" />
+                                                                    Submitted
+                                                                </span>
                                                             </th>
-                                                            <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                                Action
+                                                            <th className="text-right px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
+                                                                <span className="inline-flex items-center justify-end gap-2">
+                                                                    <Sparkles className="w-4 h-4 text-slate-400" />
+                                                                    Action
+                                                                </span>
                                                             </th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody className="divide-y divide-gray-50">
+                                                    <tbody className="divide-y divide-slate-100">
                                                         {analyticsData.map((r) => (
-                                                            <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                                                                <td className="px-4 py-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                                                            <span className="text-xs font-bold text-purple-600">
+                                                            <tr key={r.id} className="bg-white hover:bg-slate-50/80 transition-colors">
+                                                                <td className="px-5 py-4">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-100 to-fuchsia-100 ring-1 ring-purple-200/70 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                                            <span className="text-sm font-black text-purple-700">
                                                                                 {r.studentName?.[0]?.toUpperCase() ?? "?"}
                                                                             </span>
                                                                         </div>
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900 text-xs">{r.studentName}</p>
-                                                                            <p className="text-gray-400 text-xs">@{r.username}</p>
+                                                                        <div className="min-w-0">
+                                                                            <p className="font-bold text-slate-950 text-sm truncate">{r.studentName}</p>
+                                                                            <p className="text-slate-400 text-xs font-semibold truncate">@{r.username}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-4 py-3">
+                                                                <td className="px-5 py-4">
                                                                     <div className="flex items-center gap-2">
                                                                         <span
-                                                                            className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.percentage >= 75
-                                                                                ? "bg-green-100 text-green-700"
+                                                                            className={`text-sm font-black px-3 py-1 rounded-full ${r.percentage >= 75
+                                                                                ? "bg-emerald-100 text-emerald-700"
                                                                                 : r.percentage >= 50
-                                                                                    ? "bg-yellow-100 text-yellow-700"
-                                                                                    : "bg-red-100 text-red-700"
+                                                                                    ? "bg-amber-100 text-amber-700"
+                                                                                    : "bg-rose-100 text-rose-700"
                                                                                 }`}
                                                                         >
                                                                             {r.percentage}%
                                                                         </span>
-                                                                        <span className="text-xs text-gray-500">
+                                                                        <span className="text-sm font-medium text-slate-500">
                                                                             {r.score}/{r.totalQuestions}
                                                                         </span>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-4 py-3">
-                                                                    <span className="flex items-center gap-1 text-xs text-gray-600 whitespace-nowrap">
-                                                                        <Clock className="w-3 h-3 flex-shrink-0" />
+                                                                <td className="px-5 py-4">
+                                                                    <span className="flex items-center gap-1.5 text-sm font-medium text-slate-600 whitespace-nowrap">
+                                                                        <Clock className="w-4 h-4 flex-shrink-0 text-slate-400" />
                                                                         {Math.floor((r.timeTaken || 0) / 60)}m {(r.timeTaken || 0) % 60}s
                                                                     </span>
                                                                 </td>
-                                                                <td className="px-4 py-3">
-                                                                    <div className="text-xs text-gray-600 leading-snug">
-                                                                        <span className="font-medium text-gray-800">
+                                                                <td className="px-5 py-4">
+                                                                    <div className="text-sm text-slate-600 leading-snug whitespace-nowrap">
+                                                                        <span className="font-bold text-slate-900">
                                                                             {new Date(r.submittedAt).toLocaleTimeString(undefined, {
                                                                                 hour: "numeric",
                                                                                 minute: "2-digit",
                                                                             })}
                                                                         </span>
-                                                                        <span className="text-gray-400 mx-1">·</span>
-                                                                        <span className="text-gray-500">
+                                                                        <span className="text-slate-300 mx-1.5">·</span>
+                                                                        <span className="text-slate-500 font-medium">
                                                                             {new Date(r.submittedAt).toLocaleDateString(undefined, {
                                                                                 day: "numeric",
                                                                                 month: "short",
@@ -266,7 +311,7 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                                         </span>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-4 py-3 text-right">
+                                                                <td className="px-5 py-4 text-right">
                                                                     <Link
                                                                         href={`/student/results/${r.id}`}
                                                                         prefetch={false}
@@ -274,6 +319,7 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                                     >
                                                                         <ClipboardCheck className="w-4 h-4" />
                                                                         Review
+                                                                        <ArrowUpRight className="w-4 h-4" />
                                                                     </Link>
                                                                 </td>
                                                             </tr>

@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BookOpen, BarChart3, Calendar, Clock } from "lucide-react";
+import AdminQuizStatusDropdown from "@/components/admin/AdminQuizStatusDropdown";
+import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 
 export const metadata = { title: "All Quizzes — MCQify Admin" };
 
@@ -10,20 +12,6 @@ function formatDate(iso: Date | string) {
   const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
   return { date, time };
-}
-
-function StatusPill({ published }: { published: boolean }) {
-  return published ? (
-    <span className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-emerald-200">
-      <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-      Published
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-amber-200">
-      <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-      Draft
-    </span>
-  );
 }
 
 export default async function AdminQuizzesPage() {
@@ -71,7 +59,7 @@ export default async function AdminQuizzesPage() {
                   </div>
                 </div>
                 <div className="flex-shrink-0">
-                  <StatusPill published={quiz.isPublished} />
+                  <AdminQuizStatusDropdown quizId={quiz.id} initialPublished={quiz.isPublished} />
                 </div>
               </div>
 
@@ -104,6 +92,10 @@ export default async function AdminQuizzesPage() {
                 </div>
               </div>
 
+              <div className="pt-1">
+                <InstructorAnalyticsModalButton quizId={quiz.id} />
+              </div>
+
               {/* Dates */}
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#EDE8E0]">
                 <div className="flex items-center gap-1.5">
@@ -131,7 +123,8 @@ export default async function AdminQuizzesPage() {
       {/* ── DESKTOP: Premium Table ─────────────────────── */}
       <div className="hidden md:block">
         <div className="glass rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[1080px]">
             <thead>
               <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
                 {[
@@ -142,6 +135,7 @@ export default async function AdminQuizzesPage() {
                   { label: "Attempts" },
                   { label: "Created At" },
                   { label: "Last Modified" },
+                  { label: "View Analytics" },
                 ].map((h) => (
                   <th key={h.label} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
                     {h.label}
@@ -192,7 +186,7 @@ export default async function AdminQuizzesPage() {
 
                     {/* Status */}
                     <td className="px-5 py-4">
-                      <StatusPill published={quiz.isPublished} />
+                      <AdminQuizStatusDropdown quizId={quiz.id} initialPublished={quiz.isPublished} />
                     </td>
 
                     {/* Questions */}
@@ -224,11 +218,17 @@ export default async function AdminQuizzesPage() {
                         <span className="text-[11px] font-semibold text-[#A09890]">{updated.time}</span>
                       </div>
                     </td>
+
+                    {/* View Analytics */}
+                    <td className="px-5 py-4">
+                      <InstructorAnalyticsModalButton quizId={quiz.id} compact />
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
 
           {/* Footer */}
           <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">
