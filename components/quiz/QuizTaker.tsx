@@ -73,7 +73,12 @@ export default function QuizTaker({
       if (!shuffleQuestions) return questions;
       const seedStr = sessionId ? sessionId : (attemptStartedAt ? attemptStartedAt : "fallback-seed");
       const rand = mulberry32(Math.abs(hashCode(seedStr)));
-      return [...questions].sort(() => rand() - 0.5);
+      const shuffled = [...questions];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
     }
   );
 
@@ -81,7 +86,12 @@ export default function QuizTaker({
     if (shuffleQuestions) {
       const seedStr = sessionId ? sessionId : (attemptStartedAt ? attemptStartedAt : "fallback-seed");
       const rand = mulberry32(Math.abs(hashCode(seedStr)));
-      setDisplayQuestions([...questions].sort(() => rand() - 0.5));
+      const shuffled = [...questions];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      setDisplayQuestions(shuffled);
     } else {
       setDisplayQuestions(questions);
     }

@@ -18,12 +18,16 @@ interface Question {
 interface Props {
   questions: Question[];
   userAnswers: Record<string, string>;
+  shuffleOptions?: boolean;
+  sessionId?: string | null;
   children: React.ReactNode; // static content: back link, score card, stats, actions
 }
 
 export default function ReviewSidebarClientWrapper({
   questions,
   userAnswers,
+  shuffleOptions,
+  sessionId,
   children,
 }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,6 +82,8 @@ export default function ReviewSidebarClientWrapper({
             userAnswers={userAnswers}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
+            shuffleOptions={shuffleOptions}
+            sessionId={sessionId}
           />
         </div>
       </div>

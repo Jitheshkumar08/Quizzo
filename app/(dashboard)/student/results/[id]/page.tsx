@@ -42,6 +42,18 @@ export default async function ResultDetailPage({ params }: Props) {
   const incorrect = result.quiz.questions.filter((q) => userAnswers[q.id] && userAnswers[q.id] !== q.correctAnswer).length;
   const unattempted = result.quiz.questions.filter((q) => !userAnswers[q.id]).length;
 
+  const sessionRecord = await prisma.quizSession.findFirst({
+    where: {
+      quizId: result.quizId,
+      studentId: result.studentId,
+      submittedAt: {
+        gte: new Date(result.createdAt.getTime() - 60000),
+        lte: new Date(result.createdAt.getTime() + 60000),
+      }
+    }
+  });
+  const sessionId = sessionRecord?.id || null;
+
   const pctColor = pct >= 75 ? "text-green-400" : pct >= 50 ? "text-yellow-400" : "text-red-400";
   const pctBg =
     pct >= 75
@@ -53,7 +65,12 @@ export default async function ResultDetailPage({ params }: Props) {
   return (
     // Pass questions + userAnswers as props so the wrapper can render
     // ReviewQuestionsClient (20/page) separately from the static children.
-    <ReviewSidebarClientWrapper questions={result.quiz.questions} userAnswers={userAnswers}>
+    <ReviewSidebarClientWrapper 
+      questions={result.quiz.questions} 
+      userAnswers={userAnswers}
+      shuffleOptions={result.quiz.shuffleOptions}
+      sessionId={sessionId}
+    >
 
       {/* Back */}
       <Link

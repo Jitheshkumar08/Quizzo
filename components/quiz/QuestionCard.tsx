@@ -46,7 +46,12 @@ export default function QuestionCard({
       const baseSeed = sessionId ? sessionId : (attemptStartedAt ? attemptStartedAt : "");
       const seedStr = baseSeed ? baseSeed + question.id : question.id;
       const rand = mulberry32(Math.abs(hashCode(seedStr)));
-      return [...DEFAULT_KEYS].sort(() => rand() - 0.5);
+      const keys = [...DEFAULT_KEYS];
+      for (let i = keys.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [keys[i], keys[j]] = [keys[j], keys[i]];
+      }
+      return keys;
     }
     return [...DEFAULT_KEYS];
   }, [shuffleOptions, attemptStartedAt, sessionId, question.id]);
@@ -85,8 +90,9 @@ export default function QuestionCard({
 
       {/* Options */}
       <div className="space-y-1.5 sm:space-y-2 px-3 sm:px-5 pb-4 sm:pb-5 pl-11 sm:pl-[60px]">
-        {optionKeys.map((key) => {
+        {optionKeys.map((key, i) => {
           const isSelected = selected === key;
+          const displayKey = DEFAULT_KEYS[i];
           const letterStr = key as "A" | "B" | "C" | "D";
           return (
             <button
@@ -101,7 +107,7 @@ export default function QuestionCard({
                 ? "bg-purple-500 border-purple-500 text-white shadow-sm"
                 : "bg-gray-100 border-black/5 text-gray-500"
                 }`}>
-                {key}
+                {displayKey}
               </span>
               <span className="font-medium">{question.options[letterStr]}</span>
             </button>
