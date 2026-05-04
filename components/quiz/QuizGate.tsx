@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Lock, CalendarClock, Ban, ArrowLeft, KeyRound } from "lucide-react";
+import { TypewriterLoader } from "@/components/ui/TypewriterLoader";
 import QuizTaker from "./QuizTaker";
 
 interface Question {
@@ -80,7 +81,11 @@ export default function QuizGate({ quizId }: { quizId: string }) {
   }, [quizId]);
 
   useEffect(() => {
-    load();
+    const timer = window.setTimeout(() => {
+      load();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   async function tryUnlock(e: React.FormEvent) {
@@ -110,9 +115,14 @@ export default function QuizGate({ quizId }: { quizId: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-        <p className="text-sm text-muted-foreground">Loading quiz…</p>
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-7">
+        <TypewriterLoader />
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
+            Loading quiz
+          </p>
+          <span className="h-1 w-20 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 animate-pulse" />
+        </div>
       </div>
     );
   }
