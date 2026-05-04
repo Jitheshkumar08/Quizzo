@@ -49,6 +49,9 @@ model Quiz {
   accessPasswordHash String?
   /// If false, each student may submit only once. If true, unlimited attempts.
   allowMultipleAttempts Boolean @default(false)
+  /// Enable shuffling for student attempts
+  shuffleQuestions      Boolean @default(false)
+  shuffleOptions        Boolean @default(false)
   /// Per-attempt time limit (minutes). Null = no limit. Timer starts on first load after passing gates; session persists across logins.
   timeLimitMinutes      Int?
   questions             Question[]

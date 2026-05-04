@@ -74,7 +74,7 @@ export default function Sidebar({ role, userName }: SidebarProps) {
         {/* Mobile Close Button */}
         <button 
           onClick={() => setIsOpen(false)}
-          className="md:hidden absolute top-7 right-4 p-2 text-[#918B80] hover:bg-black/5 rounded-lg z-50 transition-colors"
+          className="md:hidden absolute top-7 right-4 p-2 text-[#918B80] hover:bg-black/5 rounded-lg z-50 transition-colors cursor-pointer"
           aria-label="Close Menu"
         >
           <X className="w-5 h-5" />
