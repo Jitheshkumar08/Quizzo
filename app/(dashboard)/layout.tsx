@@ -19,19 +19,19 @@ export default async function DashboardLayout({
   const roleName = session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1).toLowerCase();
 
   return (
-    <div className="flex h-screen bg-[#FDFBFA] relative overflow-hidden text-[#1A1A1A]">
+    <div className="flex h-[100dvh] bg-[#FDFBFA] relative overflow-hidden text-[#1A1A1A]">
       {/* Warm Ambient background blobs to match new auth theme */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] rounded-full bg-[#E5D8C5]/30 blur-[120px] mix-blend-multiply border border-white/20" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#D4C5B0]/30 blur-[100px] mix-blend-multiply border border-white/20" />
         <div className="absolute top-[40%] left-[20%] w-[900px] h-[900px] rounded-full bg-[#E8DFD3]/40 blur-[150px] mix-blend-multiply" />
       </div>
-      
+
       {/* Texture Layer */}
       <div className="absolute inset-0 bg-[radial-gradient(#D6C9B3_1px,transparent_1px)] [background-size:24px_24px] opacity-40 z-0 pointer-events-none"></div>
 
       <Sidebar role={session.user.role} userName={session.user.name} />
-      
+
       <main className="flex-1 flex flex-col min-w-0 relative z-10 w-full overflow-hidden">
         {/* Top bar */}
         <header className="h-[88px] bg-[#F4EFE6]/40 backdrop-blur-2xl border-b border-white/80 flex items-center pl-[72px] pr-4 md:px-10 flex-shrink-0 sticky top-0 z-20 shadow-[0_4px_20px_rgba(163,149,126,0.05)]">

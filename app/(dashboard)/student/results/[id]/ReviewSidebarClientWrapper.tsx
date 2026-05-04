@@ -26,7 +26,7 @@ export default function ReviewSidebarClientWrapper({
   userAnswers,
   children,
 }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
 
   // Called by the sidebar when the user clicks a question number bubble.
@@ -65,9 +65,8 @@ export default function ReviewSidebarClientWrapper({
 
       {/* Same pattern as QuizTaker: transition-all on padding-right, no cascade */}
       <div
-        className={`min-h-[calc(100vh-8rem)] transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "lg:pr-[260px] pr-0" : "pr-0"
-        }`}
+        className={`min-h-[calc(100vh-8rem)] transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:pr-[260px] pr-0" : "pr-0"
+          }`}
       >
         <div className="flex-1 min-w-0 flex flex-col gap-6 animate-fade-in-up">
           {/* Score card, stats, actions, back link (server-rendered, never re-renders) */}

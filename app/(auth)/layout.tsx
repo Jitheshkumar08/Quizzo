@@ -8,7 +8,7 @@ export default function AuthLayout({
     return (
         <>
             <Navbar />
-            <div className="min-h-screen pt-20 flex flex-col bg-[#FCF9F2]">
+            <div className="min-h-[100dvh] pt-20 flex flex-col bg-[#FCF9F2]">
                 {children}
             </div>
         </>

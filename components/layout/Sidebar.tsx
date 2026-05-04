@@ -53,7 +53,7 @@ export default function Sidebar({ role, userName }: SidebarProps) {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="md:hidden fixed top-7 left-5 z-[60] p-2 bg-[#F4EFE6]/90 backdrop-blur-md rounded-xl shadow-sm border border-white/80 text-[#2C2A28]"
         aria-label="Open Menu"
@@ -63,95 +63,93 @@ export default function Sidebar({ role, userName }: SidebarProps) {
 
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 bg-[#2C2A28]/20 backdrop-blur-sm z-[70] transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar Content */}
-      <aside className={`w-[260px] flex-shrink-0 h-screen bg-[#F4EFE6]/90 backdrop-blur-2xl border-r border-white/80 flex flex-col fixed md:relative z-[80] md:z-20 shadow-[4px_0_24px_rgba(163,149,126,0.1)] transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+      <aside className={`w-[260px] flex-shrink-0 h-[100dvh] bg-[#F4EFE6]/90 backdrop-blur-2xl border-r border-white/80 flex flex-col fixed md:relative z-[80] md:z-20 shadow-[4px_0_24px_rgba(163,149,126,0.1)] transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
         {/* Mobile Close Button */}
-        <button 
+        <button
           onClick={() => setIsOpen(false)}
           className="md:hidden absolute top-7 right-4 p-2 text-[#918B80] hover:bg-black/5 rounded-lg z-50 transition-colors cursor-pointer"
           aria-label="Close Menu"
         >
           <X className="w-5 h-5" />
         </button>
-      {/* Glossy highlight */}
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/40 to-transparent pointer-events-none"></div>
+        {/* Glossy highlight */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/40 to-transparent pointer-events-none"></div>
 
-      {/* Logo - precisely h-[88px] to align mathematically with the main TopBar */}
-      <div className="h-[88px] flex items-center border-b border-[#E9E4DC]/60 relative z-10 px-6">
-        <Link href="/" className="flex items-center gap-3 group px-1">
-          <div className="w-10 h-10 rounded-full bg-[#2C2A28] text-[#FDFBFA] flex items-center justify-center shadow-[0_4px_12px_rgba(44,42,40,0.2)] transition-transform group-hover:scale-105 duration-300">
-            <span className="font-bold text-xl">M</span>
-          </div>
-          <span className="font-bold text-[22px] tracking-tight text-[#2C2A28]">
-            MCQify
-          </span>
-        </Link>
-      </div>
+        {/* Logo - precisely h-[88px] to align mathematically with the main TopBar */}
+        <div className="h-[88px] flex items-center border-b border-[#E9E4DC]/60 relative z-10 px-6">
+          <Link href="/" className="flex items-center gap-3 group px-1">
+            <div className="w-10 h-10 rounded-full bg-[#2C2A28] text-[#FDFBFA] flex items-center justify-center shadow-[0_4px_12px_rgba(44,42,40,0.2)] transition-transform group-hover:scale-105 duration-300">
+              <span className="font-bold text-xl">M</span>
+            </div>
+            <span className="font-bold text-[22px] tracking-tight text-[#2C2A28]">
+              MCQify
+            </span>
+          </Link>
+        </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto relative z-10 overflow-x-hidden">
-        <div className="mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest">Main Menu</div>
-        {mainNav.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${
-                isActive
-                  ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
-                  : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
-              }`}
-            >
-              <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#8C5D3E]" : "group-hover:text-[#2C2A28]"}`} />
-              <span className="flex-1">{item.label}</span>
-            </Link>
-          );
-        })}
-
-        {adminNav.length > 0 && (
-          <>
-            <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">Admin Controls</div>
-            {adminNav.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${
-                    isActive
-                      ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
-                      : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
+        {/* Nav */}
+        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto relative z-10 overflow-x-hidden">
+          <div className="mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest">Main Menu</div>
+          {mainNav.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
+                    ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
+                    : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
                   }`}
-                >
-                  <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-white" : "group-hover:text-[#2C2A28]"}`} />
-                  <span className="flex-1">{item.label}</span>
-                </Link>
-              );
-            })}
-          </>
-        )}
-      </nav>
+              >
+                <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#8C5D3E]" : "group-hover:text-[#2C2A28]"}`} />
+                <span className="flex-1">{item.label}</span>
+              </Link>
+            );
+          })}
 
-      {/* Logout */}
-      <div className="p-5 border-t border-[#E9E4DC]/60 relative z-10">
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-[15px] font-bold text-[#918B80] hover:text-[#D94F4F] hover:bg-red-50 hover:border-red-100 transition-all duration-300 border border-transparent"
-        >
-          <LogOut className="w-5 h-5" />
-          Sign out
-        </button>
-      </div>
-    </aside>
+          {adminNav.length > 0 && (
+            <>
+              <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">Admin Controls</div>
+              {adminNav.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
+                        ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
+                        : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
+                      }`}
+                  >
+                    <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-white" : "group-hover:text-[#2C2A28]"}`} />
+                    <span className="flex-1">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </>
+          )}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-5 border-t border-[#E9E4DC]/60 relative z-10">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-[15px] font-bold text-[#918B80] hover:text-[#D94F4F] hover:bg-red-50 hover:border-red-100 transition-all duration-300 border border-transparent"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign out
+          </button>
+        </div>
+      </aside>
     </>
   );
 }
