@@ -640,7 +640,7 @@ export default function InstructorUploadPage() {
               </div>
               <button 
                 onClick={() => setShowDisclaimer(false)} 
-                className="w-10 h-10 rounded-full bg-[#2C2A28]/5 hover:bg-[#2C2A28]/10 text-[#2C2A28]/60 hover:text-[#2C2A28] flex items-center justify-center transition-all"
+                className="w-10 h-10 rounded-full bg-[#2C2A28]/5 hover:bg-[#2C2A28]/10 text-[#2C2A28]/60 hover:text-[#2C2A28] flex items-center justify-center transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
