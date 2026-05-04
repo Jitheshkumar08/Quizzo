@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { UserCircle2, Settings, Mail, User as UserIcon } from "lucide-react";
+import { UserCircle2, Settings, Mail, Shield } from "lucide-react";
 import Link from "next/link";
 
 interface ProfileDropdownProps {
@@ -9,6 +9,7 @@ interface ProfileDropdownProps {
     name: string;
     email: string;
     role: string;
+    username?: string;
   };
   roleName: string;
 }
@@ -48,24 +49,40 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-[300px] bg-white/60 backdrop-blur-3xl border border-white/80 max-w-sm shadow-[0_12px_40px_rgba(0,0,0,0.08)] rounded-[24px] p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-col px-4 py-3 border-b border-[#E9E4DC]">
-            <p className="text-[16px] font-bold text-[#2C2A28] flex items-center gap-2">
-              {user.name}
-            </p>
-            <p className="text-[13px] font-bold text-[#8C5D3E] mt-0.5">
-              @{(user as any).username || user.name?.split(' ')[0]}
-            </p>
-            <p className="text-[14px] font-medium text-[#918B80] truncate mt-0.5">
-              {user.email}
-            </p>
+        <div className="absolute right-0 mt-3 w-[340px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[28px] border border-white/95 bg-white/70 p-3 shadow-[0_22px_70px_rgba(44,42,40,0.18),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-1px_0_rgba(255,255,255,0.55)] backdrop-blur-[34px] backdrop-saturate-150 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="absolute inset-0  pointer-events-none bg-white backdrop-blur-[28px] backdrop-saturate-150" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/85 to-transparent pointer-events-none" />
+          <div className="absolute -top-16 -right-12 h-36 w-36 rounded-full bg-white/70 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex items-start gap-3 px-3 py-3 border-b border-[#E9E4DC]/80">
+            <div className="w-12 h-12 rounded-2xl bg-[#E8F6FF] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
+              <span className="text-lg font-bold">{user.name?.charAt(0).toUpperCase()}</span>
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-[16px] font-bold text-[#2C2A28] leading-tight truncate">
+                {user.name}
+              </p>
+              <div className="flex items-center gap-2 min-w-0">
+                <p className="text-[13px] font-semibold text-[#8C5D3E] truncate">
+                  @{user.username || user.name?.split(" ")[0]}
+                </p>
+                <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-700 flex-shrink-0">
+                  <Shield className="w-3 h-3" />
+                  {roleName}
+                </span>
+              </div>
+              <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#918B80] truncate">
+                <Mail className="w-3.5 h-3.5 text-[#B8AFA4] flex-shrink-0" />
+                <span className="truncate">{user.email}</span>
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-col p-2">
+          <div className="relative z-10 flex flex-col p-2">
             <Link
               href="/settings"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-[14px] text-[15px] font-bold text-[#2C2A28] hover:bg-white/80 hover:shadow-sm transition-all group"
+              className="flex items-center gap-3 px-3 py-3 rounded-[16px] text-[15px] font-bold text-[#2C2A28] hover:bg-white hover:shadow-sm transition-all group"
             >
               <Settings className="w-4 h-4 text-[#918B80] group-hover:text-[#2C2A28] transition-colors" />
               Settings
