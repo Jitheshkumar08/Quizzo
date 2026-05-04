@@ -14,7 +14,7 @@ import Link from "next/link";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 import { toDatetimeLocalValue } from "@/lib/datetime-local";
 
-  interface EditQuizClientProps {
+interface EditQuizClientProps {
   quiz: {
     id: string;
     title: string;
@@ -428,12 +428,6 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         {/* Header action buttons */}
         <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
           <button
-            onClick={handleViewAnalytics}
-            className="eq-action-btn flex items-center gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100"
-          >
-            <BarChart2 className="w-4 h-4" /> View Analytics
-          </button>
-          <button
             onClick={handleTogglePublish}
             disabled={toggling || saving}
             className={`eq-action-btn flex items-center gap-2 transition-colors ${isPublished
@@ -671,13 +665,12 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                             }
                           }, 50);
                         }}
-                        className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 hover:scale-105 ${
-                          isActive
+                        className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 hover:scale-105 ${isActive
                             ? "bg-purple-600 text-white border-purple-700 shadow-sm ring-2 ring-purple-400/40 ring-offset-1"
                             : filled
-                            ? "bg-purple-100 text-purple-700 border-purple-200"
-                            : "bg-gray-100 text-gray-500 border-black/5"
-                        }`}
+                              ? "bg-purple-100 text-purple-700 border-purple-200"
+                              : "bg-gray-100 text-gray-500 border-black/5"
+                          }`}
                         title={`Question ${i + 1}: ${filled ? "filled" : "empty"}`}
                       >
                         {i + 1}
@@ -841,8 +834,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                           <p className="text-2xl font-bold text-green-600">
                             {analyticsData.length > 0
                               ? Math.round(
-                                  analyticsData.reduce((s, r) => s + r.percentage, 0) / analyticsData.length
-                                )
+                                analyticsData.reduce((s, r) => s + r.percentage, 0) / analyticsData.length
+                              )
                               : 0}
                             %
                           </p>
@@ -893,13 +886,12 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
                                     <span
-                                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                        r.percentage >= 75
+                                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.percentage >= 75
                                           ? "bg-green-100 text-green-700"
                                           : r.percentage >= 50
                                             ? "bg-yellow-100 text-yellow-700"
                                             : "bg-red-100 text-red-700"
-                                      }`}
+                                        }`}
                                     >
                                       {r.percentage}%
                                     </span>

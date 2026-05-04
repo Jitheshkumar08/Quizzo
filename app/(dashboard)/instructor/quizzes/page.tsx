@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Plus, BookOpen, Eye, EyeOff, FileJson, BarChart3 } from "lucide-react";
+import { Plus, BookOpen, Eye, EyeOff, FileJson, BarChart3, Pencil } from "lucide-react";
+import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 
 export const metadata = { title: "My Quizzes — MCQify" };
 
@@ -28,7 +29,28 @@ export default async function InstructorQuizzesPage() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up pb-10">
+      <style>{`
+      .eq-action-btn-outline {
+        font-family: inherit;
+        padding: 0.5em 1.1em;
+        font-weight: 900;
+        font-size: 14px;
+        border: 3px solid currentColor;
+        border-radius: 0.4em;
+        box-shadow: 0.1em 0.1em currentColor;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+      .eq-action-btn-outline:hover {
+        transform: translate(-0.05em, -0.05em);
+        box-shadow: 0.15em 0.15em currentColor;
+      }
+      .eq-action-btn-outline:active {
+        transform: translate(0.05em, 0.05em);
+        box-shadow: 0.05em 0.05em currentColor;
+      }
+      `}</style>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -83,11 +105,10 @@ export default async function InstructorQuizzesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2 flex-wrap mb-1">
                     <h3 className="font-bold text-base sm:text-lg text-[#2C2A28] leading-tight break-words">{quiz.title}</h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${
-                      quiz.isPublished
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${quiz.isPublished
                         ? "text-green-500 bg-green-500/10 border-green-500/20"
                         : "text-amber-500 bg-amber-500/10 border-amber-500/20"
-                    }`}>
+                      }`}>
                       {quiz.isPublished ? "Published" : "Draft"}
                     </span>
                   </div>
@@ -118,11 +139,14 @@ export default async function InstructorQuizzesPage() {
                     <FileJson className="w-5 h-5" />
                   </a>
                 )}
+
+                <InstructorAnalyticsModalButton quizId={quiz.id} />
+
                 <Link
                   href={`/instructor/quizzes/${quiz.id}/edit`}
-                  className="px-5 py-2.5 rounded-xl text-sm font-bold text-purple-600 bg-purple-50 border border-purple-100 hover:bg-purple-100 transition-all shadow-sm"
+                  className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100"
                 >
-                  Edit
+                  <Pencil className="w-4 h-4" /> Edit
                 </Link>
               </div>
             </div>
