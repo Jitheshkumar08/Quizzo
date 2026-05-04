@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   description:
     "Upload PDFs and let AI generate comprehensive multiple-choice quizzes instantly. Built for instructors, loved by students.",
   keywords: ["quiz", "MCQ", "AI", "education", "pdf", "exam"],
+  icons: {
+    icon: "/brand-icon.svg",
+    shortcut: "/brand-icon.svg",
+    apple: "/brand-icon.svg",
+  },
 };
 
 export default function RootLayout({

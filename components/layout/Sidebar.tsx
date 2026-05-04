@@ -10,7 +10,6 @@ import {
   Users,
   ClipboardList,
   History,
-  LogOut,
   Brain,
   ChevronRight,
   Settings,
@@ -85,9 +84,13 @@ export default function Sidebar({ role, userName }: SidebarProps) {
         {/* Logo - precisely h-[88px] to align mathematically with the main TopBar */}
         <div className="h-[88px] flex items-center border-b border-[#E9E4DC]/60 relative z-10 px-6">
           <Link href="/" className="flex items-center gap-3 group px-1">
-            <div className="w-10 h-10 rounded-full bg-[#2C2A28] text-[#FDFBFA] flex items-center justify-center shadow-[0_4px_12px_rgba(44,42,40,0.2)] transition-transform group-hover:scale-105 duration-300">
-              <span className="font-bold text-xl">M</span>
-            </div>
+            <img
+              src="/brand-icon.svg"
+              alt="MCQify logo"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain transition-transform group-hover:scale-105 duration-300"
+            />
             <span className="font-bold text-[22px] tracking-tight text-[#2C2A28]">
               MCQify
             </span>
@@ -105,8 +108,8 @@ export default function Sidebar({ role, userName }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
-                    ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
-                    : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
+                  ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
+                  : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
                   }`}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#8C5D3E]" : "group-hover:text-[#2C2A28]"}`} />
@@ -126,8 +129,8 @@ export default function Sidebar({ role, userName }: SidebarProps) {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
-                        ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
-                        : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
+                      ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
+                      : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
                       }`}
                   >
                     <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-white" : "group-hover:text-[#2C2A28]"}`} />
@@ -140,15 +143,107 @@ export default function Sidebar({ role, userName }: SidebarProps) {
         </nav>
 
         {/* Logout */}
-        <div className="p-5 border-t border-[#E9E4DC]/60 relative z-10">
+        <div className="p-5 border-t border-[#E9E4DC]/60 relative z-10 flex justify-center md:justify-center">
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-[15px] font-bold text-[#918B80] hover:text-[#D94F4F] hover:bg-red-50 hover:border-red-100 transition-all duration-300 border border-transparent"
+            className="logout-btn"
+            aria-label="Sign out"
           >
-            <LogOut className="w-5 h-5" />
-            Sign out
+            <span className="logout-sign">
+              <svg viewBox="0 0 512 512" aria-hidden="true">
+                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
+              </svg>
+            </span>
+            <span className="logout-text">Logout</span>
           </button>
         </div>
+        <style jsx>{`
+          .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: width 0.3s ease, border-radius 0.3s ease, transform 0.1s ease;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+            background-color: rgb(255, 65, 65);
+          }
+
+          .logout-sign {
+            width: 100%;
+            transition: width 0.3s ease, padding-left 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+
+          .logout-sign svg {
+            width: 17px;
+            display: block;
+          }
+
+          .logout-sign svg path {
+            fill: white;
+          }
+
+          .logout-text {
+            position: absolute;
+            right: 0;
+            width: 0;
+            opacity: 0;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: width 0.3s ease, opacity 0.3s ease, padding-right 0.3s ease;
+            white-space: nowrap;
+            text-align: center;
+          }
+
+          .logout-btn:hover {
+            width: 125px;
+            border-radius: 40px;
+          }
+
+          .logout-btn:hover .logout-sign {
+            width: 30%;
+            padding-left: 20px;
+          }
+
+          .logout-btn:hover .logout-text {
+            opacity: 1;
+            width: 70%;
+            padding-right: 10px;
+          }
+
+          .logout-btn:active {
+            transform: translate(2px, 2px);
+          }
+
+          @media (max-width: 767px) {
+            .logout-btn {
+              width: 100%;
+              border-radius: 40px;
+            }
+
+            .logout-sign {
+              width: 30%;
+              padding-left: 20px;
+            }
+
+            .logout-text {
+              opacity: 1;
+              width: 70%;
+              padding-right: 10px;
+              position: static;
+            }
+          }
+        `}</style>
       </aside>
     </>
   );
