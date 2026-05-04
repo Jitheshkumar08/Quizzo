@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ProgressSidebar from "./ProgressSidebar";
 import QuestionCard from "./QuestionCard";
 import { Clock, Send, AlertTriangle, ChevronLeft, ChevronRight, Timer } from "lucide-react";
+import { SearchLoader } from "@/components/ui/SearchLoader";
 
 interface Question {
   id: string;
@@ -21,6 +22,8 @@ interface QuizTakerProps {
   timeLimitMinutes?: number | null;
   attemptDeadline?: string | null;
   serverNow?: string | null;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
   savedAnswers?: Record<string, string>;
 }
 
@@ -33,6 +36,8 @@ export default function QuizTaker({
   timeLimitMinutes,
   attemptDeadline,
   serverNow,
+  shuffleQuestions,
+  shuffleOptions,
   savedAnswers = {},
 }: QuizTakerProps) {
   const router = useRouter();
@@ -48,6 +53,17 @@ export default function QuizTaker({
   const [animating, setAnimating] = useState(false);
   const [remainingSec, setRemainingSec] = useState<number | null>(null); const [isTimeUp, setIsTimeUp] = useState(false); const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
   const [errorPopup, setErrorPopup] = useState<{ message: string, code?: string } | null>(null);
+  const [displayQuestions, setDisplayQuestions] = useState<Question[]>(questions);
+
+  useEffect(() => {
+    if (shuffleQuestions) {
+      // Deterministically seed or just purely sort. 
+      // Safe to just sort on client mount.
+      setDisplayQuestions([...questions].sort(() => Math.random() - 0.5));
+    } else {
+      setDisplayQuestions(questions);
+    }
+  }, [shuffleQuestions, questions]);
 
   const answersRef = useRef(answers);
   const elapsedRef = useRef(0);
@@ -107,8 +123,8 @@ export default function QuizTaker({
     return () => clearInterval(interval);
   }, []);
 
-  const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
-  const pageQuestions = questions.slice(
+  const totalPages = Math.ceil(displayQuestions.length / QUESTIONS_PER_PAGE);
+  const pageQuestions = displayQuestions.slice(
     currentPage * QUESTIONS_PER_PAGE,
     (currentPage + 1) * QUESTIONS_PER_PAGE
   );
@@ -362,6 +378,7 @@ export default function QuizTaker({
                   index={globalIndex}
                   selected={answers[q.id] ?? null}
                   isFlagged={flagged.has(q.id)}
+                  shuffleOptions={shuffleOptions}
                   onAnswer={(key) => handleAnswer(q.id, key)}
                   onClear={() => handleClear(q.id)}
                   onFlag={() => toggleFlag(q.id)}
@@ -524,6 +541,16 @@ export default function QuizTaker({
                 </button>
               </div>
             </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Global Loading Overlay while submitting API call happens */}
+        {submitting && !isTimeUp && mounted && createPortal(
+          <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-[99999] animate-in fade-in duration-200">
+            <SearchLoader />
+            <h2 className="mt-8 text-xl font-bold text-gray-800 animate-pulse">Submitting your answers...</h2>
+            <p className="text-gray-500 mt-2">Please do not close this page.</p>
           </div>,
           document.body
         )}
