@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { MouseEvent } from "react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpRight, BarChart2, CalendarDays, ClipboardCheck, Clock, Loader2, Sparkles, Trophy, UserRound, X } from "lucide-react";
+import { ArrowUpRight, BarChart2, CalendarDays, ClipboardCheck, Clock, Sparkles, Trophy, UserRound, X } from "lucide-react";
 
 interface AnalyticsResult {
     id: string;
@@ -118,6 +118,24 @@ export default function InstructorAnalyticsModalButton({
                     transform: translate(0.05em, 0.05em);
                     box-shadow: 0.05em 0.05em black;
                 }
+
+                .analytics-skeleton {
+                    position: relative;
+                    overflow: hidden;
+                    background: linear-gradient(90deg, #f1f5f9 0%, #ffffff 45%, #f1f5f9 100%);
+                    background-size: 220% 100%;
+                    animation: analytics-skeleton-shimmer 1.35s ease-in-out infinite;
+                }
+
+                @keyframes analytics-skeleton-shimmer {
+                    0% {
+                        background-position: 120% 0;
+                    }
+
+                    100% {
+                        background-position: -120% 0;
+                    }
+                }
             `}</style>
             <button
                 onClick={handleViewAnalytics}
@@ -176,9 +194,7 @@ export default function InstructorAnalyticsModalButton({
                                 {/* Modal body */}
                                 <div className="flex-1 overflow-y-auto p-6 min-h-0">
                                     {analyticsLoading ? (
-                                        <div className="flex items-center justify-center py-16">
-                                            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                                        </div>
+                                        <AnalyticsSkeleton />
                                     ) : analyticsError ? (
                                         <div className="text-center py-16 px-4">
                                             <p className="text-red-600 font-medium text-sm">{analyticsError}</p>
@@ -336,5 +352,50 @@ export default function InstructorAnalyticsModalButton({
                     document.body
                 )}
         </>
+    );
+}
+
+function AnalyticsSkeleton() {
+    return (
+        <div className="space-y-6" aria-label="Loading quiz analytics">
+            <div className="grid grid-cols-3 gap-3">
+                {[0, 1, 2].map((item) => (
+                    <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-center">
+                        <div className="analytics-skeleton mx-auto h-7 w-12 rounded-full" />
+                        <div className="analytics-skeleton mx-auto mt-3 h-3 w-24 rounded-full" />
+                    </div>
+                ))}
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="grid grid-cols-[1.4fr_0.7fr_0.8fr_1.1fr_0.8fr] gap-4 bg-slate-50/90 px-5 py-4 border-b border-slate-200">
+                    {[0, 1, 2, 3, 4].map((item) => (
+                        <div key={item} className="analytics-skeleton h-4 rounded-full" />
+                    ))}
+                </div>
+
+                {[0, 1, 2].map((row) => (
+                    <div
+                        key={row}
+                        className="grid grid-cols-[1.4fr_0.7fr_0.8fr_1.1fr_0.8fr] gap-4 items-center px-5 py-4 border-b border-slate-100 last:border-b-0 bg-white"
+                    >
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="analytics-skeleton h-10 w-10 rounded-2xl flex-shrink-0" />
+                            <div className="space-y-2 flex-1">
+                                <div className="analytics-skeleton h-4 w-28 rounded-full" />
+                                <div className="analytics-skeleton h-3 w-20 rounded-full" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="analytics-skeleton h-7 w-14 rounded-full" />
+                            <div className="analytics-skeleton h-4 w-10 rounded-full" />
+                        </div>
+                        <div className="analytics-skeleton h-4 w-16 rounded-full" />
+                        <div className="analytics-skeleton h-4 w-32 rounded-full" />
+                        <div className="analytics-skeleton ml-auto h-11 w-28 rounded-xl" />
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }
