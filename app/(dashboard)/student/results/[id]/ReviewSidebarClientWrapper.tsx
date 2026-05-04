@@ -20,6 +20,7 @@ interface Props {
   userAnswers: Record<string, string>;
   shuffleOptions?: boolean;
   sessionId?: string | null;
+  answerLabel?: string;
   children: React.ReactNode; // static content: back link, score card, stats, actions
 }
 
@@ -28,6 +29,7 @@ export default function ReviewSidebarClientWrapper({
   userAnswers,
   shuffleOptions,
   sessionId,
+  answerLabel,
   children,
 }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -84,6 +86,7 @@ export default function ReviewSidebarClientWrapper({
             onPageChange={setCurrentPage}
             shuffleOptions={shuffleOptions}
             sessionId={sessionId}
+            answerLabel={answerLabel}
           />
         </div>
       </div>

@@ -38,7 +38,7 @@ export async function GET(
     const results = await prisma.result.findMany({
       where: { quizId },
       include: {
-        student: { select: { fullName: true, email: true } },
+        student: { select: { fullName: true, username: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -46,7 +46,7 @@ export async function GET(
     const formatted = results.map((r) => ({
       id: r.id,
       studentName: r.student?.fullName ?? "Unknown",
-      email: r.student?.email ?? "",
+      username: r.student?.username ?? "",
       score: r.score,
       totalQuestions: r.total,
       percentage: r.total > 0 ? Math.round((r.score / r.total) * 100) : 0,

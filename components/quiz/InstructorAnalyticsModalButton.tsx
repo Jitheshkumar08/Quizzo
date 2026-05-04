@@ -1,21 +1,38 @@
 "use client";
 
+import Link from "next/link";
+import type { MouseEvent } from "react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, BarChart2, X, Clock } from "lucide-react";
+import { Loader2, BarChart2, X, Clock, ClipboardCheck } from "lucide-react";
+
+interface AnalyticsResult {
+    id: string;
+    studentName: string;
+    username: string;
+    score: number;
+    totalQuestions: number;
+    percentage: number;
+    timeTaken: number | null;
+    submittedAt: string;
+}
 
 export default function InstructorAnalyticsModalButton({ quizId }: { quizId: string }) {
     const [analyticsOpen, setAnalyticsOpen] = useState(false);
-    const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+    const [analyticsData, setAnalyticsData] = useState<AnalyticsResult[]>([]);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
     const [analyticsError, setAnalyticsError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        const timer = window.setTimeout(() => {
+            setMounted(true);
+        }, 0);
+
+        return () => window.clearTimeout(timer);
     }, []);
 
-    async function handleViewAnalytics(e?: React.MouseEvent) {
+    async function handleViewAnalytics(e?: MouseEvent) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -48,6 +65,31 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
 
     return (
         <>
+            <style>{`
+                .review-attempt-button {
+                    background: #ffe68b;
+                    color: #111827;
+                    font-family: inherit;
+                    padding: 0.55em 1.15em;
+                    font-weight: 900;
+                    font-size: 14px;
+                    border: 3px solid black;
+                    border-radius: 0.4em;
+                    box-shadow: 0.1em 0.1em black;
+                    cursor: pointer;
+                    transition: transform 120ms ease, box-shadow 120ms ease;
+                }
+
+                .review-attempt-button:hover {
+                    transform: translate(-0.05em, -0.05em);
+                    box-shadow: 0.15em 0.15em black;
+                }
+
+                .review-attempt-button:active {
+                    transform: translate(0.05em, 0.05em);
+                    box-shadow: 0.05em 0.05em black;
+                }
+            `}</style>
             <button
                 onClick={handleViewAnalytics}
                 className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100"
@@ -71,7 +113,7 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                             }}
                         >
                             <div
-                                className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[min(85vh,100dvh-2rem)] flex flex-col border border-black/5 my-auto"
+                                className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[min(85vh,100dvh-2rem)] flex flex-col border border-black/5 my-auto"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {/* Modal header */}
@@ -146,7 +188,7 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                 </div>
                                             </div>
 
-                                            <div className="rounded-2xl border border-black/5 overflow-hidden">
+                                            <div className="rounded-2xl border border-black/5 overflow-x-auto">
                                                 <table className="w-full text-sm">
                                                     <thead>
                                                         <tr className="bg-gray-50 border-b border-gray-100">
@@ -162,6 +204,9 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                             <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                                                 Submitted
                                                             </th>
+                                                            <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                                Action
+                                                            </th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-gray-50">
@@ -176,7 +221,7 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                                         </div>
                                                                         <div>
                                                                             <p className="font-semibold text-gray-900 text-xs">{r.studentName}</p>
-                                                                            <p className="text-gray-400 text-xs">{r.email}</p>
+                                                                            <p className="text-gray-400 text-xs">@{r.username}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -184,10 +229,10 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                                     <div className="flex items-center gap-2">
                                                                         <span
                                                                             className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.percentage >= 75
-                                                                                    ? "bg-green-100 text-green-700"
-                                                                                    : r.percentage >= 50
-                                                                                        ? "bg-yellow-100 text-yellow-700"
-                                                                                        : "bg-red-100 text-red-700"
+                                                                                ? "bg-green-100 text-green-700"
+                                                                                : r.percentage >= 50
+                                                                                    ? "bg-yellow-100 text-yellow-700"
+                                                                                    : "bg-red-100 text-red-700"
                                                                                 }`}
                                                                         >
                                                                             {r.percentage}%
@@ -220,6 +265,16 @@ export default function InstructorAnalyticsModalButton({ quizId }: { quizId: str
                                                                             })}
                                                                         </span>
                                                                     </div>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-right">
+                                                                    <Link
+                                                                        href={`/student/results/${r.id}`}
+                                                                        prefetch={false}
+                                                                        className="review-attempt-button inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+                                                                    >
+                                                                        <ClipboardCheck className="w-4 h-4" />
+                                                                        Review
+                                                                    </Link>
                                                                 </td>
                                                             </tr>
                                                         ))}

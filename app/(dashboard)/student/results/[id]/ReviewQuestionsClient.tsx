@@ -24,6 +24,7 @@ interface Props {
   onPageChange: (page: number) => void;
   shuffleOptions?: boolean;
   sessionId?: string | null;
+  answerLabel?: string;
 }
 
 export default function ReviewQuestionsClient({
@@ -33,6 +34,7 @@ export default function ReviewQuestionsClient({
   onPageChange,
   shuffleOptions,
   sessionId,
+  answerLabel = "Your answer",
 }: Props) {
   const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
   const pageQuestions = questions.slice(
@@ -96,7 +98,7 @@ export default function ReviewQuestionsClient({
             {/* Options */}
             <div className="pl-9 sm:pl-11 space-y-1.5">
               {(() => {
-                let optionKeys = [...DEFAULT_KEYS];
+                const optionKeys = [...DEFAULT_KEYS];
                 if (shuffleOptions) {
                   const baseSeed = sessionId ? sessionId : "";
                   const seedStr = baseSeed ? baseSeed + q.id : String(q.id);
@@ -140,7 +142,7 @@ export default function ReviewQuestionsClient({
                       )}
                       {isSelectedOption && !isCorrect && (
                         <span className="ml-auto text-xs text-red-700 font-bold">
-                          ✗ Your answer
+                          ✗ {answerLabel}
                         </span>
                       )}
                     </div>

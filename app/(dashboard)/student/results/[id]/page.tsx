@@ -29,11 +29,22 @@ export default async function ResultDetailPage({ params }: Props) {
           questions: { orderBy: { order: "asc" } },
         },
       },
-      student: { select: { fullName: true } },
+      student: { select: { fullName: true, username: true } },
     },
   });
 
-  if (!result || result.studentId !== session.user.id) redirect("/student/results");
+  if (!result) redirect("/student/results");
+
+  const isStudentOwner = result.studentId === session.user.id;
+  const canReviewAsQuizOwner =
+    (session.user.role === "INSTRUCTOR" && result.quiz.createdById === session.user.id) ||
+    session.user.role === "ADMIN";
+
+  if (!isStudentOwner && !canReviewAsQuizOwner) {
+    redirect(session.user.role === "INSTRUCTOR" || session.user.role === "ADMIN" ? "/instructor/quizzes" : "/student/results");
+  }
+
+  const isInstructorReview = !isStudentOwner && canReviewAsQuizOwner;
 
   const pct = Math.round((result.score / result.total) * 100);
   const userAnswers = result.userAnswers as Record<string, string>;
@@ -70,23 +81,31 @@ export default async function ResultDetailPage({ params }: Props) {
       userAnswers={userAnswers}
       shuffleOptions={result.quiz.shuffleOptions}
       sessionId={sessionId}
+      answerLabel={isInstructorReview ? "Student answer" : "Your answer"}
     >
 
       {/* Back */}
       <Link
-        href="/student/results"
+        href={isInstructorReview ? "/instructor/quizzes" : "/student/results"}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Results
+        <ArrowLeft className="w-4 h-4" /> {isInstructorReview ? "Back to Quizzes" : "Back to Results"}
       </Link>
 
       {/* Score card */}
       <div className={`glass rounded-2xl p-6 sm:p-8 border bg-gradient-to-br ${pctBg} text-center space-y-2`}>
         <Trophy className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto ${pctColor}`} />
         <h1 className="text-xl sm:text-2xl font-bold break-words">{result.quiz.title}</h1>
+        {isInstructorReview && (
+          <p className="text-sm font-semibold text-muted-foreground">
+            Reviewing {result.student.fullName}
+            {result.student.username ? ` (@${result.student.username})` : ""}
+          </p>
+        )}
         <div className={`text-5xl sm:text-6xl font-black ${pctColor}`}>{pct}%</div>
         <p className="text-base sm:text-lg text-muted-foreground">
-          You scored <strong className="text-foreground">{result.score}</strong> out of{" "}
+          {isInstructorReview ? `${result.student.fullName} scored` : "You scored"}{" "}
+          <strong className="text-foreground">{result.score}</strong> out of{" "}
           <strong className="text-foreground">{result.total}</strong>
         </p>
         {result.timeTaken && (
@@ -114,21 +133,23 @@ export default async function ResultDetailPage({ params }: Props) {
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Link
-          href={`/student/quizzes/${result.quizId}`}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-medium glass glass-hover w-full sm:w-auto"
-        >
-          <RotateCcw className="w-4 h-4" /> Retake Quiz
-        </Link>
-        <Link
-          href="/student/quizzes"
-          className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-semibold text-white w-full sm:w-auto"
-          style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
-        >
-          Browse More Quizzes
-        </Link>
-      </div>
+      {!isInstructorReview && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            href={`/student/quizzes/${result.quizId}`}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-medium glass glass-hover w-full sm:w-auto"
+          >
+            <RotateCcw className="w-4 h-4" /> Retake Quiz
+          </Link>
+          <Link
+            href="/student/quizzes"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-semibold text-white w-full sm:w-auto"
+            style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
+          >
+            Browse More Quizzes
+          </Link>
+        </div>
+      )}
 
     </ReviewSidebarClientWrapper>
   );
