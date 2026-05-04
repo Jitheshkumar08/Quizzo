@@ -318,8 +318,19 @@ export default function InstructorUploadPage() {
           <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF</h1>
           <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
         </div>
-        <button onClick={() => setShowDisclaimer(true)} className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl font-bold border border-orange-200 hover:bg-orange-100 transition-colors self-start md:self-auto text-sm shadow-sm group">
-          <Info className="w-4 h-4 group-hover:scale-110 transition-transform" /> Upload Guide
+        <button onClick={() => setShowDisclaimer(true)} className="relative inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 self-start md:self-auto group mt-2 md:mt-0 rounded-xl">
+          {/* Beautiful spreading background glow */}
+          <div className="absolute -inset-[3px] rounded-xl bg-gradient-to-r from-[#a3f7bf] via-[#fce7a1] via-[#fcb6b6] to-[#c19dfa] opacity-70 blur-[8px] group-hover:opacity-100 group-hover:blur-[12px] transition-all duration-500" />
+          
+          {/* Solid crisp colorful border */}
+          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-[#a3f7bf] via-[#fce7a1] via-[#fcb6b6] to-[#c19dfa] opacity-100 transition-all duration-500" />
+          
+          {/* Main dark inner surface */}
+          <div className="absolute inset-0 rounded-[10px] bg-[#323232] group-hover:bg-[#3f3f3f] transition-colors duration-300" />
+          
+          {/* Content */}
+          <Info className="w-4 h-4 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+          <span className="relative z-10 tracking-wide">Upload Guide</span>
         </button>
       </div>
 
