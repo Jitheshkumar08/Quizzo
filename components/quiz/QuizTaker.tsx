@@ -53,16 +53,20 @@ export default function QuizTaker({
   const [animating, setAnimating] = useState(false);
   const [remainingSec, setRemainingSec] = useState<number | null>(null); const [isTimeUp, setIsTimeUp] = useState(false); const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
   const [errorPopup, setErrorPopup] = useState<{ message: string, code?: string } | null>(null);
-  const [displayQuestions, setDisplayQuestions] = useState<Question[]>(questions);
+  const [displayQuestions, setDisplayQuestions] = useState<Question[]>(
+    () => (shuffleQuestions ? [...questions].sort(() => Math.random() - 0.5) : questions)
+  );
 
   useEffect(() => {
     if (shuffleQuestions) {
-      // Deterministically seed or just purely sort. 
-      // Safe to just sort on client mount.
       setDisplayQuestions([...questions].sort(() => Math.random() - 0.5));
     } else {
       setDisplayQuestions(questions);
     }
+    // Prevent stale "visited" ids from pre-shuffle order creating random skipped markers.
+    setVisited(new Set());
+    setCurrentPage(0);
+    setTargetQuestionIndex(null);
   }, [shuffleQuestions, questions]);
 
   const answersRef = useRef(answers);
@@ -129,14 +133,14 @@ export default function QuizTaker({
     (currentPage + 1) * QUESTIONS_PER_PAGE
   );
 
-  // Mark current page questions as visited
-  useEffect(() => {
+  function markVisited(questionId: string) {
     setVisited((prev) => {
+      if (prev.has(questionId)) return prev;
       const next = new Set(prev);
-      pageQuestions.forEach((q) => next.add(q.id));
+      next.add(questionId);
       return next;
     });
-  }, [currentPage]);
+  }
 
   function formatTime(secs: number) {
     const m = Math.floor(secs / 60).toString().padStart(2, "0");
@@ -145,10 +149,12 @@ export default function QuizTaker({
   }
 
   function handleAnswer(questionId: string, key: string) {
+    markVisited(questionId);
     setAnswers((prev) => ({ ...prev, [questionId]: key }));
   }
 
   function handleClear(questionId: string) {
+    markVisited(questionId);
     setAnswers((prev) => {
       const next = { ...prev };
       delete next[questionId];
@@ -157,6 +163,7 @@ export default function QuizTaker({
   }
 
   function toggleFlag(questionId: string) {
+    markVisited(questionId);
     setFlagged((prev) => {
       const next = new Set(prev);
       if (next.has(questionId)) next.delete(questionId);
@@ -379,6 +386,7 @@ export default function QuizTaker({
                   selected={answers[q.id] ?? null}
                   isFlagged={flagged.has(q.id)}
                   shuffleOptions={shuffleOptions}
+                  onViewed={() => markVisited(q.id)}
                   onAnswer={(key) => handleAnswer(q.id, key)}
                   onClear={() => handleClear(q.id)}
                   onFlag={() => toggleFlag(q.id)}
@@ -429,7 +437,7 @@ export default function QuizTaker({
             {/* Sidebar Content Container */}
             <div className="w-full h-full bg-white rounded-l-3xl border border-r-0 border-black/10 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] p-4 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-black/20">
               <ProgressSidebar
-                questions={questions}
+                questions={displayQuestions}
                 answers={answers}
                 flagged={flagged}
                 visited={visited}

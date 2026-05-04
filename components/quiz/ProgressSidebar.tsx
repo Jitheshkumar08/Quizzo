@@ -24,9 +24,7 @@ export default function ProgressSidebar({
   questionsPerPage,
   onJump,
 }: ProgressSidebarProps) {
-  function getStatus(q: Question): "answered" | "flagged" | "skipped" | "notVisited" | "current" {
-    const isCurrentPage =
-      Math.floor(q.order / questionsPerPage) === currentPage;
+  function getStatus(q: Question): "answered" | "flagged" | "skipped" | "notVisited" {
     if (flagged.has(q.id)) return "flagged";
     if (answers[q.id]) return "answered";
     if (visited.has(q.id)) return "skipped";
@@ -38,7 +36,6 @@ export default function ProgressSidebar({
     flagged: "bg-orange-500 text-white border-orange-600 shadow-sm",
     skipped: "bg-red-500/80 text-white border-red-600 shadow-sm",
     notVisited: "bg-gray-100 text-gray-500 border-black/5",
-    current: "bg-purple-500 text-white border-purple-600 shadow-sm",
   };
 
   const stats = {
@@ -55,8 +52,8 @@ export default function ProgressSidebar({
       {/* Grid */}
       <div className="grid grid-cols-5 gap-1.5">
         {questions.map((q, i) => {
-          const status = getStatus(q);
           const isOnCurrentPage = Math.floor(i / questionsPerPage) === currentPage;
+          const status = getStatus(q);
           return (
             <button
               key={q.id}

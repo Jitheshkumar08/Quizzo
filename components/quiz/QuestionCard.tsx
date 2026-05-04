@@ -15,6 +15,7 @@ interface QuestionCardProps {
   selected: string | null;
   isFlagged: boolean;
   shuffleOptions?: boolean;
+  onViewed?: () => void;
   onAnswer: (key: string) => void;
   onClear: () => void;
   onFlag: () => void;
@@ -28,6 +29,7 @@ export default function QuestionCard({
   selected,
   isFlagged,
   shuffleOptions,
+  onViewed,
   onAnswer,
   onClear,
   onFlag,
@@ -40,6 +42,10 @@ export default function QuestionCard({
       setOptionKeys([...DEFAULT_KEYS].sort(() => Math.random() - 0.5));
     }
   }, [shuffleOptions]);
+
+  useEffect(() => {
+    onViewed?.();
+  }, [onViewed, question.id]);
 
   return (
     <div
