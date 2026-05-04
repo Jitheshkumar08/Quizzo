@@ -1,7 +1,8 @@
 "use client";
 
 import { Flag } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { hashCode, mulberry32 } from "@/lib/utils";
 
 interface Question {
   id: string;
@@ -15,6 +16,7 @@ interface QuestionCardProps {
   selected: string | null;
   isFlagged: boolean;
   shuffleOptions?: boolean;
+  attemptStartedAt?: string | null;
   onViewed?: () => void;
   onAnswer: (key: string) => void;
   onClear: () => void;
@@ -29,19 +31,22 @@ export default function QuestionCard({
   selected,
   isFlagged,
   shuffleOptions,
+  attemptStartedAt,
   onViewed,
   onAnswer,
   onClear,
   onFlag,
 }: QuestionCardProps) {
   const isAnswered = !!selected;
-  const [optionKeys, setOptionKeys] = useState<string[]>([...DEFAULT_KEYS]);
-
-  useEffect(() => {
+  
+  const optionKeys = useMemo(() => {
     if (shuffleOptions) {
-      setOptionKeys([...DEFAULT_KEYS].sort(() => Math.random() - 0.5));
+      const seedStr = attemptStartedAt ? attemptStartedAt + question.id : question.id;
+      const rand = mulberry32(Math.abs(hashCode(seedStr)));
+      return [...DEFAULT_KEYS].sort(() => rand() - 0.5);
     }
-  }, [shuffleOptions]);
+    return [...DEFAULT_KEYS];
+  }, [shuffleOptions, attemptStartedAt, question.id]);
 
   useEffect(() => {
     onViewed?.();

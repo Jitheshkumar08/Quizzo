@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
-import { sessionDeadline, finalizeExpiredOpenSession } from "@/lib/quiz-session";
+import { sessionDeadline, finalizeExpiredOpenSession, computeEffectiveStart } from "@/lib/quiz-session";
 
 export const maxDuration = 60;
 
@@ -69,7 +69,9 @@ export async function POST(
           { status: 403 }
         );
       }
-      const deadline = sessionDeadline(open.startedAt, quiz.timeLimitMinutes, quiz.scheduledEnd);
+      
+      const effectiveStart = computeEffectiveStart(open.startedAt, open.currentAnswers);
+      const deadline = sessionDeadline(effectiveStart, quiz.timeLimitMinutes, quiz.scheduledEnd);
       const graceMs = 120_000;
       if (deadline && Date.now() > deadline.getTime() + graceMs) {
         const finalized = await finalizeExpiredOpenSession({
@@ -100,10 +102,20 @@ export async function POST(
       }
     }
 
+    // remove internal keys and validate
+    const finalAnswers: Record<string, string> = {};
+    if (userAnswers && typeof userAnswers === 'object' && !Array.isArray(userAnswers)) {
+      for (const k in userAnswers) {
+        if (!k.startsWith('_')) {
+          finalAnswers[k] = userAnswers[k];
+        }
+      }
+    }
+
     // Server-side scoring
     let score = 0;
     const breakdown = (quiz.questions as unknown as QuestionWithAnswer[]).map((q) => {
-      const selected = userAnswers[q.id] ?? null;
+      const selected = finalAnswers[q.id] ?? null;
       const isCorrect = selected === q.correctAnswer;
       if (isCorrect) score++;
       return {
@@ -131,7 +143,7 @@ export async function POST(
           score,
           total,
           timeTaken: timeTakenCapped,
-          userAnswers,
+          userAnswers: finalAnswers,
         },
       });
       await tx.quizSession.updateMany({

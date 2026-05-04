@@ -7,6 +7,7 @@ import ProgressSidebar from "./ProgressSidebar";
 import QuestionCard from "./QuestionCard";
 import { Clock, Send, AlertTriangle, ChevronLeft, ChevronRight, Timer } from "lucide-react";
 import { SearchLoader } from "@/components/ui/SearchLoader";
+import { hashCode, mulberry32 } from "@/lib/utils";
 
 interface Question {
   id: string;
@@ -64,12 +65,19 @@ export default function QuizTaker({
   const [remainingSec, setRemainingSec] = useState<number | null>(null); const [isTimeUp, setIsTimeUp] = useState(false); const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
   const [errorPopup, setErrorPopup] = useState<{ message: string, code?: string } | null>(null);
   const [displayQuestions, setDisplayQuestions] = useState<Question[]>(
-    () => (shuffleQuestions ? [...questions].sort(() => Math.random() - 0.5) : questions)
+    () => {
+      if (!shuffleQuestions) return questions;
+      const seedStr = attemptStartedAt ? attemptStartedAt : "fallback-seed";
+      const rand = mulberry32(Math.abs(hashCode(seedStr)));
+      return [...questions].sort(() => rand() - 0.5);
+    }
   );
 
   useEffect(() => {
     if (shuffleQuestions) {
-      setDisplayQuestions([...questions].sort(() => Math.random() - 0.5));
+      const seedStr = attemptStartedAt ? attemptStartedAt : "fallback-seed";
+      const rand = mulberry32(Math.abs(hashCode(seedStr)));
+      setDisplayQuestions([...questions].sort(() => rand() - 0.5));
     } else {
       setDisplayQuestions(questions);
     }
@@ -396,6 +404,7 @@ export default function QuizTaker({
                   selected={answers[q.id] ?? null}
                   isFlagged={flagged.has(q.id)}
                   shuffleOptions={shuffleOptions}
+                  attemptStartedAt={attemptStartedAt}
                   onViewed={() => markVisited(q.id)}
                   onAnswer={(key) => handleAnswer(q.id, key)}
                   onClear={() => handleClear(q.id)}
