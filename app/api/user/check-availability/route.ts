@@ -9,25 +9,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { field, value } = await req.json();
+    const { field, value, excludeUserId } = await req.json();
 
     if (!field || !value) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
+
+    const excludedUserId =
+      typeof excludeUserId === "string" && session.user.role === "ADMIN"
+        ? excludeUserId
+        : session.user.id;
 
     let exists = null;
     if (field === "username") {
       exists = await prisma.user.findFirst({
         where: {
           username: { equals: value, mode: "insensitive" },
-          id: { not: session.user.id },
+          id: { not: excludedUserId },
         },
       });
     } else if (field === "email") {
       exists = await prisma.user.findFirst({
         where: {
           email: { equals: value, mode: "insensitive" },
-          id: { not: session.user.id },
+          id: { not: excludedUserId },
         },
       });
     } else {
