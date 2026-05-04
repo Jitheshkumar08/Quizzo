@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings } from "lucide-react";
+import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search } from "lucide-react";
 
 interface User {
   id: string;
@@ -165,6 +165,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [usernameQuery, setUsernameQuery] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -194,6 +195,11 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
     }
   }
 
+  const normalizedUsernameQuery = usernameQuery.trim().toLowerCase();
+  const filteredUsers = normalizedUsernameQuery
+    ? users.filter((user) => user.username.toLowerCase().includes(normalizedUsernameQuery))
+    : users;
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -205,9 +211,37 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
 
   return (
     <div>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="order-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#A09890] sm:order-1">
+          {filteredUsers.length} of {users.length} shown
+        </p>
+        <label className="relative order-1 block w-full sm:order-2 sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A09890]" />
+          <input
+            type="search"
+            value={usernameQuery}
+            onChange={(e) => setUsernameQuery(e.target.value)}
+            placeholder="Search username..."
+            aria-label="Search users by username"
+            className="h-12 w-full rounded-2xl border border-[#E4DDD3] bg-white/78 pl-11 pr-4 text-sm font-semibold text-[#2C2A28] shadow-[0_8px_26px_rgba(44,42,40,0.06)] outline-none transition-all placeholder:text-[#AFA69A] focus:border-violet-200 focus:bg-white focus:ring-4 focus:ring-violet-100/70"
+          />
+        </label>
+      </div>
+
+      {filteredUsers.length === 0 ? (
+        <div className="glass rounded-2xl border border-[#E8E2D8] px-6 py-12 text-center shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
+          <p className="text-sm font-black text-[#2C2A28]">No users found</p>
+          <p className="mt-1 text-xs font-semibold text-[#918B80]">
+            {normalizedUsernameQuery
+              ? `No username matches @${normalizedUsernameQuery}`
+              : "No users are on the platform yet."}
+          </p>
+        </div>
+      ) : (
+      <>
       {/* ── MOBILE: Card list ─────────────────────────── */}
       <div className="md:hidden grid gap-5">
-        {users.map((user) => {
+        {filteredUsers.map((user) => {
           const { date } = formatDate(user.createdAt);
           const isYou = user.id === currentUserId;
           return (
@@ -277,7 +311,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
               </tr>
             </thead>
             <tbody>
-              {users.map((user, i) => {
+              {filteredUsers.map((user, i) => {
                 const { date, time } = formatDate(user.createdAt);
                 const isYou = user.id === currentUserId;
                 return (
@@ -359,7 +393,9 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
           {/* Footer legend */}
           <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">
             <p className="text-[11px] font-bold text-[#A09890] uppercase tracking-widest">
-              {users.length} user{users.length !== 1 ? "s" : ""} total
+              {normalizedUsernameQuery
+                ? `${filteredUsers.length} of ${users.length} users shown`
+                : `${users.length} user${users.length !== 1 ? "s" : ""} total`}
             </p>
             <div className="flex items-center gap-4 text-[11px] font-bold text-[#6B6357]">
               <span className="flex items-center gap-1.5">
@@ -375,6 +411,8 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

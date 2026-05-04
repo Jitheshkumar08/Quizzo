@@ -1,11 +1,17 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BookOpen, BarChart3, Calendar, Clock } from "lucide-react";
 import AdminQuizStatusDropdown from "@/components/admin/AdminQuizStatusDropdown";
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
+import AdminQuizUsernameSearch from "@/components/admin/AdminQuizUsernameSearch";
 
 export const metadata = { title: "All Quizzes — MCQify Admin" };
+
+interface AdminQuizzesPageProps {
+  searchParams?: Promise<{ username?: string }>;
+}
 
 function formatDate(iso: Date | string) {
   const d = new Date(iso);
@@ -14,15 +20,28 @@ function formatDate(iso: Date | string) {
   return { date, time };
 }
 
-export default async function AdminQuizzesPage() {
+export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPageProps) {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") redirect("/dashboard");
+  const params = searchParams ? await searchParams : {};
+  const usernameQuery = typeof params.username === "string" ? params.username.trim() : "";
+  const where: Prisma.QuizWhereInput = usernameQuery
+    ? {
+        createdBy: {
+          username: {
+            contains: usernameQuery,
+            mode: "insensitive",
+          },
+        },
+      }
+    : {};
 
   type QuizRow = Awaited<ReturnType<typeof prisma.quiz.findMany<{
     include: { createdBy: { select: { fullName: true; username: true } }; _count: { select: { questions: true; results: true } } };
   }>>>[number];
 
   const quizzes: QuizRow[] = await prisma.quiz.findMany({
+    where,
     include: {
       createdBy: { select: { fullName: true, username: true } },
       _count: { select: { questions: true, results: true } },
@@ -33,11 +52,30 @@ export default async function AdminQuizzesPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold gradient-text">All Quizzes</h1>
-        <p className="text-muted-foreground text-sm mt-1">{quizzes.length} total quizzes on platform</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold gradient-text">All Quizzes</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {usernameQuery
+              ? `${quizzes.length} quiz${quizzes.length !== 1 ? "zes" : ""} matching @${usernameQuery}`
+              : `${quizzes.length} total quizzes on platform`}
+          </p>
+        </div>
+
+        <AdminQuizUsernameSearch initialValue={usernameQuery} />
       </div>
 
+      {quizzes.length === 0 ? (
+        <div className="glass rounded-2xl border border-[#E8E2D8] px-6 py-12 text-center shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
+          <p className="text-sm font-black text-[#2C2A28]">No quizzes found</p>
+          <p className="mt-1 text-xs font-semibold text-[#918B80]">
+            {usernameQuery
+              ? `No creator username matches @${usernameQuery}`
+              : "No quizzes are on the platform yet."}
+          </p>
+        </div>
+      ) : (
+      <>
       {/* ── MOBILE: Card list ─────────────────────────── */}
       <div className="md:hidden grid gap-5 pb-10">
         {quizzes.map((quiz) => {
@@ -246,6 +284,8 @@ export default async function AdminQuizzesPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
