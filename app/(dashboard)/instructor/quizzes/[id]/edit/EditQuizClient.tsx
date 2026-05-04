@@ -8,13 +8,13 @@ import {
   Save, Send, Loader2, Plus, UnfoldVertical, FoldVertical,
   Shuffle, RotateCcw, ArrowLeft, BookOpen, CheckCircle2,
   Trash2, EyeOff, Eye, BarChart2, X, Clock, Award, User,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 import { toDatetimeLocalValue } from "@/lib/datetime-local";
 
-interface EditQuizClientProps {
+  interface EditQuizClientProps {
   quiz: {
     id: string;
     title: string;
@@ -24,6 +24,8 @@ interface EditQuizClientProps {
     scheduledStart: Date | null;
     scheduledEnd: Date | null;
     allowMultipleAttempts: boolean;
+    shuffleQuestions: boolean;
+    shuffleOptions: boolean;
     hasAccessPassword: boolean;
     timeLimitMinutes: number | null;
   };
@@ -57,6 +59,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [expandedMap, setExpandedMap] = useState<Record<number, boolean>>({});
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -74,6 +77,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [requireQuizPassword, setRequireQuizPassword] = useState(quiz.hasAccessPassword);
   const [quizAccessPassword, setQuizAccessPassword] = useState("");
   const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(quiz.allowMultipleAttempts);
+  const [shuffleQuestions, setShuffleQuestions] = useState(quiz.shuffleQuestions);
+  const [shuffleOptions, setShuffleOptions] = useState(quiz.shuffleOptions);
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(!!quiz.timeLimitMinutes);
   const [timeLimitMinutesVal, setTimeLimitMinutesVal] = useState(quiz.timeLimitMinutes ?? 30);
 
@@ -96,6 +101,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           requireQuizPassword,
           quizAccessPassword: quizAccessPassword.trim() || undefined,
           allowMultipleAttempts,
+          shuffleQuestions,
+          shuffleOptions,
           timeLimitEnabled,
           timeLimitMinutes: timeLimitEnabled ? timeLimitMinutesVal : null,
         }),
@@ -171,7 +178,6 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to permanently delete this quiz? This cannot be undone.")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/quiz/${quiz.id}`, { method: "DELETE" });
@@ -180,10 +186,10 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         router.refresh();
       } else {
         alert("Failed to delete quiz");
+        setDeleting(false);
       }
     } catch {
       alert("An error occurred");
-    } finally {
       setDeleting(false);
     }
   }
@@ -205,43 +211,12 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
     setGlobalCollapsed(false);
   }
 
-  function shuffleArray<T>(array: T[]): T[] {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
+  function handleShuffleQuestionsToggle() {
+    setShuffleQuestions(!shuffleQuestions);
   }
 
-  function handleShuffleQuestions() {
-    setQuestions((prev) => shuffleArray(prev).map((q, i) => ({ ...q, order: i })));
-  }
-
-  function handleShuffleOptions() {
-    setQuestions((prev) =>
-      prev.map((q) => {
-        const opts = [
-          { key: "A", val: q.options.A },
-          { key: "B", val: q.options.B },
-          { key: "C", val: q.options.C },
-          { key: "D", val: q.options.D },
-        ];
-        const shuffledOpts = shuffleArray(opts);
-        const newOptions: any = {};
-        let newCorrectAnswer = "A";
-        shuffledOpts.forEach((o, i) => {
-          const newKey = String.fromCharCode(65 + i);
-          newOptions[newKey] = o.val;
-          if (o.key === q.correctAnswer) newCorrectAnswer = newKey;
-        });
-        return { ...q, options: newOptions, correctAnswer: newCorrectAnswer as "A" | "B" | "C" | "D" };
-      })
-    );
-  }
-
-  function handleResetShuffles() {
-    setQuestions([...originalQuestions]);
+  function handleShuffleOptionsToggle() {
+    setShuffleOptions(!shuffleOptions);
   }
 
   return (
@@ -347,7 +322,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
             {isPublished ? "Unpublish" : "Republish"}
           </button>
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteModal(true)}
             disabled={deleting}
             className="eq-delete-btn"
             title="Delete Quiz"
@@ -424,8 +399,12 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         {/* Tools */}
         <div className="flex flex-wrap sm:flex-nowrap border border-black/10 rounded-xl sm:rounded-full overflow-hidden shadow-sm flex-shrink-0">
           <button
-            onClick={() => setGlobalCollapsed((prev) => !prev)}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0"
+            onClick={() => {
+              setGlobalCollapsed((prev) => !prev);
+              setActiveQuestion(-1);
+              setExpandedMap({});
+            }}
+            className="px-4 py-2 cursor-pointer text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0"
           >
             {globalCollapsed ? <UnfoldVertical className="w-4 h-4" /> : <FoldVertical className="w-4 h-4" />}
             <span className="hidden sm:inline">{globalCollapsed ? "Expand All" : "Collapse All"}</span>
@@ -433,24 +412,19 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           </button>
           <div className="w-full h-px sm:w-px sm:h-auto bg-black/10 hidden sm:block" />
           <button
-            onClick={handleShuffleQuestions}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
+            onClick={handleShuffleQuestionsToggle}
+            className={`px-4 py-2 cursor-pointer text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10 ${shuffleQuestions ? "bg-green-100 text-green-700 hover:bg-green-200" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"}`}
+            title="Shuffle question order for students"
           >
             <Shuffle className="w-4 h-4" /> Mix Qs
           </button>
           <div className="w-full h-px sm:w-px sm:h-auto bg-black/10 hidden sm:block" />
           <button
-            onClick={handleShuffleOptions}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
+            onClick={handleShuffleOptionsToggle}
+            className={`px-4 py-2 text-[13px] cursor-pointer font-semibold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10 ${shuffleOptions ? "bg-green-100 text-green-700 hover:bg-green-200" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"}`}
+            title="Shuffle A/B/C/D options for students"
           >
             <Shuffle className="w-4 h-4" /> <span className="hidden sm:inline">Mix Options</span><span className="sm:hidden">Options</span>
-          </button>
-          <div className="w-full h-px sm:w-px sm:h-auto bg-black/10 hidden sm:block" />
-          <button
-            onClick={handleResetShuffles}
-            className="px-4 py-2 text-[13px] font-semibold text-red-400 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
-          >
-            <RotateCcw className="w-4 h-4" /> Reset
           </button>
         </div>
 
@@ -466,7 +440,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           <button
             onClick={() => handleSave(false)}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-black/10 bg-white text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-black/10 bg-white text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm cursor-pointer"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Draft
@@ -474,7 +448,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           <button
             onClick={() => handleSave(true)}
             disabled={saving || questions.length === 0}
-            className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
             style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -600,6 +574,57 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         document.body
       )}
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)} />
+          <div className="relative bg-white rounded-2xl border border-black/5 shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-900 mb-2">Delete Quiz?</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    Are you sure you want to permanently delete <span className="font-bold text-gray-700">"{title || "this quiz"}"</span>? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-3 rounded-xl border border-black/10 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold flex items-center justify-center gap-2 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-red-600/20"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            {/* Subtle red accent line at top */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-rose-500" />
+          </div>
+        </div>,
+        document.body
+      )}
+
       <button
         onClick={handleAddQuestion}
         className="w-full py-4 rounded-xl border-2 border-dashed border-black/10 text-gray-400 hover:border-purple-400/50 hover:text-purple-600 transition-all flex items-center justify-center gap-2 text-sm font-semibold bg-white/60 hover:bg-white"
@@ -648,7 +673,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                       setAnalyticsOpen(false);
                       setAnalyticsError(null);
                     }}
-                    className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center text-gray-500"
+                    className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center text-gray-500 cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
