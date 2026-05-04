@@ -1,6 +1,7 @@
 "use client";
 
 import { Flag } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface Question {
   id: string;
@@ -13,23 +14,32 @@ interface QuestionCardProps {
   index: number;
   selected: string | null;
   isFlagged: boolean;
+  shuffleOptions?: boolean;
   onAnswer: (key: string) => void;
   onClear: () => void;
   onFlag: () => void;
 }
 
-const OPTION_KEYS = ["A", "B", "C", "D"] as const;
+const DEFAULT_KEYS = ["A", "B", "C", "D"] as const;
 
 export default function QuestionCard({
   question,
   index,
   selected,
   isFlagged,
+  shuffleOptions,
   onAnswer,
   onClear,
   onFlag,
 }: QuestionCardProps) {
   const isAnswered = !!selected;
+  const [optionKeys, setOptionKeys] = useState<string[]>([...DEFAULT_KEYS]);
+
+  useEffect(() => {
+    if (shuffleOptions) {
+      setOptionKeys([...DEFAULT_KEYS].sort(() => Math.random() - 0.5));
+    }
+  }, [shuffleOptions]);
 
   return (
     <div
@@ -37,20 +47,20 @@ export default function QuestionCard({
       className={`glass rounded-2xl border transition-all duration-200 ${isFlagged ? "border-orange-500/30 bg-orange-50" : "border-black/5 bg-white/50"
         }`}>
       {/* Question header */}
-      <div className="flex items-start gap-3 p-5">
-        <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors ${isAnswered ? "bg-purple-500 text-white shadow-sm" : "bg-black/5 text-gray-500"
+      <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-5 pb-2 sm:pb-5">
+        <span className={`w-6 h-6 sm:w-8 sm:h-8 mt-0.5 sm:mt-0 rounded-md sm:rounded-lg flex items-center justify-center text-[11px] sm:text-sm font-bold flex-shrink-0 transition-colors ${isAnswered ? "bg-purple-500 text-white shadow-sm" : "bg-black/5 text-gray-500"
           }`}>
           {index + 1}
         </span>
-        <p className={`font-medium flex-1 leading-relaxed ${isAnswered ? "text-gray-900" : "text-gray-700"}`}>
+        <p className={`text-sm sm:text-base font-medium flex-1 leading-snug sm:leading-relaxed ${isAnswered ? "text-gray-900" : "text-gray-700"}`}>
           {question.questionText}
         </p>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 mt-0.5 sm:mt-0">
           <button
             onClick={onFlag}
             className={`p-1.5 rounded-lg transition-all ${isFlagged
-                ? "text-orange-500 bg-orange-100"
-                : "text-gray-400 hover:text-orange-500 hover:bg-orange-50"
+              ? "text-orange-500 bg-orange-100"
+              : "text-gray-400 hover:text-orange-500 hover:bg-orange-50"
               }`}
             title={isFlagged ? "Remove flag" : "Flag for review"}
           >
@@ -60,25 +70,26 @@ export default function QuestionCard({
       </div>
 
       {/* Options */}
-      <div className="space-y-2 px-5 pb-5 pl-[60px]">
-        {OPTION_KEYS.map((key) => {
+      <div className="space-y-1.5 sm:space-y-2 px-3 sm:px-5 pb-4 sm:pb-5 pl-11 sm:pl-[60px]">
+        {optionKeys.map((key) => {
           const isSelected = selected === key;
+          const letterStr = key as "A" | "B" | "C" | "D";
           return (
             <button
               key={key}
               onClick={() => onAnswer(key)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all duration-150 border ${isSelected
-                  ? "bg-purple-50 border-purple-300 text-purple-900 shadow-sm"
-                  : "bg-white border-black/5 text-gray-700 hover:bg-gray-50 hover:border-black/10"
+              className={`w-full flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-sm text-left transition-all duration-150 border ${isSelected
+                ? "bg-purple-50 border-purple-300 text-purple-900 shadow-sm"
+                : "bg-white border-black/5 text-gray-700 hover:bg-gray-50 hover:border-black/10"
                 }`}
             >
-              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 border transition-colors ${isSelected
-                  ? "bg-purple-500 border-purple-500 text-white shadow-sm"
-                  : "bg-gray-100 border-black/5 text-gray-500"
+              <span className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center text-[11px] sm:text-xs font-bold flex-shrink-0 border transition-colors ${isSelected
+                ? "bg-purple-500 border-purple-500 text-white shadow-sm"
+                : "bg-gray-100 border-black/5 text-gray-500"
                 }`}>
                 {key}
               </span>
-              <span className="font-medium">{question.options[key]}</span>
+              <span className="font-medium">{question.options[letterStr]}</span>
             </button>
           );
         })}

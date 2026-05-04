@@ -62,20 +62,19 @@ export default function ReviewQuestionsClient({
           <div
             key={q.id}
             id={`question-${globalIndex}`}
-            className={`bg-white rounded-2xl p-5 space-y-3 border shadow-sm ${
-              isCorrect
+            className={`bg-white rounded-2xl p-4 sm:p-5 space-y-2.5 sm:space-y-3 border shadow-sm ${isCorrect
                 ? "border-green-200"
                 : isUnattempted
-                ? "border-gray-200"
-                : "border-red-200"
-            }`}
+                  ? "border-gray-200"
+                  : "border-red-200"
+              }`}
           >
             {/* Header */}
-            <div className="flex items-start gap-3">
-              <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-700 flex-shrink-0">
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-gray-100 flex items-center justify-center text-[11px] sm:text-xs font-bold text-gray-700 flex-shrink-0 mt-0.5 sm:mt-0">
                 {globalIndex + 1}
               </span>
-              <p className="font-medium text-gray-900 flex-1 leading-relaxed">
+              <p className="font-medium text-sm sm:text-base text-gray-900 flex-1 leading-snug sm:leading-relaxed">
                 {q.questionText}
               </p>
               {isCorrect ? (
@@ -88,7 +87,7 @@ export default function ReviewQuestionsClient({
             </div>
 
             {/* Options */}
-            <div className="pl-11 space-y-1.5">
+            <div className="pl-9 sm:pl-11 space-y-1.5">
               {(["A", "B", "C", "D"] as const).map((key) => {
                 const isCorrectOption = key === q.correctAnswer;
                 const isSelectedOption = key === selected;
@@ -101,16 +100,15 @@ export default function ReviewQuestionsClient({
                 return (
                   <div
                     key={key}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border ${optionStyle}`}
+                    className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[13px] sm:text-sm border ${optionStyle}`}
                   >
                     <span
-                      className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                        isCorrectOption
+                      className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0 ${isCorrectOption
                           ? "bg-green-200"
                           : isSelectedOption && !isCorrect
-                          ? "bg-red-200"
-                          : "bg-gray-100"
-                      }`}
+                            ? "bg-red-200"
+                            : "bg-gray-100"
+                        }`}
                     >
                       {key}
                     </span>
@@ -132,8 +130,8 @@ export default function ReviewQuestionsClient({
 
             {/* Explanation */}
             {q.explanation && (
-              <div className="pl-11 mt-2">
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-900">
+              <div className="pl-9 sm:pl-11 mt-2">
+                <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-blue-50 border border-blue-100 text-[13px] sm:text-sm text-blue-900">
                   <strong className="text-blue-700">Explanation: </strong>
                   {q.explanation}
                 </div>

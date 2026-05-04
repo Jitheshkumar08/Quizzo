@@ -46,13 +46,13 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
     <div className="bg-white rounded-2xl border border-black/5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-purple-200">
       {/* Header */}
       <div
-        className="flex items-center gap-3 p-4 cursor-pointer select-none rounded-2xl"
+        className="flex items-center gap-2.5 sm:gap-3 p-3 sm:p-4 cursor-pointer select-none rounded-2xl"
         onClick={() => setCollapsed(!collapsed)}
       >
-        <span className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-bold flex-shrink-0">
+        <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-[11px] sm:text-sm font-bold flex-shrink-0">
           {index + 1}
         </span>
-        <p className="flex-1 text-sm font-medium truncate text-gray-800">
+        <p className="flex-1 text-[13px] sm:text-sm font-medium truncate text-gray-800">
           {question.questionText || <span className="text-gray-400">New question...</span>}
         </p>
         <div className="flex items-center gap-2">
@@ -95,11 +95,10 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
                 <button
                   type="button"
                   onClick={() => update({ correctAnswer: key })}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-150 border ${
-                    question.correctAnswer === key
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-150 border ${question.correctAnswer === key
                       ? "bg-green-100 border-green-300 text-green-600 shadow-sm"
                       : "bg-gray-100 border-black/5 text-gray-500 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   {question.correctAnswer === key ? <Check className="w-4 h-4" /> : key}
                 </button>
