@@ -30,6 +30,8 @@ const SaveQuizSchema = z.object({
   requireQuizPassword: z.boolean().optional(),
   quizAccessPassword: z.string().optional(),
   allowMultipleAttempts: z.boolean().optional(),
+  shuffleQuestions: z.boolean().optional(),
+  shuffleOptions: z.boolean().optional(),
   timeLimitEnabled: z.boolean().optional(),
   timeLimitMinutes: z.number().int().min(1).max(1440).optional().nullable(),
 });
@@ -89,7 +91,10 @@ async function buildAccessUpdateData(
     timeLimitMinutes = m;
   }
 
-  return { scheduledStart, scheduledEnd, accessPasswordHash, allowMultipleAttempts, timeLimitMinutes };
+  const shuffleQuestions = parsed.shuffleQuestions ?? false;
+  const shuffleOptions = parsed.shuffleOptions ?? false;
+
+  return { scheduledStart, scheduledEnd, accessPasswordHash, allowMultipleAttempts, shuffleQuestions, shuffleOptions, timeLimitMinutes };
 }
 
 export async function POST(req: NextRequest) {

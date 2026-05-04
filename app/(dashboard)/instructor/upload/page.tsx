@@ -83,6 +83,8 @@ export default function InstructorUploadPage() {
   const [allowMultipleAttempts, setAllowMultipleAttempts] = useState(false);
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
   const [timeLimitMinutesVal, setTimeLimitMinutesVal] = useState(30);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [shuffleOptions, setShuffleOptions] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -263,43 +265,12 @@ export default function InstructorUploadPage() {
     setQuestions((prev) => [...prev, createBlankQuestion(prev.length)]);
   }
 
-  function handleShuffleQuestions() {
-    setQuestions((prev) => {
-      const shuffled = [...prev].sort(() => Math.random() - 0.5);
-      return shuffled.map((q, i) => ({ ...q, order: i }));
-    });
+  function handleShuffleQuestionsToggle() {
+    setShuffleQuestions(!shuffleQuestions);
   }
 
-  function handleShuffleOptions() {
-    setQuestions((prev) => prev.map((q) => {
-        const optionEntries = [
-          { key: "A", val: q.options.A, isCorrect: q.correctAnswer === "A" },
-          { key: "B", val: q.options.B, isCorrect: q.correctAnswer === "B" },
-          { key: "C", val: q.options.C, isCorrect: q.correctAnswer === "C" },
-          { key: "D", val: q.options.D, isCorrect: q.correctAnswer === "D" },
-        ];
-        optionEntries.sort(() => Math.random() - 0.5);
-        const newOptions = { 
-           A: optionEntries[0].val, 
-           B: optionEntries[1].val, 
-           C: optionEntries[2].val, 
-           D: optionEntries[3].val 
-        };
-        let newCorrectAnswer = q.correctAnswer;
-        if (optionEntries[0].isCorrect) newCorrectAnswer = "A";
-        else if (optionEntries[1].isCorrect) newCorrectAnswer = "B";
-        else if (optionEntries[2].isCorrect) newCorrectAnswer = "C";
-        else if (optionEntries[3].isCorrect) newCorrectAnswer = "D";
-
-        return { ...q, options: newOptions as any, correctAnswer: newCorrectAnswer as any };
-    }));
-  }
-
-  function handleResetShuffles() {
-    // Restore exact state from before any shuffles
-    if (backupQuestions.length > 0) {
-      setQuestions(JSON.parse(JSON.stringify(backupQuestions)));
-    }
+  function handleShuffleOptionsToggle() {
+    setShuffleOptions(!shuffleOptions);
   }
 
   async function handlePublish(publish: boolean) {
@@ -320,6 +291,8 @@ export default function InstructorUploadPage() {
           requireQuizPassword,
           quizAccessPassword: quizAccessPassword.trim() || undefined,
           allowMultipleAttempts,
+          shuffleQuestions,
+          shuffleOptions,
           timeLimitEnabled,
           timeLimitMinutes: timeLimitEnabled ? timeLimitMinutesVal : null,
         }),
@@ -502,30 +475,21 @@ export default function InstructorUploadPage() {
                 </button>
                 <div className="w-full h-[1px] sm:w-[1px] sm:h-auto bg-black/10 hidden sm:block"></div>
                 <button
-                  onClick={handleShuffleQuestions}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
-                  title="Shuffle question order"
+                  onClick={handleShuffleQuestionsToggle}
+                  className={`px-4 py-2.5 text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10 ${shuffleQuestions ? "bg-green-100 text-green-700 hover:bg-green-200" : "text-[#6B7280] hover:text-[#111827] hover:bg-black/5"}`}
+                  title="Shuffle question order for students"
                 >
                   <Shuffle className="w-4 h-4" />
                   Mix Qs
                 </button>
                 <div className="w-full h-[1px] sm:w-[1px] sm:h-auto bg-black/10 hidden sm:block"></div>
                 <button
-                  onClick={handleShuffleOptions}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-black/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
-                  title="Shuffle A/B/C/D options"
+                  onClick={handleShuffleOptionsToggle}
+                  className={`px-4 py-2.5 text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10 ${shuffleOptions ? "bg-green-100 text-green-700 hover:bg-green-200" : "text-[#6B7280] hover:text-[#111827] hover:bg-black/5"}`}
+                  title="Shuffle A/B/C/D options for students"
                 >
                   <Shuffle className="w-4 h-4" />
                   <span className="hidden sm:inline">Mix Options</span><span className="sm:hidden">Options</span>
-                </button>
-                <div className="w-full h-[1px] sm:w-[1px] sm:h-auto bg-black/10 hidden sm:block"></div>
-                <button
-                  onClick={handleResetShuffles}
-                  className="px-4 py-2.5 text-[13px] font-semibold text-red-400 hover:text-red-500 hover:bg-red-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap flex-grow sm:flex-grow-0 border-t sm:border-t-0 sm:border-l border-black/10"
-                  title="Restore original question order and options"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Reset
                 </button>
               </div>
 
@@ -676,7 +640,7 @@ export default function InstructorUploadPage() {
                      </div>
                      <button 
                        onClick={handleCopyPrompt} 
-                       className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[13px] font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                       className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 border cursor-pointer border-white/10 text-white text-[13px] font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
                      >
                        {copied ? <><Check className="w-3.5 h-3.5 text-green-400" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
                      </button>
@@ -695,7 +659,7 @@ export default function InstructorUploadPage() {
             <div className="p-6 sm:px-8 sm:py-6 border-t border-black/5 bg-[#FDFBFA]/50 backdrop-blur-xl flex justify-end flex-shrink-0 relative z-10">
               <button 
                 onClick={() => setShowDisclaimer(false)} 
-                className="px-8 py-3 rounded-full bg-[#2C2A28] text-white text-[15px] font-bold hover:bg-black transition-all hover:-translate-y-0.5 shadow-[0_8px_16px_rgba(44,42,40,0.2)] active:translate-y-0 active:shadow-none"
+                className="px-8 py-3 rounded-full bg-[#2C2A28] text-white text-[15px] font-bold hover:bg-black transition-all hover:-translate-y-0.5 shadow-[0_8px_16px_rgba(44,42,40,0.2)] active:translate-y-0 active:shadow-none cursor-pointer"
               >
                 I Understand
               </button>
