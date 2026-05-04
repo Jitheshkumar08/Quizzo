@@ -170,18 +170,18 @@ export default function AdminUserAccountForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-[24px] border border-[#E8E2D8] bg-white/75 p-5 sm:p-6 shadow-sm">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-2xl bg-[#F0EBE2] flex items-center justify-center">
-          <Shield className="w-5 h-5 text-[#8C6D50]" />
+    <form onSubmit={handleSubmit} className="rounded-[20px] border border-[#E8E2D8] bg-white/75 p-4 sm:p-5 shadow-sm">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-9 h-9 rounded-2xl bg-[#F0EBE2] flex items-center justify-center">
+          <Shield className="w-4 h-4 text-[#8C6D50]" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-[#1E1C1A]">Account Settings</h2>
+          <h2 className="text-base sm:text-lg font-bold text-[#1E1C1A]">Account Settings</h2>
           <p className="text-xs font-medium text-[#918B80]">Edit profile, access, and password</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <label className="flex flex-col gap-2">
           <span className="text-[12px] font-bold text-[#6B6357] flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-[#918B80]" />
@@ -190,7 +190,7 @@ export default function AdminUserAccountForm({
           <input
             value={form.fullName}
             onChange={(e) => updateField("fullName", e.target.value)}
-            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-3 text-sm font-medium text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
+            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-medium text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
           />
         </label>
 
@@ -205,7 +205,7 @@ export default function AdminUserAccountForm({
           <input
             value={form.username}
             onChange={(e) => updateField("username", e.target.value)}
-            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-3 text-sm font-medium text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
+            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-medium text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
           />
         </label>
 
@@ -221,7 +221,7 @@ export default function AdminUserAccountForm({
             type="email"
             value={form.email}
             onChange={(e) => updateField("email", e.target.value)}
-            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-3 text-sm font-medium text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
+            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-medium text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
           />
         </label>
 
@@ -234,7 +234,7 @@ export default function AdminUserAccountForm({
             value={form.role}
             disabled={isSelf}
             onChange={(e) => updateField("role", e.target.value as Role)}
-            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-3 text-sm font-bold text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-bold text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {roles.map((role) => (
               <option key={role.value} value={role.value}>
@@ -255,14 +255,14 @@ export default function AdminUserAccountForm({
             value={form.newPassword}
             onChange={(e) => updateField("newPassword", e.target.value)}
             placeholder="Leave blank to keep current"
-            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-3 text-sm font-medium text-[#2C2A28] outline-none transition placeholder:text-[#B0A89E] focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
+            className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-medium text-[#2C2A28] outline-none transition placeholder:text-[#B0A89E] focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
           />
         </label>
       </div>
 
       {message && (
         <div
-          className={`mt-5 flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium ${
+          className={`mt-4 flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium ${
             message.type === "success"
               ? "border-emerald-100 bg-emerald-50 text-emerald-700"
               : "border-rose-100 bg-rose-50 text-rose-700"
@@ -273,11 +273,11 @@ export default function AdminUserAccountForm({
         </div>
       )}
 
-      <div className="mt-6 flex justify-end">
+      <div className="mt-5 flex justify-end">
         <button
           type="submit"
           disabled={loading || hasBlockingAvailability}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2C2A28] px-6 py-3 text-sm font-bold text-[#FDFBFA] shadow-[0_8px_20px_rgba(44,42,40,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1A1816] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-[#2C2A28] px-5 py-2.5 text-sm font-bold text-[#FDFBFA] shadow-[0_8px_20px_rgba(44,42,40,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1A1816] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Changes

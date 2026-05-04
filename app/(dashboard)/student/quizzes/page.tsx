@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { BookOpen, Users, ArrowRight, Lock, CalendarRange } from "lucide-react";
+import { BookOpen, Users, Lock, CalendarRange } from "lucide-react";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
 
@@ -21,7 +21,7 @@ export default async function StudentQuizzesPage() {
   const quizRows = await prisma.quiz.findMany({
     where: { isPublished: true },
     include: {
-      createdBy: { select: { fullName: true } },
+      createdBy: { select: { username: true } },
       _count: { select: { questions: true, results: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -127,7 +127,7 @@ export default async function StudentQuizzesPage() {
                   </div>
 
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs font-medium text-gray-500">by {quiz.createdBy.fullName}</span>
+                    <span className="text-xs font-medium text-gray-500">by @{quiz.createdBy.username}</span>
                     {sched === "ended" ? (
                       <div className="relative inline-flex items-center justify-center py-2 px-4 transition-all duration-200 cursor-not-allowed opacity-60">
                         <span className="relative z-10 font-bold text-sm tracking-[0.05em] text-gray-500 uppercase">

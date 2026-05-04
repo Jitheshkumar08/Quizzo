@@ -52,7 +52,7 @@ export default async function AdminUserProfilePage({ params }: Props) {
   const joined = formatDate(user.createdAt);
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up">
       <Link
         href="/admin/users"
         className="inline-flex items-center gap-2 text-sm font-bold text-[#6B6357] hover:text-[#2C2A28] transition-colors"
@@ -61,53 +61,53 @@ export default async function AdminUserProfilePage({ params }: Props) {
         Back to Users
       </Link>
 
-      <div className="rounded-[28px] border border-[#E8E2D8] bg-white/70 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="p-6 sm:p-8 bg-gradient-to-br from-[#FFFDF9] via-white to-[#F4EFE6] border-b border-[#E8E2D8]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-violet-100 to-sky-100 ring-1 ring-white flex items-center justify-center shadow-sm">
-                <span className="text-2xl font-black text-violet-700">{user.fullName.charAt(0).toUpperCase()}</span>
+      <div className="rounded-[24px] border border-[#E8E2D8] bg-white/70 backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.055)] overflow-hidden">
+        <div className="p-4 sm:p-5 bg-gradient-to-br from-[#FFFDF9] via-white to-[#F4EFE6] border-b border-[#E8E2D8]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 ring-1 ring-white flex items-center justify-center shadow-sm">
+                <span className="text-xl font-bold text-violet-700">{user.fullName.charAt(0).toUpperCase()}</span>
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#1E1C1A] tracking-tight truncate">{user.fullName}</h1>
-                <p className="text-sm font-medium text-[#918B80]">@{user.username}</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-[#1E1C1A] tracking-tight truncate">{user.fullName}</h1>
+                <p className="text-xs sm:text-sm font-medium text-[#918B80]">@{user.username}</p>
               </div>
             </div>
 
-            <span className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r px-4 py-2 text-xs font-bold tracking-wide shadow-sm ${roleStyles[user.role]}`}>
-              <Shield className="w-4 h-4" />
+            <span className={`inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r px-3 py-1.5 text-xs font-bold tracking-wide shadow-sm ${roleStyles[user.role]}`}>
+              <Shield className="w-3.5 h-3.5" />
               {roleLabels[user.role]}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-5 p-5 sm:p-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:p-5">
           <AdminUserAccountForm user={user} currentUserId={session.user.id} />
 
-          <div className="grid grid-cols-1 gap-4">
-            <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5 shadow-sm">
-              <BookOpen className="w-6 h-6 text-sky-600 mb-3" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3">
+            <div className="rounded-[20px] border border-sky-100 bg-sky-50/70 p-4 shadow-sm">
+              <BookOpen className="w-5 h-5 text-sky-600 mb-2" />
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700/60">Quizzes</p>
-              <p className="text-3xl font-bold text-sky-700">{user._count.quizzes}</p>
+              <p className="text-2xl font-bold text-sky-700">{user._count.quizzes}</p>
             </div>
-            <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5 shadow-sm">
-              <BarChart3 className="w-6 h-6 text-violet-600 mb-3" />
+            <div className="rounded-[20px] border border-violet-100 bg-violet-50/70 p-4 shadow-sm">
+              <BarChart3 className="w-5 h-5 text-violet-600 mb-2" />
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/60">Attempts</p>
-              <p className="text-3xl font-bold text-violet-700">{user._count.results}</p>
+              <p className="text-2xl font-bold text-violet-700">{user._count.results}</p>
             </div>
-            <div className="rounded-[24px] border border-[#E8E2D8] bg-white/75 p-5 shadow-sm">
-              <Calendar className="w-6 h-6 text-[#8C6D50] mb-3" />
+            <div className="rounded-[20px] border border-[#E8E2D8] bg-white/75 p-4 shadow-sm">
+              <Calendar className="w-5 h-5 text-[#8C6D50] mb-2" />
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#A09890]">Joined</p>
-              <p className="text-sm font-bold text-[#2C2A28]">{joined.date}</p>
+              <p className="text-sm font-bold text-[#2C2A28] leading-tight">{joined.date}</p>
               <p className="text-xs font-medium text-[#A09890]">{joined.time}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="rounded-[22px] border border-[#E8E2D8] bg-[#F4EFE6]/70 p-5 flex items-start gap-3">
-        <UserCircle2 className="w-5 h-5 text-[#8C6D50] mt-0.5 flex-shrink-0" />
-        <p className="text-sm font-semibold text-[#6B6357]">
+      <div className="rounded-[18px] border border-[#E8E2D8] bg-[#F4EFE6]/70 p-3.5 flex items-start gap-3">
+        <UserCircle2 className="w-4 h-4 text-[#8C6D50] mt-0.5 flex-shrink-0" />
+        <p className="text-xs sm:text-sm font-medium text-[#6B6357]">
           This admin view gives direct access to update the user&apos;s profile, role, email, and password.
         </p>
       </div>

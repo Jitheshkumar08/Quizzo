@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsForm() {
-  const { data: session, update } = useSession();
+  const { update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -52,8 +52,8 @@ export default function SettingsForm() {
 
   useEffect(() => {
     if (!form.username || form.username === originalData.username) {
-      setUsernameStatus('idle');
-      return;
+      const timer = window.setTimeout(() => setUsernameStatus('idle'), 0);
+      return () => window.clearTimeout(timer);
     }
     
     const delayDebounceFn = setTimeout(async () => {
@@ -73,7 +73,7 @@ export default function SettingsForm() {
         setUsernameStatus(data.available ? 'available' : 'unavailable');
         
         if (data.available) setTimeout(() => setUsernameStatus('idle'), 2500);
-      } catch (err) {
+      } catch {
         setUsernameStatus('unavailable');
       }
     }, 800);
@@ -83,8 +83,8 @@ export default function SettingsForm() {
 
   useEffect(() => {
     if (!form.email || form.email === originalData.email) {
-      setEmailStatus('idle');
-      return;
+      const timer = window.setTimeout(() => setEmailStatus('idle'), 0);
+      return () => window.clearTimeout(timer);
     }
 
     const delayDebounceFn = setTimeout(async () => {
@@ -105,7 +105,7 @@ export default function SettingsForm() {
         setEmailStatus(data.available ? 'available' : 'unavailable');
         
         if (data.available) setTimeout(() => setEmailStatus('idle'), 2500);
-      } catch (err) {
+      } catch {
         setEmailStatus('unavailable');
       }
     }, 800);
@@ -147,7 +147,7 @@ export default function SettingsForm() {
         await update({ name: form.fullName, username: form.username, email: form.email });
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
     } finally {
       setLoading(false);
@@ -155,19 +155,22 @@ export default function SettingsForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-8 text-center mt-4">
-        <h1 className="text-3xl font-bold text-[#2C2A28] mb-2 tracking-tight">Account Settings</h1>
-        <p className="text-[#918B80] font-medium">Update your profile, email, and password.</p>
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6 text-center mt-2">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm border border-[#E8E2D8]">
+          <UserIcon className="w-6 h-6 text-[#8C5D3E]" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#1E1C1A] mb-2 tracking-tight">Account Settings</h1>
+        <p className="text-[#6B6357] font-medium text-sm sm:text-base">Update your profile, email, and password.</p>
       </div>
 
-      <div className="bg-[#F4EFE6]/70 backdrop-blur-2xl rounded-[32px] p-8 shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-white/80 relative overflow-hidden">
-        {/* Glossy highlight inside card */}
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/40 to-transparent pointer-events-none rounded-t-[32px]"></div>
+      <div className="bg-white/[0.88] backdrop-blur-2xl rounded-[28px] p-5 sm:p-7 shadow-[0_20px_55px_rgba(44,42,40,0.10),inset_0_1px_0_rgba(255,255,255,0.95)] border border-white/95 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#FFFDF8] to-transparent pointer-events-none" />
+        <div className="absolute -top-20 -right-16 h-44 w-44 rounded-full bg-[#F4EFE6] blur-3xl opacity-80 pointer-events-none" />
 
-        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+        <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col group relative">
               <div className="flex items-center justify-between ml-2 mb-2">
                 <label className="text-[14px] font-bold text-[#2C2A28] transition-colors group-focus-within:text-[#8C5D3E] flex items-center gap-1.5">
@@ -183,7 +186,7 @@ export default function SettingsForm() {
                 value={form.username}
                 onChange={handleChange}
                 placeholder="johndoe"
-                className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl font-medium"
+                className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
               />
             </div>
 
@@ -197,7 +200,7 @@ export default function SettingsForm() {
                 value={form.fullName}
                 onChange={handleChange}
                 placeholder="John Doe"
-                className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl font-medium"
+                className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
               />
             </div>
           </div>
@@ -218,15 +221,15 @@ export default function SettingsForm() {
               value={form.email}
               onChange={handleChange}
               placeholder="johndoe@example.com"
-              className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl font-medium"
+              className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
             />
           </div>
 
-          <div className="border-t border-[#E9E4DC]/60 pt-6 pb-2">
+          <div className="rounded-[24px] border border-[#E8E2D8] bg-[#F8F3EA]/75 p-4 sm:p-5">
             <h3 className="text-[16px] font-bold text-[#2C2A28] mb-1">Change Password</h3>
-            <p className="text-[13px] text-[#918B80] mb-4">Leave fields blank if you don&apos;t want to change your password.</p>
+            <p className="text-[13px] text-[#6B6357] mb-4 font-medium">Leave fields blank if you don&apos;t want to change your password.</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col group">
                 <label className="text-[14px] font-bold text-[#2C2A28] ml-2 mb-2 transition-colors group-focus-within:text-[#8C5D3E] flex items-center gap-1.5">
                   <Lock className="w-4 h-4 text-[#918B80] group-focus-within:text-[#8C5D3E] transition-colors" />
@@ -238,7 +241,7 @@ export default function SettingsForm() {
                   value={form.currentPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl font-medium"
+                  className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
                 />
               </div>
               <div className="flex flex-col group">
@@ -252,17 +255,23 @@ export default function SettingsForm() {
                   value={form.newPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl font-medium"
+                  className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end">
+          {message && (
+            <div className={`rounded-2xl border px-4 py-3 text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
+              {message.text}
+            </div>
+          )}
+
+          <div className="pt-1 flex justify-end">
             <button
               type="submit"
               disabled={loading}
-              className="py-4 px-8 rounded-full font-bold text-[#FDFBFA] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-[#2C2A28] hover:bg-[#1A1816] shadow-[0_8px_20px_rgba(44,42,40,0.2)] hover:shadow-[0_12px_24px_rgba(44,42,40,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-[16px] tracking-wide"
+              className="w-full sm:w-auto py-3 px-7 rounded-full font-bold text-[#FDFBFA] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-[#2C2A28] hover:bg-[#1A1816] shadow-[0_8px_20px_rgba(44,42,40,0.2)] hover:shadow-[0_12px_24px_rgba(44,42,40,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-[15px]"
             >
               {loading ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</>
