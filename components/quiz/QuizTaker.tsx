@@ -19,11 +19,13 @@ interface Question {
 interface QuizTakerProps {
   quizId: string;
   quizTitle: string;
+  quizDescription?: string | null;
   questions: Question[];
   timeLimitMinutes?: number | null;
   attemptDeadline?: string | null;
   serverNow?: string | null;
   attemptStartedAt?: string | null;
+  sessionId?: string | null;
   shuffleQuestions?: boolean;
   shuffleOptions?: boolean;
   savedAnswers?: Record<string, string>;
@@ -34,11 +36,13 @@ const QUESTIONS_PER_PAGE = 5;
 export default function QuizTaker({
   quizId,
   quizTitle,
+  quizDescription,
   questions,
   timeLimitMinutes,
   attemptDeadline,
   serverNow,
   attemptStartedAt,
+  sessionId,
   shuffleQuestions,
   shuffleOptions,
   savedAnswers = {},
@@ -67,7 +71,7 @@ export default function QuizTaker({
   const [displayQuestions, setDisplayQuestions] = useState<Question[]>(
     () => {
       if (!shuffleQuestions) return questions;
-      const seedStr = attemptStartedAt ? attemptStartedAt : "fallback-seed";
+      const seedStr = sessionId ? sessionId : (attemptStartedAt ? attemptStartedAt : "fallback-seed");
       const rand = mulberry32(Math.abs(hashCode(seedStr)));
       return [...questions].sort(() => rand() - 0.5);
     }
@@ -75,7 +79,7 @@ export default function QuizTaker({
 
   useEffect(() => {
     if (shuffleQuestions) {
-      const seedStr = attemptStartedAt ? attemptStartedAt : "fallback-seed";
+      const seedStr = sessionId ? sessionId : (attemptStartedAt ? attemptStartedAt : "fallback-seed");
       const rand = mulberry32(Math.abs(hashCode(seedStr)));
       setDisplayQuestions([...questions].sort(() => rand() - 0.5));
     } else {
@@ -268,7 +272,7 @@ export default function QuizTaker({
     void runSubmit();
   }, [hasTimer, remainingSec, runSubmit]);
 
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = questions.filter(q => answers[q.id] && answers[q.id].trim() !== "").length;
   const unansweredCount = questions.length - answeredCount;
 
   return (
@@ -354,14 +358,37 @@ export default function QuizTaker({
         {/* Main Content */}
         <div className="flex-1 min-w-0 flex flex-col gap-4 transition-all duration-300">
           {/* Top bar */}
-          <div className="bg-white rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 border border-black/5 shadow-sm">
-            <div className="flex-1 min-w-0 w-full">
-              <h1 className="font-bold text-sm truncate text-gray-900">{quizTitle}</h1>
-              <p className="text-xs text-gray-500 font-medium mt-0.5">
-                {answeredCount}/{questions.length} answered
-              </p>
+          <div className="bg-white rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 border border-black/5 shadow-sm relative overflow-hidden">
+            {/* Decorative background accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-100/50 via-transparent to-transparent rounded-bl-full pointer-events-none"></div>
+
+            <div className="flex-1 min-w-0 w-full relative z-10">
+              <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                {quizTitle}
+              </h1>
+              {quizDescription && (
+                <p className="text-sm md:text-base text-gray-600 mt-2 leading-relaxed max-w-4xl line-clamp-2">
+                  {quizDescription}
+                </p>
+              )}
+              <div className="flex items-center gap-3 mt-4">
+                <div className="h-2.5 w-48 sm:w-64 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${(answeredCount / questions.length) * 100}%`,
+                      // Ensure it's at least a perfect circle if answering has started
+                      minWidth: answeredCount > 0 ? '10px' : '0px'
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 font-bold tracking-wide">
+                  {answeredCount} / {questions.length} ANSWERED
+                </p>
+              </div>
             </div>
-            <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full md:w-auto gap-3 relative z-10 shrink-0">
               {hasTimer && remainingSec !== null ? (
                 <div
                   className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-1.5 rounded-lg border ${remainingSec <= 60
@@ -405,6 +432,7 @@ export default function QuizTaker({
                   isFlagged={flagged.has(q.id)}
                   shuffleOptions={shuffleOptions}
                   attemptStartedAt={attemptStartedAt}
+                  sessionId={sessionId}
                   onViewed={() => markVisited(q.id)}
                   onAnswer={(key) => handleAnswer(q.id, key)}
                   onClear={() => handleClear(q.id)}

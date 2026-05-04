@@ -15,6 +15,7 @@ interface Question {
 interface QuizPayload {
   id: string;
   title: string;
+  description: string | null;
   questions: Question[];
   timeLimitMinutes: number | null;
   attemptDeadline: string | null;
@@ -23,6 +24,7 @@ interface QuizPayload {
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
   savedAnswers?: Record<string, string>;
+  sessionId?: string | null;
 }
 
 interface BlockPayload {
@@ -53,11 +55,13 @@ export default function QuizGate({ quizId }: { quizId: string }) {
         setQuiz({
           id: data.id,
           title: data.title,
+          description: data.description ?? null,
           questions: data.questions,
           timeLimitMinutes: data.timeLimitMinutes ?? null,
           attemptDeadline: data.attemptDeadline ?? null,
           serverNow: data.serverNow ?? null,
           attemptStartedAt: data.attemptStartedAt ?? null,
+          sessionId: data.sessionId ?? null,
           shuffleQuestions: !!data.shuffleQuestions,
           shuffleOptions: !!data.shuffleOptions,
           savedAnswers: data.savedAnswers || {},
@@ -118,11 +122,13 @@ export default function QuizGate({ quizId }: { quizId: string }) {
       <QuizTaker
         quizId={quiz.id}
         quizTitle={quiz.title}
+        quizDescription={quiz.description}
         questions={quiz.questions}
         timeLimitMinutes={quiz.timeLimitMinutes}
         attemptDeadline={quiz.attemptDeadline}
         serverNow={quiz.serverNow}
         attemptStartedAt={quiz.attemptStartedAt}
+        sessionId={quiz.sessionId}
         shuffleQuestions={quiz.shuffleQuestions}
         shuffleOptions={quiz.shuffleOptions}
         savedAnswers={quiz.savedAnswers}

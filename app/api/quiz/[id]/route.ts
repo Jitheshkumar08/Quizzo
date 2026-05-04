@@ -91,12 +91,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
     const openSession = await prisma.quizSession.findFirst({
       where: { quizId, studentId: session.user.id, submittedAt: null },
-      select: { currentAnswers: true },
+      select: { currentAnswers: true, id: true },
     });
 
     const { accessPasswordHash: _omit, ...safe } = quiz;
     return NextResponse.json({
       ...safe,
+      sessionId: openSession?.id || null,
       attemptDeadline: timing.attemptDeadline,
       serverNow: timing.serverNow,
       attemptStartedAt: timing.attemptStartedAt,

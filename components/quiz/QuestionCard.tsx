@@ -17,6 +17,7 @@ interface QuestionCardProps {
   isFlagged: boolean;
   shuffleOptions?: boolean;
   attemptStartedAt?: string | null;
+  sessionId?: string | null;
   onViewed?: () => void;
   onAnswer: (key: string) => void;
   onClear: () => void;
@@ -32,21 +33,23 @@ export default function QuestionCard({
   isFlagged,
   shuffleOptions,
   attemptStartedAt,
+  sessionId,
   onViewed,
   onAnswer,
   onClear,
   onFlag,
 }: QuestionCardProps) {
   const isAnswered = !!selected;
-  
+
   const optionKeys = useMemo(() => {
     if (shuffleOptions) {
-      const seedStr = attemptStartedAt ? attemptStartedAt + question.id : question.id;
+      const baseSeed = sessionId ? sessionId : (attemptStartedAt ? attemptStartedAt : "");
+      const seedStr = baseSeed ? baseSeed + question.id : question.id;
       const rand = mulberry32(Math.abs(hashCode(seedStr)));
       return [...DEFAULT_KEYS].sort(() => rand() - 0.5);
     }
     return [...DEFAULT_KEYS];
-  }, [shuffleOptions, attemptStartedAt, question.id]);
+  }, [shuffleOptions, attemptStartedAt, sessionId, question.id]);
 
   useEffect(() => {
     onViewed?.();
