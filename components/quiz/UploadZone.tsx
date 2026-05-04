@@ -61,7 +61,7 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
           <p className="text-xs text-[#918B80] font-medium">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
         </div>
         {!disabled && (
-          <button onClick={onClear} className="text-[#918B80] hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-all">
+          <button onClick={onClear} className="text-[#918B80] hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-all cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         )}
