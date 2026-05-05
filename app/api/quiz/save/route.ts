@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { recordQuizListEvent } from "@/lib/quiz-list-events";
 
 const QuestionSchema = z.object({
   questionText: z.string().min(1),
@@ -159,27 +160,43 @@ export async function POST(req: NextRequest) {
           data: { submittedAt: new Date() },
         });
 
+        await recordQuizListEvent(tx, {
+          quizId,
+          action: publish ? "quiz.updated_published" : "quiz.updated_draft",
+          actorId: session.user.id,
+        });
+
         return updated;
       });
     } else {
-      quiz = await prisma.quiz.create({
-        data: {
-          title,
-          description,
-          jsonBlobUrl,
-          isPublished: publish,
-          createdById: session.user.id,
-          ...accessFields,
-          questions: {
-            create: questions.map((q: QuestionInput) => ({
-              questionText: q.questionText,
-              options: q.options,
-              correctAnswer: q.correctAnswer,
-              explanation: q.explanation ?? "",
-              order: q.order,
-            })),
+      quiz = await prisma.$transaction(async (tx) => {
+        const created = await tx.quiz.create({
+          data: {
+            title,
+            description,
+            jsonBlobUrl,
+            isPublished: publish,
+            createdById: session.user.id,
+            ...accessFields,
+            questions: {
+              create: questions.map((q: QuestionInput) => ({
+                questionText: q.questionText,
+                options: q.options,
+                correctAnswer: q.correctAnswer,
+                explanation: q.explanation ?? "",
+                order: q.order,
+              })),
+            },
           },
-        },
+        });
+
+        await recordQuizListEvent(tx, {
+          quizId: created.id,
+          action: publish ? "quiz.created_published" : "quiz.created_draft",
+          actorId: session.user.id,
+        });
+
+        return created;
       });
     }
 
@@ -254,6 +271,12 @@ export async function PATCH(req: NextRequest) {
       await tx.quizSession.updateMany({
         where: { quizId, submittedAt: null },
         data: { submittedAt: new Date() },
+      });
+
+      await recordQuizListEvent(tx, {
+        quizId,
+        action: publish ? "quiz.updated_published" : "quiz.updated_draft",
+        actorId: session.user.id,
       });
 
       return next;

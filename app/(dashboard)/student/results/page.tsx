@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Trophy, Clock, BookOpen } from "lucide-react";
 import ViewAnalyticsButton from "@/components/ui/ViewAnalyticsButton";
-import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
 import { formatAppDateTime } from "@/lib/timezone";
+import ResultListRealtimeRefresh from "@/components/live/ResultListRealtimeRefresh";
 
 export const metadata = { title: "My Results — MCQify" };
 
@@ -33,7 +33,7 @@ export default async function StudentResultsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <RouteAutoRefresh intervalMs={10000} />
+      <ResultListRealtimeRefresh />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">My Results</h1>
         <p className="text-gray-500 font-medium text-sm mt-1">{results.length} quiz attempt{results.length !== 1 ? "s" : ""}</p>

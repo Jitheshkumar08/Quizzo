@@ -6,8 +6,8 @@ import { BookOpen, Users, Lock, CalendarRange, Timer } from "lucide-react";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
 import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
-import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
 import { formatAppScheduleDateTime } from "@/lib/timezone";
+import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
@@ -73,7 +73,7 @@ export default async function StudentQuizzesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <RouteAutoRefresh intervalMs={8000} />
+      <QuizListRealtimeRefresh />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold gradient-text">Browse Quizzes</h1>

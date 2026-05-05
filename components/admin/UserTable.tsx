@@ -187,15 +187,6 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
     return () => window.clearTimeout(timer);
   }, [loadUsers]);
 
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      if (document.visibilityState !== "visible" || updating) return;
-      void loadUsers({ silent: true });
-    }, 10000);
-
-    return () => window.clearInterval(id);
-  }, [loadUsers, updating]);
-
   async function changeRole(userId: string, role: string) {
     setUpdating(userId);
     try {

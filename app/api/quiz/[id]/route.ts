@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
 import { ensureOpenQuizSession, finalizeExpiredOpenSession } from "@/lib/quiz-session";
+import { recordQuizListEvent } from "@/lib/quiz-list-events";
 
 function quizIdFromPathname(pathname: string): string | undefined {
   const m = pathname.match(/\/api\/quiz\/([^/]+)\/?$/);
@@ -142,6 +143,12 @@ export async function PATCH(
           where: { quizId, submittedAt: null },
           data: { submittedAt: new Date() },
         });
+
+        await recordQuizListEvent(tx, {
+          quizId,
+          action: nextPublished ? "quiz.published" : "quiz.unpublished",
+          actorId: session.user.id,
+        });
       }
 
       return next;
@@ -174,7 +181,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.quiz.delete({ where: { id: quizId } });
+    await prisma.$transaction(async (tx) => {
+      await tx.quiz.delete({ where: { id: quizId } });
+      await recordQuizListEvent(tx, {
+        quizId,
+        action: "quiz.deleted",
+        actorId: session.user.id,
+      });
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

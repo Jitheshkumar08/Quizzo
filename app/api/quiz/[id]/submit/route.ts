@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
 import { sessionDeadline, finalizeExpiredOpenSession } from "@/lib/quiz-session";
+import { recordResultListEvent } from "@/lib/result-list-events";
 
 export const maxDuration = 60;
 
@@ -148,6 +149,11 @@ export async function POST(
       await tx.quizSession.updateMany({
         where: { quizId, studentId: session.user.id, submittedAt: null },
         data: { submittedAt: new Date() },
+      });
+      await recordResultListEvent(tx, {
+        quizId,
+        resultId: r.id,
+        action: "result.created",
       });
       return r;
     });
