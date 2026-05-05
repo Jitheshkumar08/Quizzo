@@ -5,8 +5,8 @@ import Link from "next/link";
 import { BookOpen, Eye, FileJson, BarChart3, Pencil, Timer } from "lucide-react";
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
-import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
 import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
+import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 
 export const metadata = { title: "My Quizzes — MCQify" };
 
@@ -41,7 +41,7 @@ export default async function InstructorQuizzesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-10">
-      <RouteAutoRefresh intervalMs={10000} />
+      <QuizListRealtimeRefresh />
       <style>{`
       .eq-action-btn-outline {
         font-family: inherit;

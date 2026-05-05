@@ -52,7 +52,6 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [toggling, setToggling] = useState(false);
   const [isPublished, setIsPublished] = useState(quiz.isPublished);
   const [globalCollapsed, setGlobalCollapsed] = useState(true);
   const [activeQuestion, setActiveQuestion] = useState(0);
@@ -117,9 +116,9 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      setIsPublished(publish);
 
       if (publish) {
-        setIsPublished(true);
         router.push("/instructor/quizzes");
         router.refresh();
       }
@@ -157,25 +156,9 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
     }
   }
 
-  async function handleTogglePublish() {
-    setToggling(true);
-    try {
-      const res = await fetch(`/api/quiz/${quiz.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPublished: !isPublished }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setIsPublished(data.isPublished);
-      } else {
-        alert("Failed to update quiz status");
-      }
-    } catch {
-      alert("An error occurred");
-    } finally {
-      setToggling(false);
-    }
+  function handleTogglePublish() {
+    setIsPublished((value) => !value);
+    setSaved(false);
   }
 
   async function handleDelete() {
@@ -430,7 +413,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
           <button
             onClick={handleTogglePublish}
-            disabled={toggling || saving}
+            disabled={saving}
             className={`eq-action-btn flex items-center gap-2 transition-colors ${isPublished
               ? "text-amber-700 bg-amber-50 hover:bg-amber-100"
               : "text-green-700 bg-green-50 hover:bg-green-100"
@@ -440,8 +423,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
               : { color: "#15803d", background: "rgb(240,253,244)" }
             }
           >
-            {toggling ? <Loader2 className="w-4 h-4 animate-spin" /> : isPublished ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {isPublished ? "Unpublish" : "Republish"}
+            {isPublished ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {isPublished ? "Set Draft" : "Set Published"}
           </button>
           <div className="eq-delete-slot">
             <button
@@ -566,20 +549,22 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
             </span>
           )}
           <button
-            onClick={() => handleSave(false)}
-            disabled={saving}
-            className="eq-action-btn flex items-center gap-2 text-gray-700 bg-white hover:bg-gray-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Draft
-          </button>
-          <button
-            onClick={() => handleSave(true)}
+            onClick={() => handleSave(isPublished)}
             disabled={saving || questions.length === 0}
-            className="eq-action-btn eq-action-btn-primary flex items-center gap-2"
+            className={`eq-action-btn flex items-center gap-2 ${
+              isPublished
+                ? "eq-action-btn-primary"
+                : "text-gray-700 bg-white hover:bg-gray-50"
+            }`}
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {quiz.isPublished ? "Save & Publish" : "Publish Quiz"}
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isPublished ? (
+              <Send className="w-4 h-4" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {isPublished ? "Save & Publish" : "Save Draft"}
           </button>
         </div>
       </div>
