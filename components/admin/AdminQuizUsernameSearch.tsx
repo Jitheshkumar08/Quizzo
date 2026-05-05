@@ -9,10 +9,11 @@ export default function AdminQuizUsernameSearch({ initialValue = "" }: { initial
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(initialValue);
+  const currentQueryString = searchParams.toString();
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(currentQueryString);
       const nextValue = value.trim();
 
       if (nextValue) {
@@ -22,11 +23,13 @@ export default function AdminQuizUsernameSearch({ initialValue = "" }: { initial
       }
 
       const query = params.toString();
+      if (query === currentQueryString) return;
+
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }, 250);
 
     return () => window.clearTimeout(handle);
-  }, [pathname, router, searchParams, value]);
+  }, [currentQueryString, pathname, router, value]);
 
   return (
     <label className="relative block w-full sm:max-w-sm">

@@ -83,8 +83,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      // JWTs stay cheap on normal requests. The dashboard poll calls update({ refreshUser: true })
-      // so admin role/profile edits propagate without requiring a manual refresh.
+      // JWTs stay cheap on normal requests. Explicit session updates can opt into
+      // reloading user fields after profile or role edits.
 
       return token;
     },
