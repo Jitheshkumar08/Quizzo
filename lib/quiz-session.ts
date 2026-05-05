@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { recordResultListEvent } from "@/lib/result-list-events";
 
 export function sessionDeadline(startedAt: Date, timeLimitMinutes: number | null, scheduledEnd: Date | null): Date | null {
   let deadline: Date | null = null;
@@ -76,7 +77,7 @@ export async function finalizeExpiredOpenSession(args: {
 
     if (closed.count === 0) return false;
 
-    await tx.result.create({
+    const result = await tx.result.create({
       data: {
         quizId: args.quizId,
         studentId: args.studentId,
@@ -85,6 +86,12 @@ export async function finalizeExpiredOpenSession(args: {
         timeTaken: elapsedSec,
         userAnswers,
       },
+    });
+
+    await recordResultListEvent(tx, {
+      quizId: args.quizId,
+      resultId: result.id,
+      action: "result.auto_created",
     });
 
     return true;
