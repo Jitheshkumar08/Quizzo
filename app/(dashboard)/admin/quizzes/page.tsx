@@ -8,6 +8,7 @@ import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalytic
 import AdminQuizUsernameSearch from "@/components/admin/AdminQuizUsernameSearch";
 import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
+import AdminQuizDeleteButton from "@/components/admin/AdminQuizDeleteButton";
 
 export const metadata = { title: "All Quizzes — MCQify Admin" };
 
@@ -132,8 +133,9 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                 </div>
               </div>
 
-              <div className="pt-1">
+              <div className="flex items-center justify-between gap-3 pt-1">
                 <InstructorAnalyticsModalButton quizId={quiz.id} />
+                <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} />
               </div>
 
               {/* Dates */}
@@ -164,7 +166,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
       <div className="hidden md:block">
         <div className="glass rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px]">
+          <table className="w-full min-w-[1120px]">
             <thead>
               <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
                 {[
@@ -176,8 +178,9 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                   { label: "Created At" },
                   { label: "Last Modified" },
                   { label: "View Analytics" },
+                  { label: "Delete" },
                 ].map((h) => (
-                  <th key={h.label} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
+                  <th key={h.label} className={`py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50] ${h.label === "Delete" ? "px-3 text-center" : "px-5"}`}>
                     {h.label}
                   </th>
                 ))}
@@ -262,6 +265,11 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                     {/* View Analytics */}
                     <td className="px-5 py-4">
                       <InstructorAnalyticsModalButton quizId={quiz.id} compact />
+                    </td>
+
+                    {/* Delete */}
+                    <td className="px-3 py-4 text-center">
+                      <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} />
                     </td>
                   </tr>
                 );
