@@ -27,6 +27,7 @@ model User {
   email        String        @unique
   passwordHash String
   role         Role          @default(STUDENT)
+  lastLoginAt  DateTime?
   createdAt    DateTime      @default(now())
   quizzes      Quiz[]
   results      Result[]
@@ -96,4 +97,27 @@ model QuizSession {
   student        User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([quizId, studentId])
+}
+
+model QuizListEvent {
+  id        String   @id @default(uuid())
+  quizId    String?
+  action    String
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([quizId])
+}
+
+model ResultListEvent {
+  id        String   @id @default(uuid())
+  quizId    String?
+  resultId  String?
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([quizId])
+  @@index([resultId])
 }

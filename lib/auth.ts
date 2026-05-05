@@ -56,6 +56,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcryptjs.compare(password, user.passwordHash);
         if (!valid) return null;
 
+        await prisma.$executeRaw`
+          UPDATE "User"
+          SET "lastLoginAt" = NOW()
+          WHERE "id" = ${user.id}
+        `;
+
         return {
           id: user.id,
           email: user.email,
