@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
-import { sessionDeadline, finalizeExpiredOpenSession, computeEffectiveStart } from "@/lib/quiz-session";
+import { sessionDeadline, finalizeExpiredOpenSession } from "@/lib/quiz-session";
 
 export const maxDuration = 60;
 
@@ -70,11 +70,10 @@ export async function POST(
         );
       }
       
-      const effectiveStart = computeEffectiveStart(open.startedAt, open.currentAnswers);
-      const deadline = sessionDeadline(effectiveStart, quiz.timeLimitMinutes, quiz.scheduledEnd);
+      const deadline = sessionDeadline(open.startedAt, quiz.timeLimitMinutes, quiz.scheduledEnd);
       const graceMs = 120_000;
       if (deadline && Date.now() > deadline.getTime() + graceMs) {
-        const finalized = await finalizeExpiredOpenSession({
+        await finalizeExpiredOpenSession({
           quizId,
           studentId: session.user.id,
           timeLimitMinutes: quiz.timeLimitMinutes,

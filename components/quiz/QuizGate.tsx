@@ -21,6 +21,7 @@ interface QuizPayload {
   timeLimitMinutes: number | null;
   attemptDeadline: string | null;
   serverNow: string | null;
+  serverReceivedAt: number;
   attemptStartedAt: string | null;
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
@@ -52,6 +53,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
     try {
       const res = await fetch(`/api/quiz/${encodeURIComponent(quizId)}`, { credentials: "include" });
       const data = await res.json();
+      const serverReceivedAt = Date.now();
       if (res.ok) {
         setQuiz({
           id: data.id,
@@ -61,6 +63,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
           timeLimitMinutes: data.timeLimitMinutes ?? null,
           attemptDeadline: data.attemptDeadline ?? null,
           serverNow: data.serverNow ?? null,
+          serverReceivedAt,
           attemptStartedAt: data.attemptStartedAt ?? null,
           sessionId: data.sessionId ?? null,
           shuffleQuestions: !!data.shuffleQuestions,
@@ -137,6 +140,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
         timeLimitMinutes={quiz.timeLimitMinutes}
         attemptDeadline={quiz.attemptDeadline}
         serverNow={quiz.serverNow}
+        serverReceivedAt={quiz.serverReceivedAt}
         attemptStartedAt={quiz.attemptStartedAt}
         sessionId={quiz.sessionId}
         shuffleQuestions={quiz.shuffleQuestions}

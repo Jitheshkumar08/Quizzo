@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookOpen, Users, Lock, CalendarRange } from "lucide-react";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
+import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
@@ -12,11 +13,10 @@ export default async function StudentQuizzesPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const openSessions = await prisma.quizSession.findMany({
+  let openSessions = await prisma.quizSession.findMany({
     where: { studentId: session.user.id, submittedAt: null },
     select: { quizId: true, startedAt: true }
   });
-  const openQuizMap = new Map(openSessions.map((s) => [s.quizId, s.startedAt]));
 
   const quizRows = await prisma.quiz.findMany({
     where: { isPublished: true },
@@ -27,6 +27,33 @@ export default async function StudentQuizzesPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const quizById = new Map(quizRows.map((quiz) => [quiz.id, quiz]));
+  const finalizedQuizIds = new Set<string>();
+
+  await Promise.all(
+    openSessions.map(async (openSession) => {
+      const quiz = quizById.get(openSession.quizId);
+      if (!quiz) return;
+
+      const finalized = await finalizeExpiredOpenSession({
+        quizId: quiz.id,
+        studentId: session.user.id,
+        timeLimitMinutes: quiz.timeLimitMinutes,
+        scheduledEnd: quiz.scheduledEnd,
+        totalQuestions: quiz._count.questions,
+      });
+
+      if (finalized) {
+        finalizedQuizIds.add(openSession.quizId);
+      }
+    })
+  );
+
+  if (finalizedQuizIds.size > 0) {
+    openSessions = openSessions.filter((openSession) => !finalizedQuizIds.has(openSession.quizId));
+  }
+
+  const openQuizMap = new Map(openSessions.map((s) => [s.quizId, s.startedAt]));
   const quizzes = quizRows.map(({ accessPasswordHash, ...quiz }) => ({
     ...quiz,
     passwordProtected: !!accessPasswordHash,
@@ -72,9 +99,11 @@ export default async function StudentQuizzesPage() {
                     </div>
                   ) : openQuizMap.has(quiz.id) ? (
                     <TimerBadge
+                      quizId={quiz.id}
                       startTime={openQuizMap.get(quiz.id)!}
                       timeLimitMinutes={quiz.timeLimitMinutes}
                       scheduledEnd={quiz.scheduledEnd}
+                      serverNow={now}
                     />
                   ) : (
                     <div className="px-3 py-1 rounded-full bg-purple-50 text-xs font-bold uppercase tracking-wider text-purple-600 border border-purple-100 shadow-sm min-w-max">
