@@ -80,7 +80,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
       ) : (
       <>
       {/* ── MOBILE: Card list ─────────────────────────── */}
-      <div className="md:hidden grid gap-5 pb-10">
+      <div className="xl:hidden grid gap-5 pb-10">
         {quizzes.map((quiz) => {
           const created = formatDate(quiz.createdAt);
           const updated = formatDate(quiz.updatedAt);
@@ -163,10 +163,21 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
       </div>
 
       {/* ── DESKTOP: Premium Table ─────────────────────── */}
-      <div className="hidden md:block">
+      <div className="hidden xl:block">
         <div className="glass rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px]">
+          <div className="overflow-hidden">
+          <table className="w-full table-fixed">
+            <colgroup>
+              <col className="w-[15%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[9%]" />
+              <col className="w-[8%]" />
+              <col className="w-[11%]" />
+              <col className="w-[11%]" />
+              <col className="w-[14%]" />
+              <col className="w-[6%]" />
+            </colgroup>
             <thead>
               <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
                 {[
@@ -180,7 +191,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                   { label: "View Analytics" },
                   { label: "Delete" },
                 ].map((h) => (
-                  <th key={h.label} className={`py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50] ${h.label === "Delete" ? "px-3 text-center" : "px-5"}`}>
+                  <th key={h.label} className={`py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50] ${h.label === "Delete" ? "px-2 text-center" : h.label === "View Analytics" ? "px-4 text-center" : "px-4"}`}>
                     {h.label}
                   </th>
                 ))}
@@ -200,54 +211,44 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                     `}
                   >
                     {/* Title */}
-                    <td className="px-5 py-4 max-w-[220px]">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <BookOpen className="w-4 h-4 text-violet-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-[14px] text-[#1E1C1A] leading-snug truncate">{quiz.title}</p>
-                          {quiz.description && (
-                            <p className="text-[11px] font-semibold text-[#A09890] truncate">{quiz.description}</p>
-                          )}
-                        </div>
+                    <td className="px-4 py-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-[14px] font-bold leading-snug text-[#1E1C1A]">{quiz.title}</p>
+                        {quiz.description && (
+                          <p className="truncate text-[11px] font-semibold text-[#A09890]">{quiz.description}</p>
+                        )}
                       </div>
                     </td>
 
                     {/* Creator */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 border border-white/80">
-                          <span className="text-[11px] font-black text-violet-600">{quiz.createdBy.fullName.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-[13px] text-[#1E1C1A] leading-snug">{quiz.createdBy.fullName}</p>
-                          <p className="text-[11px] font-semibold text-[#A09890]">@{quiz.createdBy.username}</p>
-                        </div>
+                    <td className="px-4 py-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-bold leading-snug text-[#1E1C1A]">{quiz.createdBy.fullName}</p>
+                        <p className="truncate text-[11px] font-semibold text-[#A09890]">@{quiz.createdBy.username}</p>
                       </div>
                     </td>
 
                     {/* Status */}
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <AdminQuizStatusDropdown quizId={quiz.id} initialPublished={quiz.isPublished} />
                     </td>
 
                     {/* Questions */}
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <span className="inline-flex items-center justify-center bg-sky-50 border border-sky-100 text-sky-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
                         {quiz._count.questions}
                       </span>
                     </td>
 
                     {/* Attempts */}
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <span className="inline-flex items-center justify-center bg-violet-50 border border-violet-100 text-violet-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
                         {quiz._count.results}
                       </span>
                     </td>
 
                     {/* Created At */}
-                    <td className="px-5 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[13px] font-bold text-[#3D3A37]">{created.date}</span>
                         <span className="text-[11px] font-semibold text-[#A09890]">{created.time}</span>
@@ -255,7 +256,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                     </td>
 
                     {/* Last Modified */}
-                    <td className="px-5 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[13px] font-bold text-[#3D3A37]">{updated.date}</span>
                         <span className="text-[11px] font-semibold text-[#A09890]">{updated.time}</span>
@@ -263,13 +264,17 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                     </td>
 
                     {/* View Analytics */}
-                    <td className="px-5 py-4">
-                      <InstructorAnalyticsModalButton quizId={quiz.id} compact />
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex justify-center">
+                        <InstructorAnalyticsModalButton quizId={quiz.id} compact />
+                      </div>
                     </td>
 
                     {/* Delete */}
-                    <td className="px-3 py-4 text-center">
-                      <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} />
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} />
+                      </div>
                     </td>
                   </tr>
                 );

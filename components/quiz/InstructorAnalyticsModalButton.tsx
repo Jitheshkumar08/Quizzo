@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpRight, BarChart2, CalendarDays, ClipboardCheck, Clock, Sparkles, Trophy, UserRound, X } from "lucide-react";
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, ArrowUpRight, BarChart2, CalendarDays, ClipboardCheck, Clock, Sparkles, Trophy, UserRound, X } from "lucide-react";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 interface AnalyticsResult {
@@ -18,6 +18,9 @@ interface AnalyticsResult {
     submittedAt: string;
 }
 
+type SortField = "score" | "submitted";
+type SortDirection = "asc" | "desc";
+
 export default function InstructorAnalyticsModalButton({
     quizId,
     compact = false,
@@ -30,6 +33,46 @@ export default function InstructorAnalyticsModalButton({
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
     const [analyticsError, setAnalyticsError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [sortField, setSortField] = useState<SortField>("submitted");
+    const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+    const sortedAnalyticsData = useMemo(() => {
+        const direction = sortDirection === "asc" ? 1 : -1;
+        return [...analyticsData].sort((a, b) => {
+            if (sortField === "score") {
+                const scoreDiff = a.percentage - b.percentage || a.score - b.score;
+                if (scoreDiff !== 0) return scoreDiff * direction;
+                return (new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()) * -1;
+            }
+
+            return (new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()) * direction;
+        });
+    }, [analyticsData, sortDirection, sortField]);
+
+    function toggleSort(field: SortField) {
+        if (sortField === field) {
+            setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+            return;
+        }
+
+        setSortField(field);
+        setSortDirection(field === "score" ? "asc" : "desc");
+    }
+
+    function renderSortIndicator(field: SortField) {
+        const iconClassName = "w-4 h-4 stroke-[2.6] text-slate-400";
+        const activeIconClassName = "w-4 h-4 stroke-[2.8] text-slate-600";
+
+        if (sortField !== field) {
+            return <ArrowDownWideNarrow className={iconClassName} aria-hidden="true" />;
+        }
+
+        return sortDirection === "asc" ? (
+            <ArrowUpNarrowWide className={activeIconClassName} aria-hidden="true" />
+        ) : (
+            <ArrowDownWideNarrow className={activeIconClassName} aria-hidden="true" />
+        );
+    }
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -245,11 +288,17 @@ export default function InstructorAnalyticsModalButton({
                                                                     Student
                                                                 </span>
                                                             </th>
-                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
-                                                                <span className="inline-flex items-center gap-2">
+                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider" aria-sort={sortField === "score" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleSort("score")}
+                                                                    className="inline-flex cursor-pointer items-center gap-2 uppercase tracking-wider transition-colors hover:text-slate-800"
+                                                                    title="Sort by score"
+                                                                >
                                                                     <Trophy className="w-4 h-4 text-amber-500" />
                                                                     Score
-                                                                </span>
+                                                                    {renderSortIndicator("score")}
+                                                                </button>
                                                             </th>
                                                             <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
                                                                 <span className="inline-flex items-center gap-2">
@@ -257,11 +306,17 @@ export default function InstructorAnalyticsModalButton({
                                                                     Duration
                                                                 </span>
                                                             </th>
-                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
-                                                                <span className="inline-flex items-center gap-2">
+                                                            <th className="text-left px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider" aria-sort={sortField === "submitted" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleSort("submitted")}
+                                                                    className="inline-flex cursor-pointer items-center gap-2 uppercase tracking-wider transition-colors hover:text-slate-800"
+                                                                    title="Sort by submitted time"
+                                                                >
                                                                     <CalendarDays className="w-4 h-4 text-violet-500" />
                                                                     Submitted
-                                                                </span>
+                                                                    {renderSortIndicator("submitted")}
+                                                                </button>
                                                             </th>
                                                             <th className="text-right px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">
                                                                 <span className="inline-flex items-center justify-end gap-2">
@@ -272,7 +327,7 @@ export default function InstructorAnalyticsModalButton({
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100">
-                                                        {analyticsData.map((r) => (
+                                                        {sortedAnalyticsData.map((r) => (
                                                             <tr key={r.id} className="bg-white hover:bg-slate-50/80 transition-colors">
                                                                 <td className="px-5 py-4">
                                                                     <div className="flex items-center gap-3">
