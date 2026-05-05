@@ -6,6 +6,7 @@ import { BookOpen, BarChart3, Calendar, Clock } from "lucide-react";
 import AdminQuizStatusDropdown from "@/components/admin/AdminQuizStatusDropdown";
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 import AdminQuizUsernameSearch from "@/components/admin/AdminQuizUsernameSearch";
+import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
 
 export const metadata = { title: "All Quizzes — MCQify Admin" };
 
@@ -51,6 +52,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
 
   return (
     <div className="space-y-6 animate-fade-in-up">
+      <RouteAutoRefresh intervalMs={10000} />
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>

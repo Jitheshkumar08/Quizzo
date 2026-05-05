@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -109,6 +110,7 @@ export default function QuizTaker({
   const serverSkewMs = useRef(0);
   const submitLock = useRef(false);
   const autoSubmitFired = useRef(false);
+  const statusConflictFired = useRef(false);
 
   const hasTimer = !!(attemptDeadline && serverNow);
 
@@ -283,6 +285,40 @@ export default function QuizTaker({
     setIsTimeUp(true);
     void runSubmit();
   }, [hasTimer, remainingSec, runSubmit]);
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (document.visibilityState !== "visible" || statusConflictFired.current || submitLock.current) return;
+
+      try {
+        const res = await fetch(`/api/quiz/${quizId}/status`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (res.ok) return;
+
+        const data = await res.json();
+        statusConflictFired.current = true;
+        setShowConfirm(false);
+        setErrorPopup({
+          message:
+            typeof data.message === "string"
+              ? data.message
+              : "This quiz changed while you were taking it. You will be taken back to Browse Quizzes.",
+          code: typeof data.code === "string" ? data.code : "QUIZ_UNAVAILABLE",
+        });
+      } catch (error) {
+        console.error("Failed to check quiz status:", error);
+      }
+    };
+
+    const id = window.setInterval(() => {
+      void checkStatus();
+    }, 8000);
+
+    return () => window.clearInterval(id);
+  }, [quizId]);
 
   const answeredCount = questions.filter(q => answers[q.id] && answers[q.id].trim() !== "").length;
   const unansweredCount = questions.length - answeredCount;
@@ -598,7 +634,16 @@ export default function QuizTaker({
                 <button
                   onClick={() => {
                     setErrorPopup(null);
-                    if (errorPopup.code === "ENDED" || errorPopup.code === "TIME_EXPIRED") {
+                    if (
+                      errorPopup.code === "ENDED" ||
+                      errorPopup.code === "TIME_EXPIRED" ||
+                      errorPopup.code === "QUIZ_UNAVAILABLE" ||
+                      errorPopup.code === "QUIZ_UPDATED" ||
+                      errorPopup.code === "NOT_STARTED" ||
+                      errorPopup.code === "MAX_ATTEMPTS" ||
+                      errorPopup.code === "PASSWORD_REQUIRED" ||
+                      errorPopup.code === "NO_SESSION"
+                    ) {
                       router.push("/student/quizzes");
                     }
                   }}

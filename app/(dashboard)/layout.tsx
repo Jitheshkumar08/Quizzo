@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
+import SessionRoleRefresher from "@/components/live/SessionRoleRefresher";
 
 export default async function DashboardLayout({
   children,
@@ -48,6 +49,7 @@ export default async function DashboardLayout({
             {/* White glossy rim for inner container */}
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-[32px] z-0"></div>
             <div className="relative z-10">
+              <SessionRoleRefresher />
               {children}
             </div>
           </div>

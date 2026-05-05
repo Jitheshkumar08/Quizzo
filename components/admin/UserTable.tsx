@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search } from "lucide-react";
 
@@ -167,12 +167,34 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
   const [updating, setUpdating] = useState<string | null>(null);
   const [usernameQuery, setUsernameQuery] = useState("");
 
-  useEffect(() => {
-    fetch("/api/admin/users")
-      .then((r) => r.json())
-      .then(setUsers)
-      .finally(() => setLoading(false));
+  const loadUsers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading(true);
+
+    const res = await fetch("/api/admin/users", { credentials: "include" });
+    const data = await res.json();
+    if (res.ok && Array.isArray(data)) {
+      setUsers(data);
+    }
+
+    if (!silent) setLoading(false);
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadUsers();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadUsers]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible" || updating) return;
+      void loadUsers({ silent: true });
+    }, 10000);
+
+    return () => window.clearInterval(id);
+  }, [loadUsers, updating]);
 
   async function changeRole(userId: string, role: string) {
     setUpdating(userId);

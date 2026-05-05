@@ -1,7 +1,31 @@
 import NextAuth from "next-auth";
+import type { Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcryptjs from "bcryptjs";
+
+async function refreshTokenUser(token: JWT) {
+  if (!token.id) return token;
+
+  const user = await prisma.user.findUnique({
+    where: { id: token.id },
+    select: {
+      email: true,
+      fullName: true,
+      role: true,
+      username: true,
+    },
+  });
+
+  if (!user) return token;
+
+  token.email = user.email;
+  token.name = user.fullName;
+  token.role = user.role;
+  token.username = user.username;
+  return token;
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -46,18 +70,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       // 1. Initial Sign In
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-        token.username = (user as any).username;
+        if (user.id) token.id = user.id;
+        token.role = user.role;
+        token.username = user.username;
       }
       
       // 2. Client-side update trigger handling
       if (trigger === "update" && session) {
-        token = { ...token, ...session };
+        const requested = session as Session & { refreshUser?: boolean };
+        if (requested.refreshUser) {
+          token = await refreshTokenUser(token);
+        }
       }
 
-      // Removed Dynamic Database Check to prevent massive blocking latency on every page load.
-      // JWTs are designed to be stateless. If a role update is needed, the client should call update().
+      // JWTs stay cheap on normal requests. The dashboard poll calls update({ refreshUser: true })
+      // so admin role/profile edits propagate without requiring a manual refresh.
 
       return token;
     },
