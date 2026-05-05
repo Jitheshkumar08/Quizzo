@@ -130,9 +130,21 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const updated = await prisma.quiz.update({
-      where: { id: quizId },
-      data: { isPublished: body.isPublished ?? !quiz.isPublished },
+    const nextPublished = body.isPublished ?? !quiz.isPublished;
+    const updated = await prisma.$transaction(async (tx) => {
+      const next = await tx.quiz.update({
+        where: { id: quizId },
+        data: { isPublished: nextPublished },
+      });
+
+      if (nextPublished !== quiz.isPublished) {
+        await tx.quizSession.updateMany({
+          where: { quizId, submittedAt: null },
+          data: { submittedAt: new Date() },
+        });
+      }
+
+      return next;
     });
 
     return NextResponse.json({ isPublished: updated.isPublished });

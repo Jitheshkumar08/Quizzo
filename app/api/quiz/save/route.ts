@@ -132,25 +132,34 @@ export async function POST(req: NextRequest) {
     }
 
     if (quizId) {
-      quiz = await prisma.quiz.update({
-        where: { id: quizId },
-        data: {
-          title,
-          description,
-          jsonBlobUrl,
-          isPublished: publish,
-          ...accessFields,
-          questions: {
-            deleteMany: {},
-            create: questions.map((q: QuestionInput) => ({
-              questionText: q.questionText,
-              options: q.options,
-              correctAnswer: q.correctAnswer,
-              explanation: q.explanation ?? "",
-              order: q.order,
-            })),
+      quiz = await prisma.$transaction(async (tx) => {
+        const updated = await tx.quiz.update({
+          where: { id: quizId },
+          data: {
+            title,
+            description,
+            jsonBlobUrl,
+            isPublished: publish,
+            ...accessFields,
+            questions: {
+              deleteMany: {},
+              create: questions.map((q: QuestionInput) => ({
+                questionText: q.questionText,
+                options: q.options,
+                correctAnswer: q.correctAnswer,
+                explanation: q.explanation ?? "",
+                order: q.order,
+              })),
+            },
           },
-        },
+        });
+
+        await tx.quizSession.updateMany({
+          where: { quizId, submittedAt: null },
+          data: { submittedAt: new Date() },
+        });
+
+        return updated;
       });
     } else {
       quiz = await prisma.quiz.create({
@@ -220,25 +229,34 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    await prisma.question.deleteMany({ where: { quizId } });
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.question.deleteMany({ where: { quizId } });
 
-    const updated = await prisma.quiz.update({
-      where: { id: quizId },
-      data: {
-        title,
-        description,
-        isPublished: publish,
-        ...accessFields,
-        questions: {
-          create: questions.map((q: QuestionInput) => ({
-            questionText: q.questionText,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation ?? "",
-            order: q.order,
-          })),
+      const next = await tx.quiz.update({
+        where: { id: quizId },
+        data: {
+          title,
+          description,
+          isPublished: publish,
+          ...accessFields,
+          questions: {
+            create: questions.map((q: QuestionInput) => ({
+              questionText: q.questionText,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              explanation: q.explanation ?? "",
+              order: q.order,
+            })),
+          },
         },
-      },
+      });
+
+      await tx.quizSession.updateMany({
+        where: { quizId, submittedAt: null },
+        data: { submittedAt: new Date() },
+      });
+
+      return next;
     });
 
     return NextResponse.json({ quizId: updated.id });
