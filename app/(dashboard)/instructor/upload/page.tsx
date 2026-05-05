@@ -315,8 +315,9 @@ export default function InstructorUploadPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF</h1>
+          <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF </h1>
           <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
+          <p className="text-[red] font-medium text-[15px] mt-1">(Please use a JSON file by copying the format from the Upload Guide.)</p>
         </div>
         <button onClick={() => setShowDisclaimer(true)} className="relative inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 self-start md:self-auto group mt-2 md:mt-0 rounded-xl">
           {/* Beautiful spreading background glow */}
