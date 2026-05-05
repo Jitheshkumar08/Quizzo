@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, BarChart3, BookOpen, Calendar, Shield, UserCircle2 } from "lucide-react";
 import AdminUserAccountForm from "@/components/admin/AdminUserAccountForm";
+import DeleteUserButton from "@/components/admin/DeleteUserButton";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -111,6 +112,12 @@ export default async function AdminUserProfilePage({ params }: Props) {
           This admin view gives direct access to update the user&apos;s profile, role, email, and password.
         </p>
       </div>
+
+      <DeleteUserButton
+        userId={user.id}
+        userName={user.fullName}
+        isSelf={user.id === session.user.id}
+      />
     </div>
   );
 }

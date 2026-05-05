@@ -130,3 +130,54 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
 }
+
+// DELETE — remove a user and owned/dependent data (Admin only)
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { userId } = await req.json();
+    if (!userId || typeof userId !== "string") {
+      return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
+    }
+
+    if (userId === session.user.id) {
+      return NextResponse.json({ error: "You cannot delete your own account" }, { status: 400 });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const ownedQuizzes = await tx.quiz.findMany({
+        where: { createdById: userId },
+        select: { id: true },
+      });
+      const ownedQuizIds = ownedQuizzes.map((quiz) => quiz.id);
+
+      if (ownedQuizIds.length > 0) {
+        await tx.quiz.deleteMany({
+          where: { id: { in: ownedQuizIds } },
+        });
+      }
+
+      await tx.quizSession.deleteMany({ where: { studentId: userId } });
+      await tx.result.deleteMany({ where: { studentId: userId } });
+      await tx.user.delete({ where: { id: userId } });
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[DELETE USER ERROR]", error);
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+  }
+}
