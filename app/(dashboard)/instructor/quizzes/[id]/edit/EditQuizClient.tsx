@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 import { toDatetimeLocalValue } from "@/lib/datetime-local";
+import { appDatetimeLocalToISOString, formatAppDate, formatAppTime } from "@/lib/timezone";
 
 interface EditQuizClientProps {
   quiz: {
@@ -96,8 +97,8 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           publish,
           questions,
           scheduleEnabled,
-          scheduledStart: scheduleEnabled && scheduledStart ? new Date(scheduledStart).toISOString() : null,
-          scheduledEnd: scheduleEnabled && scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+          scheduledStart: scheduleEnabled && scheduledStart ? appDatetimeLocalToISOString(scheduledStart) : null,
+          scheduledEnd: scheduleEnabled && scheduledEnd ? appDatetimeLocalToISOString(scheduledEnd) : null,
           requireQuizPassword,
           quizAccessPassword: quizAccessPassword.trim() || undefined,
           allowMultipleAttempts,
@@ -909,18 +910,11 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                                 <td className="px-4 py-3">
                                   <div className="text-xs text-gray-600 leading-snug">
                                     <span className="font-medium text-gray-800">
-                                      {new Date(r.submittedAt).toLocaleTimeString(undefined, {
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                      })}
+                                      {formatAppTime(r.submittedAt)}
                                     </span>
                                     <span className="text-gray-400 mx-1">·</span>
                                     <span className="text-gray-500">
-                                      {new Date(r.submittedAt).toLocaleDateString(undefined, {
-                                        day: "numeric",
-                                        month: "short",
-                                        year: "numeric",
-                                      })}
+                                      {formatAppDate(r.submittedAt)}
                                     </span>
                                   </div>
                                 </td>

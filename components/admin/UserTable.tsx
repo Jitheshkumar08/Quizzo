@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search } from "lucide-react";
+import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 interface User {
   id: string;
@@ -55,9 +56,8 @@ const roleConfig: Record<string, {
 };
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const date = formatAppDate(iso);
+  const time = formatAppTime(iso);
   return { date, time };
 }
 

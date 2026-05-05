@@ -5,15 +5,15 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, BarChart3, BookOpen, Calendar, Shield, UserCircle2 } from "lucide-react";
 import AdminUserAccountForm from "@/components/admin/AdminUserAccountForm";
 import DeleteUserButton from "@/components/admin/DeleteUserButton";
+import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 function formatDate(iso: Date | string) {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const date = formatAppDate(iso);
+  const time = formatAppTime(iso);
   return { date, time };
 }
 

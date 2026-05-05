@@ -6,17 +6,12 @@ import { BookOpen, Eye, FileJson, BarChart3, Pencil, Timer } from "lucide-react"
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
+import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
 
 export const metadata = { title: "My Quizzes — MCQify" };
 
 function formatScheduleTime(date: Date) {
-  return date.toLocaleString("en-GB", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return formatAppScheduleDateTime(date);
 }
 
 function formatTimeLimit(minutes: number) {
@@ -167,7 +162,7 @@ export default async function InstructorQuizzesPage() {
                     {session.user.role === "ADMIN" && (
                       <span className="bg-black/5 px-2 py-0.5 rounded-md">by {quiz.createdBy.fullName}</span>
                     )}
-                    <span className="opacity-70">{new Date(quiz.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
+                    <span className="opacity-70">{formatAppDate(quiz.createdAt)}</span>
                   </div>
                 </div>
               </div>

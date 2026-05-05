@@ -7,6 +7,7 @@ import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
 import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw, Info, X, AlertTriangle, Copy, Check } from "lucide-react";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
+import { appDatetimeLocalToISOString } from "@/lib/timezone";
 
 type Step = "upload" | "edit" | "publishing";
 
@@ -286,8 +287,8 @@ export default function InstructorUploadPage() {
           publish,
           questions,
           scheduleEnabled,
-          scheduledStart: scheduleEnabled && scheduledStart ? new Date(scheduledStart).toISOString() : null,
-          scheduledEnd: scheduleEnabled && scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+          scheduledStart: scheduleEnabled && scheduledStart ? appDatetimeLocalToISOString(scheduledStart) : null,
+          scheduledEnd: scheduleEnabled && scheduledEnd ? appDatetimeLocalToISOString(scheduledEnd) : null,
           requireQuizPassword,
           quizAccessPassword: quizAccessPassword.trim() || undefined,
           allowMultipleAttempts,

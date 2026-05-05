@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2, Lock, CalendarClock, Ban, ArrowLeft, KeyRound } from "lucide-react";
 import { TypewriterLoader } from "@/components/ui/TypewriterLoader";
 import QuizTaker from "./QuizTaker";
+import { formatAppDateTime } from "@/lib/timezone";
 
 interface Question {
   id: string;
@@ -202,10 +203,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
             <p>
               This quiz is not open yet. It starts{" "}
               <strong className="text-gray-900">
-                {new Date(block.scheduledStart).toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
+                {formatAppDateTime(block.scheduledStart)}
               </strong>
               .
             </p>
@@ -218,10 +216,7 @@ export default function QuizGate({ quizId }: { quizId: string }) {
             <p>
               This quiz closed on{" "}
               <strong className="text-gray-900">
-                {new Date(block.scheduledEnd).toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
+                {formatAppDateTime(block.scheduledEnd)}
               </strong>
               .
             </p>

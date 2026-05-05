@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trophy, Clock, BookOpen } from "lucide-react";
 import ViewAnalyticsButton from "@/components/ui/ViewAnalyticsButton";
 import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
+import { formatAppDateTime } from "@/lib/timezone";
 
 export const metadata = { title: "My Results — MCQify" };
 
@@ -15,14 +16,7 @@ function formatTime(secs: number) {
 }
 
 function formatDateTime(date: Date) {
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+  return formatAppDateTime(date);
 }
 
 export default async function StudentResultsPage() {

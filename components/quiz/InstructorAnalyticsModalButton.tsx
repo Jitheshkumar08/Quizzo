@@ -5,6 +5,7 @@ import type { MouseEvent } from "react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ArrowUpRight, BarChart2, CalendarDays, ClipboardCheck, Clock, Sparkles, Trophy, UserRound, X } from "lucide-react";
+import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 interface AnalyticsResult {
     id: string;
@@ -312,18 +313,11 @@ export default function InstructorAnalyticsModalButton({
                                                                 <td className="px-5 py-4">
                                                                     <div className="text-sm text-slate-600 leading-snug whitespace-nowrap">
                                                                         <span className="font-bold text-slate-900">
-                                                                            {new Date(r.submittedAt).toLocaleTimeString(undefined, {
-                                                                                hour: "numeric",
-                                                                                minute: "2-digit",
-                                                                            })}
+                                                                            {formatAppTime(r.submittedAt)}
                                                                         </span>
                                                                         <span className="text-slate-300 mx-1.5">·</span>
                                                                         <span className="text-slate-500 font-medium">
-                                                                            {new Date(r.submittedAt).toLocaleDateString(undefined, {
-                                                                                day: "numeric",
-                                                                                month: "short",
-                                                                                year: "numeric",
-                                                                            })}
+                                                                            {formatAppDate(r.submittedAt)}
                                                                         </span>
                                                                     </div>
                                                                 </td>

@@ -7,6 +7,7 @@ import AdminQuizStatusDropdown from "@/components/admin/AdminQuizStatusDropdown"
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 import AdminQuizUsernameSearch from "@/components/admin/AdminQuizUsernameSearch";
 import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
+import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 export const metadata = { title: "All Quizzes — MCQify Admin" };
 
@@ -15,9 +16,8 @@ interface AdminQuizzesPageProps {
 }
 
 function formatDate(iso: Date | string) {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const date = formatAppDate(iso);
+  const time = formatAppTime(iso);
   return { date, time };
 }
 

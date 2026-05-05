@@ -7,17 +7,12 @@ import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
 import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
 import RouteAutoRefresh from "@/components/live/RouteAutoRefresh";
+import { formatAppScheduleDateTime } from "@/lib/timezone";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
 function formatCardDateTime(date: Date) {
-  return date.toLocaleString("en-GB", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return formatAppScheduleDateTime(date);
 }
 
 function formatTimeLimit(minutes: number) {
