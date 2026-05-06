@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
@@ -23,31 +23,7 @@ export default function GoogleAuthButton({
   enabled: boolean;
 }) {
   const [loading, setLoading] = useState(false);
-  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const disabled = loading || !enabled;
-
-  useEffect(() => {
-    function clearLoadingOnReturn() {
-      setLoading(false);
-    }
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") clearLoadingOnReturn();
-    }
-
-    window.addEventListener("focus", clearLoadingOnReturn);
-    window.addEventListener("pageshow", clearLoadingOnReturn);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("focus", clearLoadingOnReturn);
-      window.removeEventListener("pageshow", clearLoadingOnReturn);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (resetTimerRef.current) {
-        clearTimeout(resetTimerRef.current);
-        resetTimerRef.current = null;
-      }
-    };
-  }, []);
 
   return (
     <button
@@ -56,13 +32,7 @@ export default function GoogleAuthButton({
       onClick={() => {
         if (!enabled) return;
         setLoading(true);
-
-        // If navigation is cancelled (user closes picker / goes back), reset the CTA.
-        if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-        resetTimerRef.current = setTimeout(() => setLoading(false), 12000);
-
-        void signIn("google", { callbackUrl: "/dashboard" })
-          .catch(() => setLoading(false));
+        void signIn("google", { callbackUrl: "/dashboard" });
       }}
       className="group cursor-pointer relative flex w-full items-center justify-center gap-3 rounded-full border border-[#E5DED3] bg-white px-5 py-4 text-[15px] font-black text-[#2C2A28] shadow-[0_10px_24px_rgba(44,42,40,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#D8CEC0] hover:shadow-[0_14px_30px_rgba(44,42,40,0.13)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
     >
