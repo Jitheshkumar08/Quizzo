@@ -33,17 +33,19 @@ export async function getStudentQuizBlock(
     }
   }
 
-  const attemptRows = await prisma.$queryRaw<{ count: bigint }[]>`
-    SELECT COUNT(*) AS "count"
-    FROM "Result"
-    WHERE "quizId" = ${quiz.id}
-      AND "studentId" = ${session.user.id}
-      AND COALESCE("attemptType", 'NORMAL') = 'NORMAL'
-  `;
-  const attemptsUsed = Number(attemptRows[0]?.count ?? 0);
+  if (!quiz.allowMultipleAttempts) {
+    const attemptRows = await prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) AS "count"
+      FROM "Result"
+      WHERE "quizId" = ${quiz.id}
+        AND "studentId" = ${session.user.id}
+        AND COALESCE("attemptType", 'NORMAL') = 'NORMAL'
+    `;
+    const attemptsUsed = Number(attemptRows[0]?.count ?? 0);
 
-  if (!quiz.allowMultipleAttempts && attemptsUsed >= 1) {
-    return { code: "MAX_ATTEMPTS", attemptsUsed };
+    if (attemptsUsed >= 1) {
+      return { code: "MAX_ATTEMPTS", attemptsUsed };
+    }
   }
 
   if (quiz.accessPasswordHash) {

@@ -3,7 +3,8 @@ import type { Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcrypt";
+import { findUserByIdentifier } from "@/lib/user-lookup";
 
 async function refreshTokenUser(token: JWT) {
   if (!token.id) return token;
@@ -45,32 +46,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!identifier || !password) return null;
 
-        // Find by email OR username
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { email: identifier.toLowerCase() },
-              { username: identifier.toLowerCase() },
-            ],
-          },
-        });
+        const user = await findUserByIdentifier(identifier);
 
         if (!user) return null;
 
-        const valid = await bcryptjs.compare(password, user.passwordHash);
+        const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
-        await prisma.$executeRaw`
+        const [sessionState] = await prisma.$queryRaw<Array<{ sessionVersion: number }>>`
           UPDATE "User"
           SET "lastLoginAt" = NOW()
           WHERE "id" = ${user.id}
-        `;
-
-        const [sessionState] = await prisma.$queryRaw<Array<{ sessionVersion: number }>>`
-          SELECT "sessionVersion"
-          FROM "User"
-          WHERE "id" = ${user.id}
-          LIMIT 1
+          RETURNING "sessionVersion"
         `;
 
         return {

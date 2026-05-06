@@ -59,6 +59,7 @@ export default async function StudentQuizzesPage() {
     openSessions.map(async (openSession) => {
       const quiz = quizById.get(openSession.quizId);
       if (!quiz) return;
+      if (!quiz.timeLimitMinutes && !quiz.scheduledEnd) return;
 
       const finalized = await finalizeExpiredOpenSession({
         quizId: quiz.id,

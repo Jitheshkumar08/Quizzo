@@ -32,18 +32,6 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const checkRes = await fetch("/api/auth/login-check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: cleanedIdentifier, password }),
-      });
-      const checkData = await checkRes.json().catch(() => ({}));
-
-      if (!checkRes.ok) {
-        setError(typeof checkData.error === "string" ? checkData.error : "Could not verify your login. Please try again.");
-        return;
-      }
-
       const result = await signIn("credentials", {
         identifier: cleanedIdentifier,
         password,
@@ -51,7 +39,18 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Your details were correct, but the session could not be created. Please try again.");
+        const checkRes = await fetch("/api/auth/login-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: cleanedIdentifier, password }),
+        });
+        const checkData = await checkRes.json().catch(() => ({}));
+
+        setError(
+          typeof checkData.error === "string"
+            ? checkData.error
+            : "Could not verify your login. Please try again."
+        );
       } else {
         router.push("/dashboard");
         router.refresh();

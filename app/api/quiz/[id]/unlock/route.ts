@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { quizAccessCookieName, signQuizAccess } from "@/lib/quiz-access-cookie";

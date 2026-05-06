@@ -104,9 +104,11 @@ export async function ensureOpenQuizSession(args: {
   timeLimitMinutes: number | null;
   scheduledEnd: Date | null;
 }): Promise<{
+  sessionId: string;
   attemptDeadline: string | null;
   serverNow: string;
   attemptStartedAt: string | null;
+  savedAnswers: Record<string, string>;
 }> {
   const serverNow = new Date();
 
@@ -128,9 +130,11 @@ export async function ensureOpenQuizSession(args: {
 
   const deadline = sessionDeadline(open.startedAt, args.timeLimitMinutes, args.scheduledEnd);
   return {
+    sessionId: open.id,
     attemptDeadline: deadline ? deadline.toISOString() : null,
     serverNow: serverNow.toISOString(),
     attemptStartedAt: open.startedAt.toISOString(),
+    savedAnswers: (open.currentAnswers as Record<string, string>) || {},
   };
 }
 

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcrypt";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { recordUserChangeEvent } from "@/lib/role-change-events";
+import { withDatabaseRetry } from "@/lib/db-retry";
 
 // GET all users (Admin only)
 export async function GET() {
@@ -13,20 +14,42 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        username: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        _count: { select: { quizzes: true, results: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const [users, quizCounts, resultCounts] = await withDatabaseRetry(() =>
+      Promise.all([
+        prisma.user.findMany({
+          select: {
+            id: true,
+            fullName: true,
+            username: true,
+            email: true,
+            role: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.quiz.groupBy({
+          by: ["createdById"],
+          _count: { _all: true },
+        }),
+        prisma.result.groupBy({
+          by: ["studentId"],
+          _count: { _all: true },
+        }),
+      ])
+    );
 
-    return NextResponse.json(users);
+    const quizCountByUser = new Map(quizCounts.map((row) => [row.createdById, row._count._all]));
+    const resultCountByUser = new Map(resultCounts.map((row) => [row.studentId, row._count._all]));
+
+    return NextResponse.json(
+      users.map((user) => ({
+        ...user,
+        _count: {
+          quizzes: quizCountByUser.get(user.id) ?? 0,
+          results: resultCountByUser.get(user.id) ?? 0,
+        },
+      }))
+    );
   } catch (error) {
     console.error("[GET USERS ERROR]", error);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
@@ -47,7 +70,18 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+    const existingUser = await withDatabaseRetry(() =>
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          role: true,
+          fullName: true,
+          username: true,
+          email: true,
+        },
+      })
+    );
     if (!existingUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -64,7 +98,9 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "You cannot change your own role" }, { status: 400 });
       }
 
-      updateData.role = role;
+      if (role !== existingUser.role) {
+        updateData.role = role;
+      }
     }
 
     if (typeof fullName !== "undefined") {
@@ -72,7 +108,9 @@ export async function PATCH(req: NextRequest) {
       if (nextFullName.length < 2) {
         return NextResponse.json({ error: "Full name must be at least 2 characters" }, { status: 400 });
       }
-      updateData.fullName = nextFullName;
+      if (nextFullName !== existingUser.fullName) {
+        updateData.fullName = nextFullName;
+      }
     }
 
     if (typeof username !== "undefined") {
@@ -81,14 +119,19 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "Username is not available" }, { status: 400 });
       }
 
-      const existingUsername = await prisma.user.findFirst({
-        where: { username: { equals: nextUsername, mode: "insensitive" }, id: { not: userId } },
-      });
-      if (existingUsername) {
-        return NextResponse.json({ error: "Username is already taken" }, { status: 400 });
-      }
+      if (nextUsername !== existingUser.username) {
+        const existingUsername = await withDatabaseRetry(() =>
+          prisma.user.findFirst({
+            where: { username: { equals: nextUsername, mode: "insensitive" }, id: { not: userId } },
+            select: { id: true },
+          })
+        );
+        if (existingUsername) {
+          return NextResponse.json({ error: "Username is already taken" }, { status: 400 });
+        }
 
-      updateData.username = nextUsername;
+        updateData.username = nextUsername;
+      }
     }
 
     if (typeof email !== "undefined") {
@@ -97,14 +140,19 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
       }
 
-      const existingEmail = await prisma.user.findFirst({
-        where: { email: { equals: nextEmail, mode: "insensitive" }, id: { not: userId } },
-      });
-      if (existingEmail) {
-        return NextResponse.json({ error: "Email is already taken" }, { status: 400 });
-      }
+      if (nextEmail !== existingUser.email) {
+        const existingEmail = await withDatabaseRetry(() =>
+          prisma.user.findFirst({
+            where: { email: { equals: nextEmail, mode: "insensitive" }, id: { not: userId } },
+            select: { id: true },
+          })
+        );
+        if (existingEmail) {
+          return NextResponse.json({ error: "Email is already taken" }, { status: 400 });
+        }
 
-      updateData.email = nextEmail;
+        updateData.email = nextEmail;
+      }
     }
 
     const passwordChanged = typeof newPassword !== "undefined" && String(newPassword).trim().length > 0;
@@ -114,7 +162,7 @@ export async function PATCH(req: NextRequest) {
       if (password.length < 8) {
         return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
       }
-      updateData.passwordHash = await bcryptjs.hash(password, 12);
+      updateData.passwordHash = await bcrypt.hash(password, 12);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -127,31 +175,31 @@ export async function PATCH(req: NextRequest) {
       (typeof updateData.username !== "undefined" && updateData.username !== existingUser.username) ||
       (typeof updateData.email !== "undefined" && updateData.email !== existingUser.email);
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const next = await tx.user.update({
+    const updated = await withDatabaseRetry(() =>
+      prisma.user.update({
         where: { id: userId },
         data: updateData,
         select: { id: true, fullName: true, username: true, email: true, role: true },
-      });
+      })
+    );
 
-      if (passwordChanged) {
-        await tx.$executeRaw`
+    if (passwordChanged) {
+      await withDatabaseRetry(() =>
+        prisma.$executeRaw`
           UPDATE "User"
           SET "sessionVersion" = "sessionVersion" + 1
           WHERE "id" = ${userId}
-        `;
-      }
+        `
+      );
+    }
 
-      if (sessionVisibleFieldsChanged || passwordChanged) {
-        await recordUserChangeEvent(tx, {
-          targetUserId: userId,
-          actorId: session.user.id,
-          action: passwordChanged ? "user.password.updated" : "user.session-fields.updated",
-        });
-      }
-
-      return next;
-    });
+    if (sessionVisibleFieldsChanged || passwordChanged) {
+      await recordUserChangeEvent(prisma, {
+        targetUserId: userId,
+        actorId: session.user.id,
+        action: passwordChanged ? "user.password.updated" : "user.session-fields.updated",
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

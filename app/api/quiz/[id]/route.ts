@@ -41,13 +41,15 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
     if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
 
-    await finalizeExpiredOpenSession({
-      quizId,
-      studentId: session.user.id,
-      timeLimitMinutes: quiz.timeLimitMinutes,
-      scheduledEnd: quiz.scheduledEnd,
-      totalQuestions: quiz.questions.length,
-    });
+    if (quiz.timeLimitMinutes || quiz.scheduledEnd) {
+      await finalizeExpiredOpenSession({
+        quizId,
+        studentId: session.user.id,
+        timeLimitMinutes: quiz.timeLimitMinutes,
+        scheduledEnd: quiz.scheduledEnd,
+        totalQuestions: quiz.questions.length,
+      });
+    }
 
     const block = await getStudentQuizBlock(req, quiz, session);
     if (block) {
@@ -90,19 +92,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       }
     }
 
-    const openSession = await prisma.quizSession.findFirst({
-      where: { quizId, studentId: session.user.id, submittedAt: null },
-      select: { currentAnswers: true, id: true },
-    });
-
-    const { accessPasswordHash: _omit, ...safe } = quiz;
+    const safe = Object.fromEntries(
+      Object.entries(quiz).filter(([key]) => key !== "accessPasswordHash")
+    );
     return NextResponse.json({
       ...safe,
-      sessionId: openSession?.id || null,
+      sessionId: timing.sessionId,
       attemptDeadline: timing.attemptDeadline,
       serverNow: timing.serverNow,
       attemptStartedAt: timing.attemptStartedAt,
-      savedAnswers: (openSession?.currentAnswers as Record<string, string>) || {},
+      savedAnswers: timing.savedAnswers,
     });
   } catch (error) {
     console.error("[GET QUIZ ERROR]", error);

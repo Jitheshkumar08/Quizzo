@@ -33,7 +33,6 @@ interface QuizTakerProps {
   savedAnswers?: Record<string, string>;
   autosaveUrl?: string | null;
   submitUrl?: string;
-  statusUrl?: string | null;
 }
 
 const QUESTIONS_PER_PAGE = 5;
@@ -54,7 +53,6 @@ export default function QuizTaker({
   savedAnswers = {},
   autosaveUrl,
   submitUrl,
-  statusUrl,
 }: QuizTakerProps) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>(savedAnswers);
@@ -116,7 +114,7 @@ export default function QuizTaker({
   const serverSkewMs = useRef(0);
   const submitLock = useRef(false);
   const autoSubmitFired = useRef(false);
-  const statusConflictFired = useRef(false);
+  const autosaveTimer = useRef<number | null>(null);
 
   const hasTimer = !!(attemptDeadline && serverNow);
 
@@ -125,16 +123,29 @@ export default function QuizTaker({
   useEffect(() => {
     answersRef.current = answers;
 
-    // Autosave answers to backend
     const targetAutosaveUrl = autosaveUrl === undefined ? `/api/quiz/${quizId}/autosave` : autosaveUrl;
-    if (targetAutosaveUrl && Object.keys(answers).length > 0) {
+    if (!targetAutosaveUrl || Object.keys(answers).length === 0) return;
+
+    if (autosaveTimer.current !== null) {
+      window.clearTimeout(autosaveTimer.current);
+    }
+
+    autosaveTimer.current = window.setTimeout(() => {
       fetch(targetAutosaveUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ userAnswers: answers }),
       }).catch(err => console.error("Failed to autosave:", err));
-    }
+
+      autosaveTimer.current = null;
+    }, 800);
+
+    return () => {
+      if (autosaveTimer.current !== null) {
+        window.clearTimeout(autosaveTimer.current);
+      }
+    };
   }, [answers, quizId, autosaveUrl]);
 
   useEffect(() => {
@@ -293,43 +304,6 @@ export default function QuizTaker({
     setIsTimeUp(true);
     void runSubmit();
   }, [hasTimer, remainingSec, runSubmit]);
-
-  useEffect(() => {
-    const targetStatusUrl = statusUrl === undefined ? `/api/quiz/${quizId}/status` : statusUrl;
-    if (!targetStatusUrl) return;
-
-    const checkStatus = async () => {
-      if (document.visibilityState !== "visible" || statusConflictFired.current || submitLock.current) return;
-
-      try {
-        const res = await fetch(targetStatusUrl, {
-          credentials: "include",
-          cache: "no-store",
-        });
-
-        if (res.ok) return;
-
-        const data = await res.json();
-        statusConflictFired.current = true;
-        setShowConfirm(false);
-        setErrorPopup({
-          message:
-            typeof data.message === "string"
-              ? data.message
-              : "This quiz changed while you were taking it. You will be taken back to Browse Quizzes.",
-          code: typeof data.code === "string" ? data.code : "QUIZ_UNAVAILABLE",
-        });
-      } catch (error) {
-        console.error("Failed to check quiz status:", error);
-      }
-    };
-
-    const id = window.setInterval(() => {
-      void checkStatus();
-    }, 8000);
-
-    return () => window.clearInterval(id);
-  }, [quizId, statusUrl]);
 
   const answeredCount = questions.filter(q => answers[q.id] && answers[q.id].trim() !== "").length;
   const unansweredCount = questions.length - answeredCount;

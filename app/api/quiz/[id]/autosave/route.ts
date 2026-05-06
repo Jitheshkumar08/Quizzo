@@ -16,17 +16,10 @@ export async function POST(
         const body = await req.json();
         const { userAnswers } = body as { userAnswers: Record<string, string> };
 
-        // Update the open session with current answers
-        const openSession = await prisma.quizSession.findFirst({
+        await prisma.quizSession.updateMany({
             where: { quizId, studentId: session.user.id, submittedAt: null },
+            data: { currentAnswers: userAnswers },
         });
-
-        if (openSession) {
-            await prisma.quizSession.update({
-                where: { id: openSession.id },
-                data: { currentAnswers: userAnswers },
-            });
-        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -96,7 +96,6 @@ export default async function ReattemptQuizPage({ params }: Props) {
       savedAnswers={parseAnswerMap(remedialSession.currentAnswers)}
       autosaveUrl={`/api/reattempts/${remedialSession.id}/autosave`}
       submitUrl={`/api/reattempts/${remedialSession.id}/submit`}
-      statusUrl={null}
     />
   );
 }

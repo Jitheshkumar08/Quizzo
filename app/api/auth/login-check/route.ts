@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcryptjs from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import bcrypt from "bcrypt";
+import { findUserByIdentifier } from "@/lib/user-lookup";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,15 +22,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: identifier },
-          { username: identifier },
-        ],
-      },
-      select: { passwordHash: true },
-    });
+    const user = await findUserByIdentifier(identifier);
 
     if (!user) {
       return NextResponse.json(
@@ -39,7 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const valid = await bcryptjs.compare(password, user.passwordHash);
+    const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       return NextResponse.json(
         { error: "Password is incorrect. Please try again." },

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcrypt";
 
 export async function PUT(req: Request) {
   try {
@@ -28,11 +28,11 @@ export async function PUT(req: Request) {
     };
 
     if (currentPassword && newPassword) {
-      const isPasswordValid = await bcryptjs.compare(currentPassword, user.passwordHash);
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!isPasswordValid) {
         return NextResponse.json({ error: "Incorrect current password" }, { status: 400 });
       }
-      updateData.passwordHash = await bcryptjs.hash(newPassword, 10);
+      updateData.passwordHash = await bcrypt.hash(newPassword, 10);
     } else if (newPassword && !currentPassword) {
       return NextResponse.json({ error: "Current password is required to set a new password." }, { status: 400 });
     }

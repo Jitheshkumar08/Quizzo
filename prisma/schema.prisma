@@ -62,6 +62,9 @@ model Quiz {
   quizSessions          QuizSession[]
   remedialQuizSessions  RemedialQuizSession[]
   updatedAt             DateTime @updatedAt @default(now())
+
+  @@index([isPublished, createdAt])
+  @@index([createdById, createdAt])
 }
 
 model Question {
@@ -73,6 +76,8 @@ model Question {
   explanation   String?
   order         Int
   quiz          Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, order])
 }
 
 model Result {
@@ -91,6 +96,10 @@ model Result {
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   student     User     @relation(fields: [studentId], references: [id])
   remedialQuizSessions RemedialQuizSession[]
+
+  @@index([quizId, studentId, attemptType])
+  @@index([quizId, attemptType])
+  @@index([studentId, createdAt])
 }
 
 /// One row per timed attempt in progress (`submittedAt` null) or historical marker after submit/expiry.
@@ -105,6 +114,8 @@ model QuizSession {
   student        User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([quizId, studentId])
+  @@index([quizId, studentId, submittedAt])
+  @@index([studentId, submittedAt])
 }
 
 model RemedialQuizSession {
