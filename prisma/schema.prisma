@@ -32,6 +32,7 @@ model User {
   quizzes      Quiz[]
   results      Result[]
   quizSessions QuizSession[]
+  remedialQuizSessions RemedialQuizSession[]
 }
 
 model Quiz {
@@ -58,6 +59,7 @@ model Quiz {
   questions             Question[]
   results               Result[]
   quizSessions          QuizSession[]
+  remedialQuizSessions  RemedialQuizSession[]
   updatedAt             DateTime @updatedAt @default(now())
 }
 
@@ -80,9 +82,14 @@ model Result {
   total       Int
   timeTaken   Int?
   userAnswers Json
+  titleOverride String?
+  questionIds Json?
+  sourceResultId String?
+  attemptType String @default("NORMAL")
   createdAt   DateTime @default(now())
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   student     User     @relation(fields: [studentId], references: [id])
+  remedialQuizSessions RemedialQuizSession[]
 }
 
 /// One row per timed attempt in progress (`submittedAt` null) or historical marker after submit/expiry.
@@ -97,6 +104,26 @@ model QuizSession {
   student        User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([quizId, studentId])
+}
+
+model RemedialQuizSession {
+  id             String    @id @default(uuid())
+  sourceResultId String
+  quizId         String
+  studentId      String
+  questionIds    Json
+  currentAnswers Json?
+  resultId       String?
+  submittedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt @default(now())
+  sourceResult   Result    @relation(fields: [sourceResultId], references: [id], onDelete: Cascade)
+  quiz           Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student        User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([sourceResultId, studentId])
+  @@index([quizId, studentId])
+  @@index([resultId])
 }
 
 model QuizListEvent {

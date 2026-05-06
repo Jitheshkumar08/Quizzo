@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { BookOpen, Eye, FileJson, BarChart3, Pencil, Timer } from "lucide-react";
@@ -9,6 +10,11 @@ import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 
 export const metadata = { title: "My Quizzes — MCQify" };
+
+interface NormalResultCountRow {
+  quizId: string;
+  count: bigint;
+}
 
 function formatScheduleTime(date: Date) {
   return formatAppScheduleDateTime(date);
@@ -38,6 +44,18 @@ export default async function InstructorQuizzesPage() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const normalResultCounts = await prisma.$queryRaw<NormalResultCountRow[]>`
+    SELECT r."quizId", COUNT(*) AS "count"
+    FROM "Result" r
+    INNER JOIN "Quiz" q ON q."id" = r."quizId"
+    WHERE COALESCE(r."attemptType", 'NORMAL') = 'NORMAL'
+      ${session.user.role === "ADMIN" ? Prisma.empty : Prisma.sql`AND q."createdById" = ${session.user.id}`}
+    GROUP BY r."quizId"
+  `;
+  const normalResultCountByQuiz = new Map(
+    normalResultCounts.map((row) => [row.quizId, Number(row.count)])
+  );
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-10">
@@ -158,7 +176,7 @@ export default async function InstructorQuizzesPage() {
                   )}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs font-medium text-muted-foreground">
                     <span className="flex items-center gap-1.5"><BarChart3 className="w-3.5 h-3.5 text-blue-400" /> {quiz._count.questions} Questions</span>
-                    <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-cyan-400" /> {quiz._count.results} Attempts</span>
+                    <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-cyan-400" /> {normalResultCountByQuiz.get(quiz.id) ?? 0} Attempts</span>
                     {session.user.role === "ADMIN" && (
                       <span className="bg-black/5 px-2 py-0.5 rounded-md">by {quiz.createdBy.fullName}</span>
                     )}

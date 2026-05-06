@@ -2,11 +2,18 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw, BookOpen } from "lucide-react";
 import ReviewSidebarClientWrapper from "./ReviewSidebarClientWrapper";
+import StartReattemptButton from "./StartReattemptButton";
+import { parseStringArray } from "@/lib/reattempt-utils";
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+interface ResultMeta {
+  titleOverride: string | null;
+  questionIds: unknown;
 }
 
 function formatTime(secs: number) {
@@ -44,14 +51,28 @@ export default async function ResultDetailPage({ params }: Props) {
     redirect(session.user.role === "INSTRUCTOR" || session.user.role === "ADMIN" ? "/instructor/quizzes" : "/student/results");
   }
 
+  const [meta] = await prisma.$queryRaw<ResultMeta[]>`
+    SELECT "titleOverride", "questionIds"
+    FROM "Result"
+    WHERE "id" = ${id}
+    LIMIT 1
+  `;
+
   const isInstructorReview = !isStudentOwner && canReviewAsQuizOwner;
 
   const pct = Math.round((result.score / result.total) * 100);
   const userAnswers = result.userAnswers as Record<string, string>;
+  const coveredQuestionIds = parseStringArray(meta?.questionIds);
+  const coveredQuestionSet = coveredQuestionIds ? new Set(coveredQuestionIds) : null;
+  const reviewQuestions = coveredQuestionSet
+    ? result.quiz.questions.filter((q) => coveredQuestionSet.has(q.id))
+    : result.quiz.questions;
+  const displayTitle = meta?.titleOverride ?? result.quiz.title;
 
-  const correct = result.quiz.questions.filter((q) => userAnswers[q.id] === q.correctAnswer).length;
-  const incorrect = result.quiz.questions.filter((q) => userAnswers[q.id] && userAnswers[q.id] !== q.correctAnswer).length;
-  const unattempted = result.quiz.questions.filter((q) => !userAnswers[q.id]).length;
+  const correct = reviewQuestions.filter((q) => userAnswers[q.id] === q.correctAnswer).length;
+  const incorrect = reviewQuestions.filter((q) => userAnswers[q.id] && userAnswers[q.id] !== q.correctAnswer).length;
+  const unattempted = reviewQuestions.filter((q) => !userAnswers[q.id]).length;
+  const missedCount = incorrect + unattempted;
 
   const sessionRecord = await prisma.quizSession.findFirst({
     where: {
@@ -63,7 +84,15 @@ export default async function ResultDetailPage({ params }: Props) {
       }
     }
   });
-  const sessionId = sessionRecord?.id || null;
+  const remedialSessionRecord = sessionRecord
+    ? []
+    : await prisma.$queryRaw<{ id: string }[]>`
+        SELECT "id"
+        FROM "RemedialQuizSession"
+        WHERE "resultId" = ${result.id}
+        LIMIT 1
+      `;
+  const sessionId = sessionRecord?.id || remedialSessionRecord[0]?.id || null;
 
   const pctColor = pct >= 75 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-rose-500";
   const pctAccent =
@@ -83,7 +112,7 @@ export default async function ResultDetailPage({ params }: Props) {
     // Pass questions + userAnswers as props so the wrapper can render
     // ReviewQuestionsClient (20/page) separately from the static children.
     <ReviewSidebarClientWrapper 
-      questions={result.quiz.questions} 
+      questions={reviewQuestions} 
       userAnswers={userAnswers}
       shuffleOptions={result.quiz.shuffleOptions}
       sessionId={sessionId}
@@ -104,7 +133,7 @@ export default async function ResultDetailPage({ params }: Props) {
         <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border bg-gradient-to-br ${pctAccent} shadow-[0_10px_25px_rgba(15,23,42,0.1)]`}>
           <Trophy className="w-7 h-7 text-white drop-shadow-sm" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-950 break-words tracking-tight">{result.quiz.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-black text-slate-950 break-words tracking-tight">{displayTitle}</h1>
         {isInstructorReview && (
           <p className="mx-auto inline-flex max-w-full items-center justify-center rounded-full border border-slate-200 bg-white/80 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-slate-600 shadow-sm">
             Reviewing {result.student.fullName}
@@ -152,12 +181,14 @@ export default async function ResultDetailPage({ params }: Props) {
           >
             <RotateCcw className="w-4 h-4" /> Retake Quiz
           </Link>
+          {missedCount > 0 && (
+            <StartReattemptButton resultId={result.id} missedCount={missedCount} />
+          )}
           <Link
             href="/student/quizzes"
-            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-semibold text-white w-full sm:w-auto"
-            style={{ background: "linear-gradient(135deg, hsl(262 80% 65%), hsl(199 89% 48%))" }}
+            className="result-action-btn-outline flex h-[42px] w-full items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 sm:w-auto"
           >
-            Browse More Quizzes
+            <BookOpen className="w-4 h-4" /> Browse Quizzes
           </Link>
         </div>
       )}

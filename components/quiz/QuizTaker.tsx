@@ -31,6 +31,9 @@ interface QuizTakerProps {
   shuffleQuestions?: boolean;
   shuffleOptions?: boolean;
   savedAnswers?: Record<string, string>;
+  autosaveUrl?: string | null;
+  submitUrl?: string;
+  statusUrl?: string | null;
 }
 
 const QUESTIONS_PER_PAGE = 5;
@@ -49,6 +52,9 @@ export default function QuizTaker({
   shuffleQuestions,
   shuffleOptions,
   savedAnswers = {},
+  autosaveUrl,
+  submitUrl,
+  statusUrl,
 }: QuizTakerProps) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>(savedAnswers);
@@ -120,15 +126,16 @@ export default function QuizTaker({
     answersRef.current = answers;
 
     // Autosave answers to backend
-    if (Object.keys(answers).length > 0) {
-      fetch(`/api/quiz/${quizId}/autosave`, {
+    const targetAutosaveUrl = autosaveUrl === undefined ? `/api/quiz/${quizId}/autosave` : autosaveUrl;
+    if (targetAutosaveUrl && Object.keys(answers).length > 0) {
+      fetch(targetAutosaveUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ userAnswers: answers }),
       }).catch(err => console.error("Failed to autosave:", err));
     }
-  }, [answers, quizId]);
+  }, [answers, quizId, autosaveUrl]);
 
   useEffect(() => {
     elapsedRef.current = elapsed;
@@ -256,7 +263,8 @@ export default function QuizTaker({
           )
           : elapsedRef.current;
 
-      const res = await fetch(`/api/quiz/${quizId}/submit`, {
+      const targetSubmitUrl = submitUrl ?? `/api/quiz/${quizId}/submit`;
+      const res = await fetch(targetSubmitUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -276,7 +284,7 @@ export default function QuizTaker({
       submitLock.current = false;
       setSubmitting(false);
     }
-  }, [quizId, hasTimer, timeLimitMinutes, router]);
+  }, [quizId, hasTimer, timeLimitMinutes, router, submitUrl]);
 
   useEffect(() => {
     if (!hasTimer || remainingSec === null || remainingSec > 0) return;
@@ -287,11 +295,14 @@ export default function QuizTaker({
   }, [hasTimer, remainingSec, runSubmit]);
 
   useEffect(() => {
+    const targetStatusUrl = statusUrl === undefined ? `/api/quiz/${quizId}/status` : statusUrl;
+    if (!targetStatusUrl) return;
+
     const checkStatus = async () => {
       if (document.visibilityState !== "visible" || statusConflictFired.current || submitLock.current) return;
 
       try {
-        const res = await fetch(`/api/quiz/${quizId}/status`, {
+        const res = await fetch(targetStatusUrl, {
           credentials: "include",
           cache: "no-store",
         });
@@ -318,7 +329,7 @@ export default function QuizTaker({
     }, 8000);
 
     return () => window.clearInterval(id);
-  }, [quizId]);
+  }, [quizId, statusUrl]);
 
   const answeredCount = questions.filter(q => answers[q.id] && answers[q.id].trim() !== "").length;
   const unansweredCount = questions.length - answeredCount;

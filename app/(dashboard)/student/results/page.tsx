@@ -9,6 +9,16 @@ import ResultListRealtimeRefresh from "@/components/live/ResultListRealtimeRefre
 
 export const metadata = { title: "My Results — MCQify" };
 
+interface ResultListRow {
+  id: string;
+  quizId: string;
+  score: number;
+  total: number;
+  timeTaken: number | null;
+  createdAt: Date;
+  displayTitle: string;
+}
+
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
@@ -23,13 +33,20 @@ export default async function StudentResultsPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const results = await prisma.result.findMany({
-    where: { studentId: session.user.id },
-    include: {
-      quiz: { select: { title: true, id: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const results = await prisma.$queryRaw<ResultListRow[]>`
+    SELECT
+      r."id",
+      r."quizId",
+      r."score",
+      r."total",
+      r."timeTaken",
+      r."createdAt",
+      COALESCE(r."titleOverride", q."title") AS "displayTitle"
+    FROM "Result" r
+    INNER JOIN "Quiz" q ON q."id" = r."quizId"
+    WHERE r."studentId" = ${session.user.id}
+    ORDER BY r."createdAt" DESC
+  `;
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -78,7 +95,7 @@ export default async function StudentResultsPage() {
 
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <h3 className="font-bold text-[17px] sm:text-[19px] text-gray-900 group-hover:text-[#A881FF] transition-colors break-words line-clamp-2 mb-2 sm:truncate sm:line-clamp-none">
-                      {result.quiz.title}
+                      {result.displayTitle}
                     </h3>
 
                     <div className="flex items-center flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-[13px] sm:text-[14px] text-gray-700 font-semibold">

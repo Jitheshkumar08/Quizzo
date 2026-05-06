@@ -11,6 +11,11 @@ import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
+interface NormalResultCountRow {
+  quizId: string;
+  count: bigint;
+}
+
 function formatCardDateTime(date: Date) {
   return formatAppScheduleDateTime(date);
 }
@@ -36,6 +41,16 @@ export default async function StudentQuizzesPage() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const normalResultCounts = await prisma.$queryRaw<NormalResultCountRow[]>`
+    SELECT "quizId", COUNT(*) AS "count"
+    FROM "Result"
+    WHERE COALESCE("attemptType", 'NORMAL') = 'NORMAL'
+    GROUP BY "quizId"
+  `;
+  const normalResultCountByQuiz = new Map(
+    normalResultCounts.map((row) => [row.quizId, Number(row.count)])
+  );
 
   const quizById = new Map(quizRows.map((quiz) => [quiz.id, quiz]));
   const finalizedQuizIds = new Set<string>();
@@ -178,7 +193,7 @@ export default async function StudentQuizzesPage() {
                       <BookOpen className="w-3.5 h-3.5 text-purple-500" /> {quiz._count.questions} Qs
                     </span>
                     <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-600 border border-gray-100">
-                      <Users className="w-3.5 h-3.5 text-cyan-500" /> {quiz._count.results} plays
+                      <Users className="w-3.5 h-3.5 text-cyan-500" /> {normalResultCountByQuiz.get(quiz.id) ?? 0} plays
                     </span>
                   </div>
 

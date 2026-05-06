@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BookOpen, BarChart3, Calendar, Clock } from "lucide-react";
 import AdminQuizStatusDropdown from "@/components/admin/AdminQuizStatusDropdown";
@@ -14,6 +14,11 @@ export const metadata = { title: "All Quizzes — MCQify Admin" };
 
 interface AdminQuizzesPageProps {
   searchParams?: Promise<{ username?: string }>;
+}
+
+interface NormalResultCountRow {
+  quizId: string;
+  count: bigint;
 }
 
 function formatDate(iso: Date | string) {
@@ -50,6 +55,16 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const normalResultCounts = await prisma.$queryRaw<NormalResultCountRow[]>`
+    SELECT "quizId", COUNT(*) AS "count"
+    FROM "Result"
+    WHERE COALESCE("attemptType", 'NORMAL') = 'NORMAL'
+    GROUP BY "quizId"
+  `;
+  const normalResultCountByQuiz = new Map(
+    normalResultCounts.map((row) => [row.quizId, Number(row.count)])
+  );
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -128,7 +143,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                   <div className="p-1.5 rounded-xl bg-violet-50"><BarChart3 className="w-4 h-4 text-violet-600" /></div>
                   <div>
                     <p className="text-[9px] font-black uppercase text-[#B0A89E] tracking-widest">Attempts</p>
-                    <p className="font-black text-[#1E1C1A] text-base leading-none">{quiz._count.results}</p>
+                    <p className="font-black text-[#1E1C1A] text-base leading-none">{normalResultCountByQuiz.get(quiz.id) ?? 0}</p>
                   </div>
                 </div>
               </div>
@@ -243,7 +258,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                     {/* Attempts */}
                     <td className="px-4 py-4">
                       <span className="inline-flex items-center justify-center bg-violet-50 border border-violet-100 text-violet-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
-                        {quiz._count.results}
+                        {normalResultCountByQuiz.get(quiz.id) ?? 0}
                       </span>
                     </td>
 
