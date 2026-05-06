@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Loader2, Target } from "lucide-react";
+
+const MIN_LOADER_VISIBLE_MS = 1200;
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 function LoadingLetters() {
   const letters = [
@@ -23,6 +30,40 @@ function LoadingLetters() {
         </span>
       ))}
     </span>
+  );
+}
+
+function PracticeMissedLoadingOverlay({
+  incorrectCount,
+  missedCount,
+  unattemptedCount,
+}: {
+  incorrectCount: number;
+  missedCount: number;
+  unattemptedCount: number;
+}) {
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-[#1f1d1b]/35 p-5 backdrop-blur-md sm:p-8"
+      style={{ zIndex: 2147483647 }}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(#D8CDEB_1px,transparent_1px)] [background-size:24px_24px] opacity-25" />
+      <div className="absolute h-[280px] w-[280px] rounded-full bg-purple-300/45 blur-[80px] sm:h-[460px] sm:w-[460px] sm:blur-[110px]" />
+      <div className="relative z-10 flex w-full max-w-[620px] flex-col items-center rounded-[32px] border border-white/90 bg-[#FCF9F2]/95 px-5 py-8 text-center shadow-[0_30px_100px_rgba(15,23,42,0.34)] ring-1 ring-purple-100 sm:px-8 sm:py-10">
+        <p className="mb-5 text-[13px] font-black uppercase tracking-[0.2em] text-[#8C5D3E]">
+          Preparing practice
+        </p>
+        <LoadingLetters />
+        <p className="mt-7 max-w-sm text-sm font-semibold leading-relaxed text-[#5F574F] sm:text-base">
+          Building a focused session with your {incorrectCount} incorrect and {unattemptedCount} unattempted question{missedCount === 1 ? "" : "s"}.
+        </p>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -47,17 +88,24 @@ export default function StartReattemptButton({
     if (loading) return;
     setLoading(true);
     setError(null);
+    const loaderStartedAt = Date.now();
 
     try {
       const res = await fetch(`/api/results/${resultId}/reattempt`, {
         method: "POST",
         credentials: "include",
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.sessionId) {
         setError(typeof data.error === "string" ? data.error : "Could not start re-attempt");
+        setLoading(false);
         return;
+      }
+
+      const remainingLoaderTime = Math.max(0, MIN_LOADER_VISIBLE_MS - (Date.now() - loaderStartedAt));
+      if (remainingLoaderTime > 0) {
+        await wait(remainingLoaderTime);
       }
 
       router.push(`/student/reattempts/${data.sessionId}`);
@@ -139,19 +187,11 @@ export default function StartReattemptButton({
         }
       `}</style>
       {loading && (
-        <div className="fixed inset-0 z-[100000] flex flex-col items-center justify-center gap-7 bg-[#FCF9F2]/92 p-6 backdrop-blur-xl">
-          <div className="absolute inset-0 bg-[radial-gradient(#D8CDEB_1px,transparent_1px)] [background-size:24px_24px] opacity-50" />
-          <div className="absolute h-[360px] w-[360px] rounded-full bg-purple-200/45 blur-[90px]" />
-          <div className="relative z-10 text-center">
-            <p className="mb-4 text-[13px] font-black uppercase tracking-[0.2em] text-[#8C5D3E]">
-              Preparing practice
-            </p>
-            <LoadingLetters />
-            <p className="mt-5 max-w-sm text-sm font-semibold text-[#6B6357]">
-              Building a focused session with your incorrect and unattempted questions.
-            </p>
-          </div>
-        </div>
+        <PracticeMissedLoadingOverlay
+          incorrectCount={incorrectCount}
+          missedCount={missedCount}
+          unattemptedCount={unattemptedCount}
+        />
       )}
       <div className="relative overflow-hidden rounded-[24px] border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 shadow-[0_14px_34px_rgba(20,184,166,0.14)] ring-1 ring-white/80 sm:p-5">
         <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-teal-200/45 blur-2xl" />
