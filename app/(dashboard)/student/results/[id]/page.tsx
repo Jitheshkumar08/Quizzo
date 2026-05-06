@@ -99,20 +99,20 @@ export default async function ResultDetailPage({ params }: Props) {
     pct >= 75
       ? "from-emerald-400 to-teal-500 border-emerald-200 bg-emerald-50/80"
       : pct >= 50
-      ? "from-amber-400 to-orange-500 border-amber-200 bg-amber-50/80"
-      : "from-rose-400 to-red-500 border-rose-200 bg-rose-50/80";
+        ? "from-amber-400 to-orange-500 border-amber-200 bg-amber-50/80"
+        : "from-rose-400 to-red-500 border-rose-200 bg-rose-50/80";
   const pctBg =
     pct >= 75
       ? "from-emerald-50 via-white to-teal-50 border-emerald-100"
       : pct >= 50
-      ? "from-amber-50 via-white to-orange-50 border-amber-100"
-      : "from-rose-50 via-white to-red-50 border-rose-100";
+        ? "from-amber-50 via-white to-orange-50 border-amber-100"
+        : "from-rose-50 via-white to-red-50 border-rose-100";
 
   return (
     // Pass questions + userAnswers as props so the wrapper can render
     // ReviewQuestionsClient (20/page) separately from the static children.
-    <ReviewSidebarClientWrapper 
-      questions={reviewQuestions} 
+    <ReviewSidebarClientWrapper
+      questions={reviewQuestions}
       userAnswers={userAnswers}
       shuffleOptions={result.quiz.shuffleOptions}
       sessionId={sessionId}
@@ -174,22 +174,30 @@ export default async function ResultDetailPage({ params }: Props) {
 
       {/* Actions */}
       {!isInstructorReview && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            href={`/student/quizzes/${result.quizId}`}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-medium glass glass-hover w-full sm:w-auto"
-          >
-            <RotateCcw className="w-4 h-4" /> Retake Quiz
-          </Link>
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-center">
+            <Link
+              href={`/student/quizzes/${result.quizId}`}
+              className="result-action-btn-outline flex h-[46px] w-full items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-50 sm:w-auto"
+            >
+              <RotateCcw className="w-4 h-4" /> Retake Quiz
+            </Link>
+            <Link
+              href="/student/quizzes"
+              className="result-action-btn-outline flex h-[46px] w-full items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 sm:w-auto"
+            >
+              <BookOpen className="w-4 h-4" /> Browse Quizzes
+            </Link>
+          </div>
+
           {missedCount > 0 && (
-            <StartReattemptButton resultId={result.id} missedCount={missedCount} />
+            <StartReattemptButton
+              resultId={result.id}
+              missedCount={missedCount}
+              incorrectCount={incorrect}
+              unattemptedCount={unattempted}
+            />
           )}
-          <Link
-            href="/student/quizzes"
-            className="result-action-btn-outline flex h-[42px] w-full items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 sm:w-auto"
-          >
-            <BookOpen className="w-4 h-4" /> Browse Quizzes
-          </Link>
         </div>
       )}
 
