@@ -8,6 +8,7 @@ import TimerBadge from "@/components/quiz/TimerBadge";
 import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
 import { formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
+import QuizSearch from "@/components/quiz/QuizSearch";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
@@ -24,17 +25,28 @@ function formatTimeLimit(minutes: number) {
   return `${minutes} min${minutes === 1 ? "" : "s"}`;
 }
 
-export default async function StudentQuizzesPage() {
+export default async function StudentQuizzesPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const resolvedSearchParams = await searchParams;
+  const searchQuery = resolvedSearchParams?.q?.trim() || "";
 
   let openSessions = await prisma.quizSession.findMany({
     where: { studentId: session.user.id, submittedAt: null },
     select: { quizId: true, startedAt: true }
   });
 
+  const whereClause: any = { isPublished: true };
+  if (searchQuery) {
+    whereClause.OR = [
+      { title: { contains: searchQuery, mode: "insensitive" } },
+      { createdBy: { username: { contains: searchQuery, mode: "insensitive" } } }
+    ];
+  }
+
   const quizRows = await prisma.quiz.findMany({
-    where: { isPublished: true },
+    where: whereClause,
     include: {
       createdBy: { select: { username: true } },
       _count: { select: { questions: true, results: true } },
@@ -91,9 +103,16 @@ export default async function StudentQuizzesPage() {
     <div className="space-y-6 animate-fade-in-up">
       <QuizListRealtimeRefresh />
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold gradient-text">Browse Quizzes</h1>
-        <p className="text-muted-foreground text-sm mt-1">{quizzes.length} published quiz{quizzes.length !== 1 ? "zes" : ""} available</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold gradient-text">Browse Quizzes</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {searchQuery
+              ? `${quizzes.length} published quiz${quizzes.length !== 1 ? "zes" : ""} matching "${searchQuery}"`
+              : `${quizzes.length} published quiz${quizzes.length !== 1 ? "zes" : ""} available`}
+          </p>
+        </div>
+        <QuizSearch initialValue={searchQuery} />
       </div>
 
       {/* Quiz cards */}
