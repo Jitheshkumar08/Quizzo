@@ -33,6 +33,41 @@ function LoadingLetters() {
   );
 }
 
+function MissedCountText({
+  incorrectCount,
+  tone = "soft",
+  missedCount,
+  unattemptedCount,
+}: {
+  incorrectCount: number;
+  tone?: "soft" | "strong";
+  missedCount: number;
+  unattemptedCount: number;
+}) {
+  const incorrectClass =
+    tone === "strong"
+      ? "border-rose-200 bg-rose-50 text-rose-600 shadow-[0_5px_14px_rgba(244,63,94,0.12)]"
+      : "border-rose-100 bg-rose-50/55 text-rose-600 shadow-none";
+  const unattemptedClass =
+    tone === "strong"
+      ? "border-indigo-200 bg-indigo-50 text-indigo-600 shadow-[0_5px_14px_rgba(79,70,229,0.12)]"
+      : "border-slate-200 bg-slate-50/70 text-slate-600 shadow-none";
+
+  return (
+    <>
+      with your{" "}
+      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${incorrectClass}`}>
+        {incorrectCount} incorrect
+      </span>{" "}
+      or{" "}
+      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${unattemptedClass}`}>
+        {unattemptedCount} unattempted
+      </span>{" "}
+      question{missedCount === 1 ? "" : "s"}.
+    </>
+  );
+}
+
 function PracticeMissedLoadingOverlay({
   incorrectCount,
   missedCount,
@@ -59,7 +94,13 @@ function PracticeMissedLoadingOverlay({
         </p>
         <LoadingLetters />
         <p className="mt-7 max-w-sm text-sm font-semibold leading-relaxed text-[#5F574F] sm:text-base">
-          Building a focused session with your {incorrectCount} incorrect and {unattemptedCount} unattempted question{missedCount === 1 ? "" : "s"}.
+          Building a focused session{" "}
+          <MissedCountText
+            incorrectCount={incorrectCount}
+            tone="strong"
+            missedCount={missedCount}
+            unattemptedCount={unattemptedCount}
+          />
         </p>
       </div>
     </div>,
@@ -203,7 +244,12 @@ export default function StartReattemptButton({
             <div className="min-w-0">
               <p className="text-base font-black leading-tight text-slate-950">Practice only what you missed</p>
               <p className="mt-1.5 max-w-xl text-sm font-semibold leading-relaxed text-slate-600">
-                Starts a short quiz with your {incorrectCount} incorrect or {unattemptedCount} unattempted question{missedCount === 1 ? "" : "s"}.
+                Starts a short quiz{" "}
+                <MissedCountText
+                  incorrectCount={incorrectCount}
+                  missedCount={missedCount}
+                  unattemptedCount={unattemptedCount}
+                />
               </p>
             </div>
           </div>
