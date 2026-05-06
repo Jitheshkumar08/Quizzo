@@ -5,8 +5,9 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
-export default function LoginForm() {
+export default function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -74,6 +75,20 @@ export default function LoginForm() {
       <div className="bg-[#F4EFE6]/70 backdrop-blur-2xl rounded-[32px] p-6 sm:p-8 shadow-[0_20px_40px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] border border-white/80 relative overflow-hidden">
         {/* Glossy highlight inside card */}
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/40 to-transparent pointer-events-none rounded-t-[32px]"></div>
+
+        <div className="relative z-10 mb-6">
+          <GoogleAuthButton
+            label="Continue with Google"
+            enabled={googleEnabled}
+          />
+          <div className="mt-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#DED7CB]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#A59C90]">
+              or
+            </span>
+            <div className="h-px flex-1 bg-[#DED7CB]" />
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           {/* Identifier */}

@@ -7,6 +7,7 @@ export interface LiveUser {
   email: string;
   username?: string;
   role: string;
+  profileImageUrl?: string | null;
 }
 
 export function dispatchLiveUserUpdated(user: LiveUser) {

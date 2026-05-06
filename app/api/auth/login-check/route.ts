@@ -33,6 +33,13 @@ export async function POST(req: NextRequest) {
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
+      if (user.authProvider === "google") {
+        return NextResponse.json(
+          { error: "This account was created with Google. Use the recommended Google button to continue." },
+          { status: 401 }
+        );
+      }
+
       return NextResponse.json(
         { error: "Password is incorrect. Please try again." },
         { status: 401 }

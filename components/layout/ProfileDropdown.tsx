@@ -12,6 +12,8 @@ interface ProfileDropdownProps {
     email: string;
     role: string;
     username?: string;
+    image?: string | null;
+    profileImageUrl?: string | null;
   };
   roleName: string;
 }
@@ -22,6 +24,7 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
   const [liveUser, setLiveUser] = useState<LiveUser | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentUser = liveUser ?? session?.user ?? user;
+  const profileImageUrl = currentUser.profileImageUrl ?? null;
   const currentRoleName =
     currentUser.role?.charAt(0).toUpperCase() + currentUser.role?.slice(1).toLowerCase() ||
     roleName;
@@ -62,8 +65,16 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
             {currentRoleName}
           </span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-[#2C2A28] text-white flex items-center justify-center shadow-sm">
-          <UserCircle2 className="w-5 h-5 text-[#FDFBFA]" strokeWidth={2} />
+        <div className="w-8 h-8 overflow-hidden rounded-full bg-[#2C2A28] text-white flex items-center justify-center shadow-sm">
+          {profileImageUrl ? (
+            <span
+              aria-hidden="true"
+              className="h-full w-full bg-cover bg-center"
+              style={{ backgroundImage: `url("${profileImageUrl}")` }}
+            />
+          ) : (
+            <UserCircle2 className="w-5 h-5 text-[#FDFBFA]" strokeWidth={2} />
+          )}
         </div>
       </div>
 
@@ -74,8 +85,16 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
           <div className="absolute -top-16 -right-12 h-36 w-36 rounded-full bg-white/70 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex items-start gap-3 px-3 py-3 border-b border-[#E9E4DC]/80">
-            <div className="w-12 h-12 rounded-2xl bg-[#E8F6FF] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
-              <span className="text-lg font-bold">{currentUser.name?.charAt(0).toUpperCase()}</span>
+            <div className="w-12 h-12 overflow-hidden rounded-2xl bg-[#E8F6FF] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
+              {profileImageUrl ? (
+                <span
+                  aria-hidden="true"
+                  className="h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url("${profileImageUrl}")` }}
+                />
+              ) : (
+                <span className="text-lg font-bold">{currentUser.name?.charAt(0).toUpperCase()}</span>
+              )}
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-[16px] font-bold text-[#2C2A28] leading-tight truncate">

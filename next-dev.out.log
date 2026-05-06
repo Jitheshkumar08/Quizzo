@@ -1,0 +1,28 @@
+
+> temp-mcqify@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.29.207:3000
+- Environments: .env.local, .env
+✓ Ready in 512ms
+- Experiments (use with caution):
+  · serverActions
+
+ GET /signup 200 in 1695ms (next.js: 926ms, proxy.ts: 395ms, application-code: 374ms)
+ GET /api/auth/session 200 in 3.2s (next.js: 3.1s, proxy.ts: 10ms, application-code: 29ms)
+ GET /api/auth/session 200 in 169ms (next.js: 152ms, proxy.ts: 9ms, application-code: 9ms)
+ HEAD /signup 200 in 136ms (next.js: 22ms, proxy.ts: 15ms, application-code: 98ms)
+ GET /api/auth/session 200 in 123ms (next.js: 28ms, proxy.ts: 46ms, application-code: 48ms)
+ GET /api/auth/session 200 in 43ms (next.js: 9ms, proxy.ts: 18ms, application-code: 16ms)
+ GET /admin/users/24ca73ff-135e-49df-b3a3-3732e9cfd5cf 200 in 934ms (next.js: 681ms, proxy.ts: 20ms, application-code: 233ms)
+ POST /api/auth/signup 200 in 2.2s (next.js: 106ms, proxy.ts: 9ms, application-code: 2.1s)
+✓ Compiled in 320ms
+ GET /signup 200 in 466ms (next.js: 192ms, proxy.ts: 151ms, application-code: 123ms)
+✓ Compiled in 122ms
+ GET /signup 200 in 286ms (next.js: 117ms, proxy.ts: 112ms, application-code: 57ms)
+✓ Compiled in 104ms
+ GET /signup 200 in 379ms (next.js: 163ms, proxy.ts: 123ms, application-code: 93ms)
+✓ Compiled in 95ms
+ GET /signup 200 in 357ms (next.js: 147ms, proxy.ts: 126ms, application-code: 84ms)

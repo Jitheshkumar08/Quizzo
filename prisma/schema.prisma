@@ -26,6 +26,10 @@ model User {
   username     String        @unique
   email        String        @unique
   passwordHash String
+  authProvider String        @default("credentials")
+  googleId     String?       @unique
+  profileImageUrl String?
+  emailVerifiedAt DateTime?
   role         Role          @default(STUDENT)
   lastLoginAt  DateTime?
   sessionVersion Int        @default(0)
@@ -34,6 +38,22 @@ model User {
   results      Result[]
   quizSessions QuizSession[]
   remedialQuizSessions RemedialQuizSession[]
+}
+
+model EmailSignupVerification {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String
+  fullName     String
+  passwordHash String
+  codeHash     String
+  attempts     Int      @default(0)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([username])
+  @@index([expiresAt])
 }
 
 model Quiz {

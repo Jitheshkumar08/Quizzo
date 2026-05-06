@@ -1,0 +1,8 @@
+ALTER TABLE "User"
+ADD COLUMN IF NOT EXISTS "authProvider" TEXT NOT NULL DEFAULT 'credentials',
+ADD COLUMN IF NOT EXISTS "googleId" TEXT,
+ADD COLUMN IF NOT EXISTS "profileImageUrl" TEXT,
+ADD COLUMN IF NOT EXISTS "emailVerifiedAt" TIMESTAMP(3);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "User_googleId_key"
+ON "User" ("googleId");

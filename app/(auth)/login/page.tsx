@@ -6,6 +6,11 @@ export const metadata = {
 };
 
 export default function LoginPage() {
+  const googleEnabled = Boolean(
+    (process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID) &&
+      (process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET)
+  );
+
   return (
     <div className="flex-1 flex items-center justify-center p-4 xl:p-8 relative overflow-hidden bg-[#FCF9F2] w-full min-h-[calc(100vh-4rem)]">
       {/* Delicate background texture */}
@@ -19,7 +24,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full animate-fade-in-up">
-        <LoginForm />
+        <LoginForm googleEnabled={googleEnabled} />
       </div>
     </div>
   );

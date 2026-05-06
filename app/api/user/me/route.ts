@@ -16,6 +16,8 @@ export async function GET() {
         email: true,
         fullName: true,
         role: true,
+        profileImageUrl: true,
+        authProvider: true,
       }
     });
 
