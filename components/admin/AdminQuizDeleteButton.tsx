@@ -58,7 +58,8 @@ export default function AdminQuizDeleteButton({
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => !deleting && setOpen(false)}
             />
-            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/80 bg-white shadow-2xl">
+            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-red-200 bg-white shadow-2xl">
+              <div className="absolute inset-x-0 top-0 h-1 bg-red-600" />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

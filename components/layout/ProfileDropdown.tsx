@@ -105,15 +105,15 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
           <div className="absolute -top-16 -right-12 h-36 w-36 rounded-full bg-white/70 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex items-start gap-3 px-3 py-3 border-b border-[#E9E4DC]/80">
-            <div className="w-12 h-12 overflow-hidden rounded-2xl bg-white p-[3px] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
+            <div className="w-12 h-12 overflow-hidden rounded-full bg-white p-[3px] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
               {profileImageUrl ? (
                 <span
                   aria-hidden="true"
-                  className="h-full w-full rounded-[14px] bg-cover bg-center"
+                  className="h-full w-full rounded-full bg-cover bg-center"
                   style={{ backgroundImage: `url("${profileImageUrl}")` }}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-[#E8F6FF]">
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-[#E8F6FF]">
                   <span className="text-lg font-black tracking-wide">{initials}</span>
                 </div>
               )}

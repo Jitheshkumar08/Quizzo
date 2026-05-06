@@ -91,13 +91,16 @@ export default async function AdminUserProfilePage({ params }: Props) {
         <div className="p-4 sm:p-5 bg-gradient-to-br from-[#FFFDF9] via-white to-[#F4EFE6] border-b border-[#E8E2D8]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 ring-1 ring-white flex items-center justify-center shadow-sm overflow-hidden">
+              <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-sky-100 ring-2 ring-[#EEE6DA] border border-white/90 flex items-center justify-center shadow-[0_8px_18px_rgba(44,42,40,0.16)] overflow-hidden">
                 {user.profileImageUrl ? (
-                  <span
-                    aria-hidden="true"
-                    className="h-full w-full bg-cover bg-center"
-                    style={{ backgroundImage: `url("${user.profileImageUrl}")` }}
-                  />
+                  <>
+                    <span aria-hidden="true" className="absolute inset-0 bg-[#F6F1E8]" />
+                    <span
+                      aria-hidden="true"
+                      className="relative h-full w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url("${user.profileImageUrl}")` }}
+                    />
+                  </>
                 ) : (
                   <span className="text-xl font-bold text-violet-700">{user.fullName.charAt(0).toUpperCase()}</span>
                 )}

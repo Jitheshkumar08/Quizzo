@@ -208,7 +208,8 @@ export default function DeleteUserButton({
         createPortal(
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !deleting && setOpen(false)} />
-            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/80 bg-white shadow-2xl">
+            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-red-200 bg-white shadow-2xl">
+              <div className="absolute inset-x-0 top-0 h-1 bg-red-600" />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

@@ -65,13 +65,16 @@ function formatDate(iso: string) {
 function Avatar({ name, role, imageUrl }: { name: string; role: string; imageUrl?: string | null }) {
   const cfg = roleConfig[role];
   return (
-    <div className={`w-10 h-10 rounded-xl ${cfg.avatarBg} flex items-center justify-center flex-shrink-0 font-black text-base ${cfg.avatarText} shadow-sm border border-white/80 overflow-hidden`}>
+    <div className={`relative w-10 h-10 rounded-full ${cfg.avatarBg} flex items-center justify-center flex-shrink-0 font-black text-base ${cfg.avatarText} shadow-[0_6px_14px_rgba(44,42,40,0.14)] ring-2 ring-[#EEE6DA] border border-white/90 overflow-hidden`}>
       {imageUrl ? (
-        <span
-          aria-hidden="true"
-          className="h-full w-full bg-cover bg-center"
-          style={{ backgroundImage: `url("${imageUrl}")` }}
-        />
+        <>
+          <span aria-hidden="true" className="absolute inset-0 bg-[#F6F1E8]" />
+          <span
+            aria-hidden="true"
+            className="relative h-full w-full bg-cover bg-center"
+            style={{ backgroundImage: `url("${imageUrl}")` }}
+          />
+        </>
       ) : (
         name.charAt(0).toUpperCase()
       )}
