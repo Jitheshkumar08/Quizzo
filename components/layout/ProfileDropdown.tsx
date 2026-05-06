@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { UserCircle2, Settings, Mail, Shield } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { isLiveUserUpdatedEvent, type LiveUser, LIVE_USER_UPDATED_EVENT } from "@/lib/live-user-event";
 
 interface ProfileDropdownProps {
   user: {
@@ -15,8 +17,14 @@ interface ProfileDropdownProps {
 }
 
 export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps) {
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [liveUser, setLiveUser] = useState<LiveUser | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const currentUser = liveUser ?? session?.user ?? user;
+  const currentRoleName =
+    currentUser.role?.charAt(0).toUpperCase() + currentUser.role?.slice(1).toLowerCase() ||
+    roleName;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -28,6 +36,17 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    function handleLiveUserUpdated(event: Event) {
+      if (isLiveUserUpdatedEvent(event)) {
+        setLiveUser(event.detail);
+      }
+    }
+
+    window.addEventListener(LIVE_USER_UPDATED_EVENT, handleLiveUserUpdated);
+    return () => window.removeEventListener(LIVE_USER_UPDATED_EVENT, handleLiveUserUpdated);
+  }, []);
+
   return (
     <div className="relative" ref={dropdownRef}>
       <div
@@ -36,11 +55,11 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
       >
         <div className="flex items-center gap-2.5">
           <span className="text-[14px] font-bold text-[#2C2A28] tracking-wide">
-            {user.name}
+            {currentUser.name}
           </span>
           <div className="w-[3px] h-[3px] rounded-full bg-[#918B80]/50"></div>
           <span className="text-[13px] font-bold text-[#8C5D3E]">
-            {roleName}
+            {currentRoleName}
           </span>
         </div>
         <div className="w-8 h-8 rounded-full bg-[#2C2A28] text-white flex items-center justify-center shadow-sm">
@@ -56,24 +75,24 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
 
           <div className="relative z-10 flex items-start gap-3 px-3 py-3 border-b border-[#E9E4DC]/80">
             <div className="w-12 h-12 rounded-2xl bg-[#E8F6FF] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
-              <span className="text-lg font-bold">{user.name?.charAt(0).toUpperCase()}</span>
+              <span className="text-lg font-bold">{currentUser.name?.charAt(0).toUpperCase()}</span>
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-[16px] font-bold text-[#2C2A28] leading-tight truncate">
-                {user.name}
+                {currentUser.name}
               </p>
               <div className="flex items-center gap-2 min-w-0">
                 <p className="text-[13px] font-semibold text-[#8C5D3E] truncate">
-                  @{user.username || user.name?.split(" ")[0]}
+                  @{currentUser.username || currentUser.name?.split(" ")[0]}
                 </p>
                 <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-700 flex-shrink-0">
                   <Shield className="w-3 h-3" />
-                  {roleName}
+                  {currentRoleName}
                 </span>
               </div>
               <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#918B80] truncate">
                 <Mail className="w-3.5 h-3.5 text-[#B8AFA4] flex-shrink-0" />
-                <span className="truncate">{user.email}</span>
+                <span className="truncate">{currentUser.email}</span>
               </p>
             </div>
           </div>

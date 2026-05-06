@@ -17,21 +17,47 @@ export default function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const cleanedIdentifier = identifier.trim();
+    if (!cleanedIdentifier) {
+      setError("Enter your email address or username.");
+      return;
+    }
+
+    if (!password) {
+      setError("Enter your password.");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const checkRes = await fetch("/api/auth/login-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: cleanedIdentifier, password }),
+      });
+      const checkData = await checkRes.json().catch(() => ({}));
+
+      if (!checkRes.ok) {
+        setError(typeof checkData.error === "string" ? checkData.error : "Could not verify your login. Please try again.");
+        return;
+      }
+
       const result = await signIn("credentials", {
-        identifier,
+        identifier: cleanedIdentifier,
         password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Invalid credentials. Please check your email/username and password.");
+        setError("Your details were correct, but the session could not be created. Please try again.");
       } else {
         router.push("/dashboard");
         router.refresh();
       }
+    } catch {
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }

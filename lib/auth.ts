@@ -8,15 +8,18 @@ import bcryptjs from "bcryptjs";
 async function refreshTokenUser(token: JWT) {
   if (!token.id) return token;
 
-  const user = await prisma.user.findUnique({
-    where: { id: token.id },
-    select: {
-      email: true,
-      fullName: true,
-      role: true,
-      username: true,
-    },
-  });
+  const [user] = await prisma.$queryRaw<Array<{
+    email: string;
+    fullName: string;
+    role: string;
+    username: string;
+    sessionVersion: number;
+  }>>`
+    SELECT "email", "fullName", "role", "username", "sessionVersion"
+    FROM "User"
+    WHERE "id" = ${token.id}
+    LIMIT 1
+  `;
 
   if (!user) return token;
 
@@ -24,6 +27,7 @@ async function refreshTokenUser(token: JWT) {
   token.name = user.fullName;
   token.role = user.role;
   token.username = user.username;
+  token.sessionVersion = user.sessionVersion;
   return token;
 }
 
@@ -62,12 +66,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           WHERE "id" = ${user.id}
         `;
 
+        const [sessionState] = await prisma.$queryRaw<Array<{ sessionVersion: number }>>`
+          SELECT "sessionVersion"
+          FROM "User"
+          WHERE "id" = ${user.id}
+          LIMIT 1
+        `;
+
         return {
           id: user.id,
           email: user.email,
           name: user.fullName,
           role: user.role,
           username: user.username,
+          sessionVersion: sessionState?.sessionVersion ?? 0,
         };
       },
     }),
@@ -77,8 +89,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // 1. Initial Sign In
       if (user) {
         if (user.id) token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
         token.role = user.role;
         token.username = user.username;
+        token.sessionVersion = user.sessionVersion ?? 0;
       }
       
       // 2. Client-side update trigger handling
@@ -97,8 +112,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
         session.user.role = token.role as string;
         session.user.username = token.username as string;
+        session.user.sessionVersion = Number(token.sessionVersion ?? 0);
       }
       return session;
     },

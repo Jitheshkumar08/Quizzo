@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import bcryptjs from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { recordUserChangeEvent } from "@/lib/role-change-events";
 
 // GET all users (Admin only)
 export async function GET() {
@@ -106,7 +107,9 @@ export async function PATCH(req: NextRequest) {
       updateData.email = nextEmail;
     }
 
-    if (typeof newPassword !== "undefined" && String(newPassword).trim()) {
+    const passwordChanged = typeof newPassword !== "undefined" && String(newPassword).trim().length > 0;
+
+    if (passwordChanged) {
       const password = String(newPassword);
       if (password.length < 8) {
         return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
@@ -118,10 +121,36 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No changes provided" }, { status: 400 });
     }
 
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: { id: true, fullName: true, username: true, email: true, role: true },
+    const sessionVisibleFieldsChanged =
+      (typeof updateData.role !== "undefined" && updateData.role !== existingUser.role) ||
+      (typeof updateData.fullName !== "undefined" && updateData.fullName !== existingUser.fullName) ||
+      (typeof updateData.username !== "undefined" && updateData.username !== existingUser.username) ||
+      (typeof updateData.email !== "undefined" && updateData.email !== existingUser.email);
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const next = await tx.user.update({
+        where: { id: userId },
+        data: updateData,
+        select: { id: true, fullName: true, username: true, email: true, role: true },
+      });
+
+      if (passwordChanged) {
+        await tx.$executeRaw`
+          UPDATE "User"
+          SET "sessionVersion" = "sessionVersion" + 1
+          WHERE "id" = ${userId}
+        `;
+      }
+
+      if (sessionVisibleFieldsChanged || passwordChanged) {
+        await recordUserChangeEvent(tx, {
+          targetUserId: userId,
+          actorId: session.user.id,
+          action: passwordChanged ? "user.password.updated" : "user.session-fields.updated",
+        });
+      }
+
+      return next;
     });
 
     return NextResponse.json(updated);

@@ -28,6 +28,7 @@ model User {
   passwordHash String
   role         Role          @default(STUDENT)
   lastLoginAt  DateTime?
+  sessionVersion Int        @default(0)
   createdAt    DateTime      @default(now())
   quizzes      Quiz[]
   results      Result[]
@@ -147,4 +148,15 @@ model ResultListEvent {
   @@index([createdAt])
   @@index([quizId])
   @@index([resultId])
+}
+
+model RoleChangeEvent {
+  id           String   @id @default(uuid())
+  targetUserId String
+  actorId      String?
+  action       String
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetUserId])
 }

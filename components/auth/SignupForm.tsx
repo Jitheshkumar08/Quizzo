@@ -26,13 +26,37 @@ export default function SignupForm() {
     e.preventDefault();
     setError("");
 
+    const fullName = form.fullName.trim();
+    const username = form.username.trim();
+    const email = form.email.trim().toLowerCase();
+
+    if (fullName.length < 2) {
+      setError("Enter your full name using at least 2 characters.");
+      return;
+    }
+
+    if (username.length < 3) {
+      setError("Choose a username with at least 3 characters.");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setError("Username can only contain letters, numbers, and underscores.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
 
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError("Password must be at least 8 characters.");
       return;
     }
 
@@ -42,9 +66,9 @@ export default function SignupForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName: form.fullName,
-          username: form.username,
-          email: form.email,
+          fullName,
+          username,
+          email,
           password: form.password,
         }),
       });
@@ -52,11 +76,13 @@ export default function SignupForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Signup failed. Please try again.");
+        setError(data.error || "Could not create your account. Please check your details and try again.");
         return;
       }
 
       router.push("/login?registered=true");
+    } catch {
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }

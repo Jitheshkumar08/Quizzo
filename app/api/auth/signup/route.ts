@@ -4,13 +4,14 @@ import bcryptjs from "bcryptjs";
 import { z } from "zod";
 
 const SignupSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  fullName: z.string().trim().min(2, "Enter your full name using at least 2 characters."),
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
-    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+    .trim()
+    .min(3, "Choose a username with at least 3 characters.")
+    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores."),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+  password: z.string().min(8, "Password must be at least 8 characters."),
 });
 
 export async function POST(req: NextRequest) {
@@ -38,7 +39,12 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const field = existing.email === email.toLowerCase() ? "Email" : "Username";
       return NextResponse.json(
-        { error: `${field} is already in use` },
+        {
+          error:
+            field === "Email"
+              ? "That email is already registered. Try logging in instead."
+              : "That username is already taken. Please choose another one.",
+        },
         { status: 409 }
       );
     }

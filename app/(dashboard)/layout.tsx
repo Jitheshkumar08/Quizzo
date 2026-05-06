@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
+import RoleChangeRealtimeRefresh from "@/components/live/RoleChangeRealtimeRefresh";
 
 export default async function DashboardLayout({
   children,
@@ -20,6 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-[100dvh] bg-[#FDFBFA] relative overflow-hidden text-[#1A1A1A]">
+      <RoleChangeRealtimeRefresh userId={session.user.id} />
       {/* Warm Ambient background blobs to match new auth theme */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] rounded-full bg-[#E5D8C5]/30 blur-[120px] mix-blend-multiply border border-white/20" />

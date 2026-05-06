@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 
@@ -42,10 +43,35 @@ export default function AdminQuizStatusDropdown({
   const [published, setPublished] = useState(initialPublished);
   const [saving, setSaving] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const menuWidth = 160;
+    const viewportPadding = 8;
+    const left = Math.min(
+      Math.max(viewportPadding, rect.left),
+      window.innerWidth - menuWidth - viewportPadding
+    );
+
+    setMenuPosition({
+      top: rect.bottom + 8,
+      left,
+    });
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedTrigger = ref.current?.contains(target);
+      const clickedMenu = menuRef.current?.contains(target);
+
+      if (!clickedTrigger && !clickedMenu) {
         setOpen(false);
       }
     }
@@ -53,6 +79,19 @@ export default function AdminQuizStatusDropdown({
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open, updateMenuPosition]);
 
   async function updateStatus(nextPublished: boolean) {
     setOpen(false);
@@ -102,8 +141,12 @@ export default function AdminQuizStatusDropdown({
   return (
     <div ref={ref} className="relative inline-block">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          updateMenuPosition();
+          setOpen((value) => !value);
+        }}
         className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 ${cfg.pill}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
@@ -111,8 +154,12 @@ export default function AdminQuizStatusDropdown({
         <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {open && (
-        <div className="absolute left-0 top-full mt-2 z-50 w-40 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#E8E2D9] py-1.5 overflow-hidden">
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-[9999] w-40 bg-white rounded-2xl shadow-[0_18px_50px_rgba(44,42,40,0.18)] border border-[#E8E2D9] py-1.5 overflow-hidden"
+          style={{ top: menuPosition.top, left: menuPosition.left }}
+        >
           <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#B0A89E] px-3 pt-1.5 pb-2">Quiz Status</p>
           {STATUS_OPTIONS.map((option) => {
             const optionKey = keyForStatus(option.value);
@@ -138,7 +185,8 @@ export default function AdminQuizStatusDropdown({
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

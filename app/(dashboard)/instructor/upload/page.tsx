@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
-import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw, Info, X, AlertTriangle, Copy, Check } from "lucide-react";
+import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw, Info, X, AlertTriangle, Copy, Check, UploadCloud, MessageSquareText, FileDown, FileUp } from "lucide-react";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 import { appDatetimeLocalToISOString } from "@/lib/timezone";
 
@@ -58,6 +58,29 @@ Before creating the file, carefully cross-check:
 - all options A-D
 - correct answer for every question
 - valid JSON syntax`;
+
+const guideSteps = [
+  {
+    icon: UploadCloud,
+    title: "Upload your MCQ source",
+    description: "Attach your PDF, image, Word file, or any MCQ document in ChatGPT or Claude.",
+  },
+  {
+    icon: MessageSquareText,
+    title: "Paste the prompt below",
+    description: "Copy this exact extraction prompt and send it with your uploaded file.",
+  },
+  {
+    icon: FileDown,
+    title: "Download the JSON file",
+    description: "Ask the AI to create a downloadable .json file, then download it to your device.",
+  },
+  {
+    icon: FileUp,
+    title: "Upload JSON here",
+    description: "Return to MCQify and upload that .json file to load your questions instantly.",
+  },
+];
 
 export default function InstructorUploadPage() {
   const router = useRouter();
@@ -238,7 +261,7 @@ export default function InstructorUploadPage() {
       options: q.options,
       correct_answer: q.correctAnswer
     }));
-    
+
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -323,13 +346,13 @@ export default function InstructorUploadPage() {
         <button onClick={() => setShowDisclaimer(true)} className="relative inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 self-start md:self-auto group mt-2 md:mt-0 rounded-xl">
           {/* Beautiful spreading background glow */}
           <div className="absolute -inset-[3px] rounded-xl bg-gradient-to-r from-[#a3f7bf] via-[#fce7a1] via-[#fcb6b6] to-[#c19dfa] opacity-70 blur-[8px] group-hover:opacity-100 group-hover:blur-[12px] transition-all duration-500" />
-          
+
           {/* Solid crisp colorful border */}
           <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-[#a3f7bf] via-[#fce7a1] via-[#fcb6b6] to-[#c19dfa] opacity-100 transition-all duration-500" />
-          
+
           {/* Main dark inner surface */}
           <div className="absolute inset-0 rounded-[10px] bg-[#323232] group-hover:bg-[#3f3f3f] transition-colors duration-300" />
-          
+
           {/* Content */}
           <Info className="w-4 h-4 relative z-10 group-hover:scale-110 transition-transform duration-300" />
           <span className="relative z-10 tracking-wide">Upload Guide</span>
@@ -402,11 +425,11 @@ export default function InstructorUploadPage() {
             {generating && file && !file.name.endsWith(".json") && (
               <div className="space-y-3 text-center relative z-10 pt-2">
                 <p className="text-sm text-[#918B80] font-medium animate-pulse">
-                  Gemini is reading and extracting your PDF... 
+                  Gemini is reading and extracting your PDF...
                   {totalQuestions > 0 && ` (Extracted ${questions.length} of ${totalQuestions} questions)`}
                 </p>
                 <div className="w-full h-2 bg-black/5 rounded-full overflow-hidden shadow-inner">
-                  <div 
+                  <div
                     className="h-full bg-[#8C5D3E] transition-all duration-500 rounded-full"
                     style={{ width: totalQuestions > 0 ? `${(questions.length / totalQuestions) * 100}%` : "10%" }}
                   />
@@ -431,7 +454,7 @@ export default function InstructorUploadPage() {
                     Done — All {questions.length} questions extracted in order!
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    I have successfully parsed the PDF <strong>"{file?.name}"</strong> and verified the structure. 
+                    I have successfully parsed the PDF <strong>"{file?.name}"</strong> and verified the structure.
                     All questions have been normalized into the correct format while preserving verbatim accuracy.
                   </p>
                 </div>
@@ -445,7 +468,7 @@ export default function InstructorUploadPage() {
                 >
                   <Download className="w-5 h-5" /> Download {title.slice(0, 20).toLowerCase()}.json
                 </button>
-                <button 
+                <button
                   onClick={() => setShowReport(false)}
                   className="text-sm text-muted-foreground hover:text-white transition-colors px-4"
                 >
@@ -525,7 +548,7 @@ export default function InstructorUploadPage() {
                 >
                   <Save className="w-4 h-4" /> Save Draft
                 </button>
-                
+
                 <div className="w-full sm:w-auto flex justify-end">
                   <button
                     onClick={() => handlePublish(true)}
@@ -596,14 +619,14 @@ export default function InstructorUploadPage() {
       {showDisclaimer && mounted && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" style={{ isolation: 'isolate' }}>
           {/* Deep Blur Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-[#2C2A28]/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
             onClick={() => setShowDisclaimer(false)}
           ></div>
-          
+
           {/* Modal Content */}
           <div className="relative w-full max-w-2xl bg-white/90 backdrop-blur-2xl rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/60 flex flex-col overflow-hidden max-h-[90vh] animate-in fade-in zoom-in-95 duration-300 z-10">
-            
+
             {/* Header */}
             <div className="p-6 sm:p-8 flex items-center justify-between flex-shrink-0 relative z-10">
               <div className="flex items-center gap-3">
@@ -615,8 +638,8 @@ export default function InstructorUploadPage() {
                   <p className="text-[13px] font-medium text-[#918B80] mt-0.5">Best practices for perfect JSON extraction</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowDisclaimer(false)} 
+              <button
+                onClick={() => setShowDisclaimer(false)}
                 className="w-10 h-10 rounded-full bg-[#2C2A28]/5 hover:bg-[#2C2A28]/10 text-[#2C2A28]/60 hover:text-[#2C2A28] flex items-center justify-center transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -625,7 +648,7 @@ export default function InstructorUploadPage() {
 
             {/* Scrollable Body */}
             <div className="px-6 sm:px-8 pb-8 overflow-y-auto custom-scrollbar flex-1 relative z-10 space-y-6">
-              
+
               {/* Warning Card */}
               <div className="bg-gradient-to-r from-orange-50 to-orange-50/30 border border-orange-200/60 rounded-[20px] p-5 flex gap-4 shadow-[inset_0_1px_1px_rgba(255,255,255,1)]">
                 <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
@@ -641,43 +664,84 @@ export default function InstructorUploadPage() {
 
               {/* Code Section */}
               <div className="space-y-3">
-                 <h3 className="font-bold text-[#2C2A28] text-[15px] px-1">Use this exact prompt for flawless results:</h3>
-                 
-                 <div className="relative group rounded-[24px] overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.15)] border border-[#2C2A28] bg-[#1A1816]">
-                   {/* MacOS style terminal header */}
-                   <div className="absolute top-0 left-0 w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between z-10 backdrop-blur-md">
-                     <div className="flex items-center gap-2">
-                       <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
-                       <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
-                       <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
-                     </div>
-                     <button 
-                       onClick={handleCopyPrompt} 
-                       className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 border cursor-pointer border-white/10 text-white text-[13px] font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-                     >
-                       {copied ? <><Check className="w-3.5 h-3.5 text-green-400" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
-                     </button>
-                   </div>
-                   
-                   {/* Scrollable code block */}
-                   <pre className="text-gray-300 p-6 text-[13px] overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-[320px] overflow-y-auto custom-scrollbar pt-16 selection:bg-[#8b5cf6] selection:text-white">
-                     {PROMPT_TEXT}
-                   </pre>
-                 </div>
+                <div className="rounded-[24px] border border-[#E9E4DC] bg-white/70 p-4 sm:p-5 shadow-[0_12px_30px_rgba(44,42,40,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
+                  <div className="flex flex-col gap-1 px-0.5">
+                    <h3 className="font-black text-[#2C2A28] text-[16px] sm:text-[17px] tracking-tight">
+                      Use this workflow for flawless JSON extraction
+                    </h3>
+                    <p className="text-[13px] font-semibold text-[#918B80] leading-relaxed">
+                      Follow these steps with ChatGPT or Claude, then upload the generated JSON file here.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {guideSteps.map((step, index) => {
+                      const Icon = step.icon;
+                      return (
+                        <div
+                          key={step.title}
+                          className="relative overflow-hidden rounded-[18px] border border-[#EEE8DF] bg-[#FDFBFA]/80 p-4 shadow-[0_8px_20px_rgba(44,42,40,0.035)]"
+                        >
+                          <div className="absolute right-3 top-2 text-[44px] font-black leading-none text-[#E9E4DC]/65">
+                            {String(index + 1).padStart(2, "0")}
+                          </div>
+                          <div className="relative flex items-start gap-3">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#2C2A28] text-white shadow-[0_8px_18px_rgba(44,42,40,0.16)]">
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-black uppercase tracking-[0.08em] text-[#8C5D3E]">
+                                Step {index + 1}
+                              </p>
+                              <h4 className="mt-0.5 text-[14px] font-black text-[#2C2A28] leading-snug">
+                                {step.title}
+                              </h4>
+                              <p className="mt-1.5 text-[12.5px] font-semibold leading-relaxed text-[#918B80]">
+                                {step.description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="relative group rounded-[24px] overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.15)] border border-[#2C2A28] bg-[#1A1816]">
+                  {/* MacOS style terminal header */}
+                  <div className="absolute top-0 left-0 w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between z-10 backdrop-blur-md">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                    </div>
+                    <button
+                      onClick={handleCopyPrompt}
+                      className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 border cursor-pointer border-white/10 text-white text-[13px] font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                    >
+                      {copied ? <><Check className="w-3.5 h-3.5 text-green-400" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                    </button>
+                  </div>
+
+                  {/* Scrollable code block */}
+                  <pre className="text-gray-300 p-6 text-[13px] overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-[320px] overflow-y-auto custom-scrollbar pt-16 selection:bg-[#8b5cf6] selection:text-white">
+                    {PROMPT_TEXT}
+                  </pre>
+                </div>
               </div>
 
             </div>
-            
+
             {/* Footer */}
             <div className="p-6 sm:px-8 sm:py-6 border-t border-black/5 bg-[#FDFBFA]/50 backdrop-blur-xl flex justify-end flex-shrink-0 relative z-10">
-              <button 
-                onClick={() => setShowDisclaimer(false)} 
+              <button
+                onClick={() => setShowDisclaimer(false)}
                 className="px-8 py-3 rounded-full bg-[#2C2A28] text-white text-[15px] font-bold hover:bg-black transition-all hover:-translate-y-0.5 shadow-[0_8px_16px_rgba(44,42,40,0.2)] active:translate-y-0 active:shadow-none cursor-pointer"
               >
                 I Understand
               </button>
             </div>
-            
+
           </div>
         </div>,
         document.body

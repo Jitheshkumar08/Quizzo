@@ -18,7 +18,8 @@ import {
   X,
   LogOut
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isLiveUserUpdatedEvent, LIVE_USER_UPDATED_EVENT } from "@/lib/live-user-event";
 
 interface NavItem {
   href: string;
@@ -45,10 +46,23 @@ interface SidebarProps {
 
 export default function Sidebar({ role, userName }: SidebarProps) {
   const pathname = usePathname();
+  const [liveRole, setLiveRole] = useState<string | null>(null);
+  const currentRole = liveRole ?? role;
 
-  const mainNav = navItems.filter((item) => item.roles.includes(role) && item.group === "Main");
-  const adminNav = navItems.filter((item) => item.roles.includes(role) && item.group === "Admin");
+  const mainNav = navItems.filter((item) => item.roles.includes(currentRole) && item.group === "Main");
+  const adminNav = navItems.filter((item) => item.roles.includes(currentRole) && item.group === "Admin");
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    function handleLiveUserUpdated(event: Event) {
+      if (isLiveUserUpdatedEvent(event)) {
+        setLiveRole(event.detail.role);
+      }
+    }
+
+    window.addEventListener(LIVE_USER_UPDATED_EVENT, handleLiveUserUpdated);
+    return () => window.removeEventListener(LIVE_USER_UPDATED_EVENT, handleLiveUserUpdated);
+  }, []);
 
   return (
     <>
