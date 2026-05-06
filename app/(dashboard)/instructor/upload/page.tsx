@@ -374,7 +374,7 @@ export default function InstructorUploadPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Chapter 3: Cell Biology"
+                  placeholder="Enter your quiz title"
                   className="w-full px-5 py-3.5 rounded-xl bg-white/50 border-2 border-transparent focus:bg-white/80 focus:border-[#8C5D3E]/30 text-[#2C2A28] placeholder-[#918B80] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 outline-none font-medium peer"
                 />
               </div>

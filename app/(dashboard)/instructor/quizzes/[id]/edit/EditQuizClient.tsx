@@ -468,7 +468,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Chapter 3: Cell Biology"
+            placeholder="Enter your quiz title"
             className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-black/5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400/30 focus:border-purple-300 transition-all font-medium text-sm"
           />
         </div>
@@ -551,11 +551,10 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           <button
             onClick={() => handleSave(isPublished)}
             disabled={saving || questions.length === 0}
-            className={`eq-action-btn flex items-center gap-2 ${
-              isPublished
-                ? "eq-action-btn-primary"
-                : "text-gray-700 bg-white hover:bg-gray-50"
-            }`}
+            className={`eq-action-btn flex items-center gap-2 ${isPublished
+              ? "eq-action-btn-primary"
+              : "text-gray-700 bg-white hover:bg-gray-50"
+              }`}
           >
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -652,10 +651,10 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                           }, 50);
                         }}
                         className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 hover:scale-105 ${isActive
-                            ? "bg-purple-600 text-white border-purple-700 shadow-sm ring-2 ring-purple-400/40 ring-offset-1"
-                            : filled
-                              ? "bg-purple-100 text-purple-700 border-purple-200"
-                              : "bg-gray-100 text-gray-500 border-black/5"
+                          ? "bg-purple-600 text-white border-purple-700 shadow-sm ring-2 ring-purple-400/40 ring-offset-1"
+                          : filled
+                            ? "bg-purple-100 text-purple-700 border-purple-200"
+                            : "bg-gray-100 text-gray-500 border-black/5"
                           }`}
                         title={`Question ${i + 1}: ${filled ? "filled" : "empty"}`}
                       >
@@ -873,10 +872,10 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                                   <div className="flex items-center gap-2">
                                     <span
                                       className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.percentage >= 75
-                                          ? "bg-green-100 text-green-700"
-                                          : r.percentage >= 50
-                                            ? "bg-yellow-100 text-yellow-700"
-                                            : "bg-red-100 text-red-700"
+                                        ? "bg-green-100 text-green-700"
+                                        : r.percentage >= 50
+                                          ? "bg-yellow-100 text-yellow-700"
+                                          : "bg-red-100 text-red-700"
                                         }`}
                                     >
                                       {r.percentage}%
