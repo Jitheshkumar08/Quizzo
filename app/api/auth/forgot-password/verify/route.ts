@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { ACCOUNT_OTP_PURPOSES, verifyAccountOtp } from "@/lib/account-otp";
 import { recordUserChangeEvent } from "@/lib/role-change-events";
