@@ -101,7 +101,7 @@ export default function LoginForm({ googleEnabled }: { googleEnabled: boolean })
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="example@gmail.com"
               required
               className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02),0_4px_12px_rgba(0,0,0,0.04)] backdrop-blur-xl font-medium"
             />
@@ -113,7 +113,7 @@ export default function LoginForm({ googleEnabled }: { googleEnabled: boolean })
               <label htmlFor="password" className="text-[14px] font-bold text-[#2C2A28] transition-colors group-focus-within:text-[#8C5D3E]">
                 Password
               </label>
-              <Link href="#" className="text-[13px] font-bold text-[#918B80] hover:text-[#8C5D3E] transition-colors mr-2">
+              <Link href="/forgot-password" className="text-[13px] font-bold text-[#918B80] hover:text-[#8C5D3E] transition-colors mr-2">
                 Forgot password?
               </Link>
             </div>

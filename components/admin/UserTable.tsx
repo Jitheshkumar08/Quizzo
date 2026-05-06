@@ -12,6 +12,7 @@ interface User {
   email: string;
   role: "STUDENT" | "INSTRUCTOR" | "ADMIN";
   createdAt: string;
+  profileImageUrl?: string | null;
   _count: { quizzes: number; results: number };
 }
 
@@ -61,11 +62,19 @@ function formatDate(iso: string) {
   return { date, time };
 }
 
-function Avatar({ name, role }: { name: string; role: string }) {
+function Avatar({ name, role, imageUrl }: { name: string; role: string; imageUrl?: string | null }) {
   const cfg = roleConfig[role];
   return (
-    <div className={`w-10 h-10 rounded-xl ${cfg.avatarBg} flex items-center justify-center flex-shrink-0 font-black text-base ${cfg.avatarText} shadow-sm border border-white/80`}>
-      {name.charAt(0).toUpperCase()}
+    <div className={`w-10 h-10 rounded-xl ${cfg.avatarBg} flex items-center justify-center flex-shrink-0 font-black text-base ${cfg.avatarText} shadow-sm border border-white/80 overflow-hidden`}>
+      {imageUrl ? (
+        <span
+          aria-hidden="true"
+          className="h-full w-full bg-cover bg-center"
+          style={{ backgroundImage: `url("${imageUrl}")` }}
+        />
+      ) : (
+        name.charAt(0).toUpperCase()
+      )}
     </div>
   );
 }
@@ -261,7 +270,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
             <div key={user.id} className="glass rounded-[22px] p-5 space-y-4 border border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <Avatar name={user.fullName} role={user.role} />
+                  <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
                   <div className="min-w-0">
                     <p className="font-bold text-[15px] text-[#1E1C1A] leading-tight truncate">{user.fullName}</p>
                     <p className="text-[11px] font-semibold text-[#A09890] mt-0.5">@{user.username}</p>
@@ -339,7 +348,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
                     {/* User */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <Avatar name={user.fullName} role={user.role} />
+                        <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
                         <div>
                           <p className="font-bold text-[14px] text-[#1E1C1A] leading-snug">{user.fullName}</p>
                           <p className="text-[11px] font-semibold text-[#A09890]">@{user.username}</p>

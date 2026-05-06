@@ -38,6 +38,7 @@ interface AdminUserDetail {
   role: Role;
   lastLoginAt: Date | null;
   createdAt: Date;
+  profileImageUrl: string | null;
   quizCount: bigint | number;
   resultCount: bigint | number;
 }
@@ -57,6 +58,7 @@ export default async function AdminUserProfilePage({ params }: Props) {
       u."role",
       u."lastLoginAt",
       u."createdAt",
+      u."profileImageUrl",
       COUNT(DISTINCT q."id") AS "quizCount",
       COUNT(DISTINCT r."id") AS "resultCount"
     FROM "User" u
@@ -89,8 +91,16 @@ export default async function AdminUserProfilePage({ params }: Props) {
         <div className="p-4 sm:p-5 bg-gradient-to-br from-[#FFFDF9] via-white to-[#F4EFE6] border-b border-[#E8E2D8]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 ring-1 ring-white flex items-center justify-center shadow-sm">
-                <span className="text-xl font-bold text-violet-700">{user.fullName.charAt(0).toUpperCase()}</span>
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 ring-1 ring-white flex items-center justify-center shadow-sm overflow-hidden">
+                {user.profileImageUrl ? (
+                  <span
+                    aria-hidden="true"
+                    className="h-full w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url("${user.profileImageUrl}")` }}
+                  />
+                ) : (
+                  <span className="text-xl font-bold text-violet-700">{user.fullName.charAt(0).toUpperCase()}</span>
+                )}
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-[#1E1C1A] tracking-tight truncate">{user.fullName}</h1>

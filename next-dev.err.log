@@ -1,0 +1,592 @@
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at Module.callback (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:4314:30)
+    at async AuthInternal (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:5162:24)
+    at async Auth (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:5384:34)
+    at async AppRouteRouteModule.do (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40115)
+    at async AppRouteRouteModule.handle (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47321)
+    at async responseGenerator (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18297:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:227216)
+    at async handleResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18360:32)
+    at async Module.handler (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18414:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1454:9)
+    at async DevServer.renderPageComponent (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1506:24)
+    at async DevServer.renderToResponseImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1556:32)
+    at async DevServer.pipeImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1043:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:934:17)
+    at async C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\start-server.js:225:13)
+Profile update error: Error: Resend email failed: 403 {"statusCode":403,"name":"validation_error","message":"You can only send testing emails to your own email address (jeethucodes@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain."}
+    at sendOtpEmail (lib\resend-email.ts:74:11)
+    at async PUT (app\api\user\settings\route.ts:135:7)
+  72 |   if (!res.ok) {
+  73 |     const details = await res.text().catch(() => "");
+> 74 |     throw new Error(`Resend email failed: ${res.status} ${details}`);
+     |           ^
+  75 |   }
+  76 | }
+  77 |
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ Error: Module [project]/components/live/RoleChangeRealtimeRefresh.tsx [app-ssr] (ecmascript) was instantiated because it was required from module [project]/node_modules/next/dist/esm/build/templates/app-page.js?page=/(dashboard)/admin/users/page { METADATA_0 => "[project]/app/favicon.ico.mjs { IMAGE => \"[project]/app/favicon.ico (static in ecmascript, tag client)\" } [app-rsc] (structured image object, ecmascript)", METADATA_1 => "[project]/app/icon.svg.mjs { IMAGE => \"[project]/app/icon.svg (static in ecmascript, tag client)\" } [app-rsc] (structured image object, ecmascript)", MODULE_2 => "[project]/app/layout.tsx [app-rsc] (ecmascript, Next.js Server Component)", MODULE_3 => "[project]/node_modules/next/dist/client/components/builtin/not-found.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_4 => "[project]/node_modules/next/dist/client/components/builtin/forbidden.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_5 => "[project]/node_modules/next/dist/client/components/builtin/unauthorized.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_6 => "[project]/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_7 => "[project]/app/(dashboard)/layout.tsx [app-rsc] (ecmascript, Next.js Server Component)", MODULE_8 => "[project]/node_modules/next/dist/client/components/builtin/not-found.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_9 => "[project]/node_modules/next/dist/client/components/builtin/forbidden.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_10 => "[project]/node_modules/next/dist/client/components/builtin/unauthorized.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_11 => "[project]/app/(dashboard)/admin/users/page.tsx [app-rsc] (ecmascript, Next.js Server Component)" } [app-rsc] (ecmascript) <locals>, but the module factory is not available.
+This is often caused by a stale browser cache, misconfigured Cache-Control headers, or a service worker serving outdated responses.
+To fix this, make sure your Cache-Control headers allow revalidation of chunks and review your service worker configuration. As an immediate workaround, try hard-reloading the page, clearing the browser cache, or unregistering any service workers.
+    at ignore-listed frames {
+  digest: '2021018376'
+}
+⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />
+    at RoleChangeRealtimeRefresh (components\live\RoleChangeRealtimeRefresh.tsx:16:32)
+  14 | export default function RoleChangeRealtimeRefresh({ userId }: Props) {
+  15 |   const router = useRouter();
+> 16 |   const { update } = useSession();
+     |                                ^
+  17 |   const refreshTimer = useRef<number | null>(null);
+  18 |   const signOutTimer = useRef<number | null>(null);
+  19 |   const [passwordChanged, setPasswordChanged] = useState(false); {
+  digest: '2041489916'
+}
+[31m[auth][error][0m CallbackRouteError: Read more at https://errors.authjs.dev#callbackrouteerror
+[31m[auth][cause][0m: OperationProcessingError: response parameter "iss" (issuer) missing
+    at OPE (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\[root-of-the-server]__055km1k._.js:1302:12)
+    at Module.validateAuthResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\[root-of-the-server]__055km1k._.js:3370:15)
+    at handleOAuth (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:3558:195)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Module.callback (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:4085:41)
+    at async AuthInternal (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:5137:24)
+    at async Auth (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:5384:34)
+    at async AppRouteRouteModule.do (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40115)
+    at async AppRouteRouteModule.handle (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47321)
+    at async responseGenerator (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18297:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:227216)
+    at async handleResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18360:32)
+    at async Module.handler (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18414:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1454:9)
+    at async DevServer.renderPageComponent (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1506:24)
+    at async DevServer.renderToResponseImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1556:32)
+    at async DevServer.pipeImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1043:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:934:17)
+    at async C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\start-server.js:225:13)
+[31m[auth][details][0m: {
+  "parameters": {},
+  "provider": "google"
+}
+[31m[auth][error][0m CallbackRouteError: Read more at https://errors.authjs.dev#callbackrouteerror
+[31m[auth][cause][0m: OperationProcessingError: response parameter "iss" (issuer) missing
+    at OPE (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\[root-of-the-server]__055km1k._.js:1302:12)
+    at Module.validateAuthResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\[root-of-the-server]__055km1k._.js:3370:15)
+    at handleOAuth (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:3558:195)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Module.callback (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:4085:41)
+    at async AuthInternal (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:5137:24)
+    at async Auth (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_@auth_core_0g6bd~m._.js:5384:34)
+    at async AppRouteRouteModule.do (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40115)
+    at async AppRouteRouteModule.handle (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47321)
+    at async responseGenerator (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18297:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:227216)
+    at async handleResponse (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18360:32)
+    at async Module.handler (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\.next\dev\server\chunks\node_modules_next_05fqyxl._.js:18414:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1454:9)
+    at async DevServer.renderPageComponent (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1506:24)
+    at async DevServer.renderToResponseImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1556:32)
+    at async DevServer.pipeImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:1043:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\base-server.js:934:17)
+    at async C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (C:\Users\jitheshkumar\Desktop\WebProject\MCQify\MCQify\node_modules\next\dist\server\lib\start-server.js:225:13)
+[31m[auth][details][0m: {
+  "parameters": {},
+  "provider": "google"
+}
+[browser] Uncaught Error: ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed
+
+
+    at <unknown> (Error: ./app/(dashboard)/admin/users/[id]/page.tsx:102:17)
+    at <unknown> (Error: (./app/(dashboard)/admin/users/[id]/page.tsx:102:17)
+[browser] Uncaught Error: ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed
+
+
+    at <unknown> (Error: ./app/(dashboard)/admin/users/[id]/page.tsx:102:17)
+    at <unknown> (Error: (./app/(dashboard)/admin/users/[id]/page.tsx:102:17)
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 
+[browser] ./app/(dashboard)/admin/users/[id]/page.tsx:102:17
+Expected '</', got 'jsx text'
+  100 |               </span>
+  101 |             </div>
+> 102 |           </div>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         </div>
+      | ^^^^^^^^
+  104 |
+  105 |         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 sm:...
+  106 |           <AdminUserAccountForm
+
+Parsing ecmascript source code failed 

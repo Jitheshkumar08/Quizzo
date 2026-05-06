@@ -56,6 +56,23 @@ model EmailSignupVerification {
   @@index([expiresAt])
 }
 
+model AccountOtpVerification {
+  id        String   @id @default(uuid())
+  userId    String?
+  email     String
+  purpose   String
+  codeHash  String
+  payload   Json?
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, purpose])
+  @@index([email, purpose])
+  @@index([expiresAt])
+}
+
 model Quiz {
   id          String     @id @default(uuid())
   title       String

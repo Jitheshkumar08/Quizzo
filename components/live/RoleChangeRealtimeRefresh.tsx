@@ -52,6 +52,7 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
         email: typeof user.email === "string" ? user.email : "",
         username: typeof user.username === "string" ? user.username : undefined,
         role: typeof user.role === "string" ? user.role : "STUDENT",
+        profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : null,
       });
     };
 

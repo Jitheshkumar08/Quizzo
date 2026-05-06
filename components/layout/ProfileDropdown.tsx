@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { UserCircle2, Settings, Mail, Shield } from "lucide-react";
+import { Settings, Mail, Shield } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { isLiveUserUpdatedEvent, type LiveUser, LIVE_USER_UPDATED_EVENT } from "@/lib/live-user-event";
@@ -18,13 +18,31 @@ interface ProfileDropdownProps {
   roleName: string;
 }
 
+function getInitials(name?: string | null, username?: string | null) {
+  const parts = (name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+
+  if (parts.length === 1 && parts[0].length > 0) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return (username ?? "U").slice(0, 2).toUpperCase();
+}
+
 export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps) {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [liveUser, setLiveUser] = useState<LiveUser | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentUser = liveUser ?? session?.user ?? user;
-  const profileImageUrl = currentUser.profileImageUrl ?? null;
+  const profileImageUrl = currentUser.profileImageUrl ?? currentUser.image ?? null;
+  const initials = getInitials(currentUser.name, currentUser.username);
   const currentRoleName =
     currentUser.role?.charAt(0).toUpperCase() + currentUser.role?.slice(1).toLowerCase() ||
     roleName;
@@ -65,15 +83,17 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
             {currentRoleName}
           </span>
         </div>
-        <div className="w-8 h-8 overflow-hidden rounded-full bg-[#2C2A28] text-white flex items-center justify-center shadow-sm">
+        <div className="w-8 h-8 overflow-hidden rounded-full bg-white p-[2px] flex items-center justify-center shadow-sm">
           {profileImageUrl ? (
             <span
               aria-hidden="true"
-              className="h-full w-full bg-cover bg-center"
+              className="h-full w-full bg-cover bg-center rounded-full"
               style={{ backgroundImage: `url("${profileImageUrl}")` }}
             />
           ) : (
-            <UserCircle2 className="w-5 h-5 text-[#FDFBFA]" strokeWidth={2} />
+            <div className="h-full w-full bg-[#2C2A28] rounded-full flex items-center justify-center">
+              <span className="text-[11px] font-black tracking-wide text-[#FDFBFA]">{initials}</span>
+            </div>
           )}
         </div>
       </div>
@@ -85,15 +105,17 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
           <div className="absolute -top-16 -right-12 h-36 w-36 rounded-full bg-white/70 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex items-start gap-3 px-3 py-3 border-b border-[#E9E4DC]/80">
-            <div className="w-12 h-12 overflow-hidden rounded-2xl bg-[#E8F6FF] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
+            <div className="w-12 h-12 overflow-hidden rounded-2xl bg-white p-[3px] text-[#0284C7] flex items-center justify-center shadow-sm border border-white/90 flex-shrink-0">
               {profileImageUrl ? (
                 <span
                   aria-hidden="true"
-                  className="h-full w-full bg-cover bg-center"
+                  className="h-full w-full rounded-[14px] bg-cover bg-center"
                   style={{ backgroundImage: `url("${profileImageUrl}")` }}
                 />
               ) : (
-                <span className="text-lg font-bold">{currentUser.name?.charAt(0).toUpperCase()}</span>
+                <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-[#E8F6FF]">
+                  <span className="text-lg font-black tracking-wide">{initials}</span>
+                </div>
               )}
             </div>
             <div className="min-w-0 flex-1 space-y-1">

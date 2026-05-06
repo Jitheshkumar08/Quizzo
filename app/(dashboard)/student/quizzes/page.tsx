@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { BookOpen, Users, Lock, CalendarRange, Timer } from "lucide-react";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
@@ -8,7 +9,9 @@ import TimerBadge from "@/components/quiz/TimerBadge";
 import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
 import { formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
+import ScheduleBoundaryRefresh from "@/components/live/ScheduleBoundaryRefresh";
 import QuizSearch from "@/components/quiz/QuizSearch";
+import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
 
 export const metadata = { title: "Browse Quizzes — MCQify" };
 
@@ -37,7 +40,7 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
     select: { quizId: true, startedAt: true }
   });
 
-  const whereClause: any = { isPublished: true };
+  const whereClause: Prisma.QuizWhereInput = { isPublished: true };
   if (searchQuery) {
     whereClause.OR = [
       { title: { contains: searchQuery, mode: "insensitive" } },
@@ -98,10 +101,20 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
   }));
 
   const now = new Date();
+  const scheduleBoundaries = Array.from(
+    new Set(
+      quizzes.flatMap((quiz) =>
+        [quiz.scheduledStart, quiz.scheduledEnd]
+          .filter((date): date is Date => !!date && date > now)
+          .map((date) => date.toISOString())
+      )
+    )
+  );
 
   return (
     <div className="space-y-6 animate-fade-in-up">
       <QuizListRealtimeRefresh />
+      <ScheduleBoundaryRefresh boundaries={scheduleBoundaries} serverNow={now.toISOString()} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -143,6 +156,8 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
                     <div className="px-3 py-1 rounded-full bg-red-50 text-xs font-bold uppercase tracking-wider text-red-600 border border-red-200 shadow-sm opacity-100">
                       Ended
                     </div>
+                  ) : sched === "upcoming" && quiz.scheduledStart ? (
+                    <ScheduleStartBadge scheduledStart={quiz.scheduledStart} serverNow={now} />
                   ) : openQuizMap.has(quiz.id) ? (
                     <TimerBadge
                       quizId={quiz.id}

@@ -7,6 +7,7 @@ export interface LiveUser {
   email: string;
   username?: string;
   role: string;
+  image?: string | null;
   profileImageUrl?: string | null;
 }
 

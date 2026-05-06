@@ -11,7 +11,7 @@ export default auth((req) => {
   }
 
   // Auth pages — redirect to dashboard if already logged in
-  if (pathname === "/login" || pathname === "/signup") {
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password") {
     if (session) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }

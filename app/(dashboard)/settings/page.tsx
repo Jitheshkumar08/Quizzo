@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Save, User as UserIcon, Mail, Lock, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Save, User as UserIcon, Mail, Lock, CheckCircle2, XCircle, MailCheck, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -21,6 +21,11 @@ export default function SettingsForm() {
 
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
   const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
+  const [emailVerificationEmail, setEmailVerificationEmail] = useState("");
+  const [emailOtpCode, setEmailOtpCode] = useState("");
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [emailResendSeconds, setEmailResendSeconds] = useState(0);
   
   // Track original loaded data to prevent unnecessary API checks on load
   const [originalData, setOriginalData] = useState({ username: "", email: "" });
@@ -87,36 +92,44 @@ export default function SettingsForm() {
       return () => window.clearTimeout(timer);
     }
 
-    const delayDebounceFn = setTimeout(async () => {
-      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-      if (!isValidEmail) {
-        setEmailStatus('unavailable');
-        return;
-      }
-
-      setEmailStatus('checking');
-      try {
-        const res = await fetch('/api/user/check-availability', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ field: 'email', value: form.email })
-        });
-        const data = await res.json();
-        setEmailStatus(data.available ? 'available' : 'unavailable');
-        
-        if (data.available) setTimeout(() => setEmailStatus('idle'), 2500);
-      } catch {
-        setEmailStatus('unavailable');
-      }
-    }, 800);
-
-    return () => clearTimeout(delayDebounceFn);
+    const timer = window.setTimeout(() => setEmailStatus('unavailable'), 0);
+    return () => window.clearTimeout(timer);
   }, [form.email, originalData.email]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setMessage(null);
+    if (emailVerificationEmail) {
+      setEmailVerificationEmail("");
+      setEmailOtpCode("");
+      setEmailResendSeconds(0);
+    }
   };
+
+  function startEmailResendTimer() {
+    setEmailResendSeconds(30);
+    window.clearInterval((window as typeof window & { mcqifyEmailChangeTimer?: number }).mcqifyEmailChangeTimer);
+    const timer = window.setInterval(() => {
+      setEmailResendSeconds((seconds) => {
+        if (seconds <= 1) {
+          window.clearInterval(timer);
+          return 0;
+        }
+        return seconds - 1;
+      });
+    }, 1000);
+    (window as typeof window & { mcqifyEmailChangeTimer?: number }).mcqifyEmailChangeTimer = timer;
+  }
+
+  async function submitSettingsForVerification() {
+    const res = await fetch('/api/user/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    });
+    const data = await res.json().catch(() => ({}));
+    return { res, data };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,15 +142,16 @@ export default function SettingsForm() {
     setMessage(null);
 
     try {
-      const res = await fetch('/api/user/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      const data = await res.json();
+      const { res, data } = await submitSettingsForVerification();
 
       if (!res.ok) {
         setMessage({ type: 'error', text: data.error || 'Failed to update profile' });
+      } else if (data.emailVerificationRequired) {
+        const pendingEmail = typeof data.email === "string" ? data.email : form.email;
+        setEmailVerificationEmail(pendingEmail);
+        setEmailOtpCode("");
+        setMessage({ type: 'success', text: data.message || `A verification code was sent to ${pendingEmail}.` });
+        startEmailResendTimer();
       } else {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         
@@ -151,6 +165,78 @@ export default function SettingsForm() {
       setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendEmailVerificationCode = async () => {
+    setResendingEmail(true);
+    setMessage(null);
+    try {
+      const { res, data } = await submitSettingsForVerification();
+      if (!res.ok) {
+        setMessage({ type: 'error', text: data.error || 'Could not resend the verification code.' });
+        return;
+      }
+
+      const pendingEmail = typeof data.email === "string" ? data.email : emailVerificationEmail;
+      setEmailVerificationEmail(pendingEmail);
+      setEmailOtpCode("");
+      setMessage({ type: 'success', text: data.message || `A new verification code was sent to ${pendingEmail}.` });
+      startEmailResendTimer();
+    } catch {
+      setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
+  const verifyEmailChange = async () => {
+    setMessage(null);
+
+    if (!/^\d{6}$/.test(emailOtpCode.trim())) {
+      setMessage({ type: 'error', text: 'Enter the 6-digit verification code.' });
+      return;
+    }
+
+    setVerifyingEmail(true);
+    try {
+      const res = await fetch('/api/user/settings/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailVerificationEmail, code: emailOtpCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setMessage({ type: 'error', text: data.error || 'Could not verify your email.' });
+        return;
+      }
+
+      const updatedUser = data.user || {};
+      const nextUsername = typeof updatedUser.username === "string" ? updatedUser.username : form.username;
+      const nextFullName = typeof updatedUser.fullName === "string" ? updatedUser.fullName : form.fullName;
+      const nextEmail = typeof updatedUser.email === "string" ? updatedUser.email : form.email;
+
+      setForm(prev => ({
+        ...prev,
+        username: nextUsername,
+        fullName: nextFullName,
+        email: nextEmail,
+        currentPassword: "",
+        newPassword: "",
+      }));
+      setOriginalData({ username: nextUsername, email: nextEmail });
+      setEmailVerificationEmail("");
+      setEmailOtpCode("");
+      setEmailResendSeconds(0);
+      setMessage({ type: 'success', text: data.message || 'Email verified and profile updated successfully.' });
+
+      await update({ name: nextFullName, username: nextUsername, email: nextEmail });
+      router.refresh();
+    } catch {
+      setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+    } finally {
+      setVerifyingEmail(false);
     }
   };
 
@@ -211,19 +297,111 @@ export default function SettingsForm() {
                 <Mail className="w-4 h-4 text-[#918B80] group-focus-within:text-[#8C5D3E] transition-colors" />
                 Email Address
               </label>
-              {emailStatus === 'checking' && <span className="text-[12px] font-bold text-[#8C5D3E] flex items-center gap-1 animate-pulse"><Loader2 className="w-3 h-3 animate-spin"/> Checking</span>}
-              {emailStatus === 'available' && <span className="text-[12px] font-bold text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Available</span>}
-              {emailStatus === 'unavailable' && <span className="text-[12px] font-bold text-red-500 flex items-center gap-1"><XCircle className="w-3 h-3"/> Invalid Email</span>}
+              <span className="text-[12px] font-bold text-[#918B80] flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Locked
+              </span>
             </div>
             <input
               name="email"
               type="email"
               value={form.email}
-              onChange={handleChange}
+              readOnly
+              disabled
               placeholder="johndoe@example.com"
-              className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
+              className="w-full cursor-not-allowed px-5 py-3.5 rounded-2xl bg-[#F4EFE6]/70 border border-[#DED6CA] text-[#6B6357] placeholder-[#A8A296] focus:outline-none transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
             />
+            <p className="mt-2 ml-2 text-[12px] font-semibold text-[#918B80]">
+              Email changes are temporarily disabled.
+            </p>
           </div>
+
+          {emailVerificationEmail && (
+            <div className="rounded-[26px] border border-emerald-100 bg-gradient-to-b from-emerald-50 to-white p-1 shadow-[0_16px_34px_rgba(16,185,129,0.10)]">
+              <div className="rounded-[22px] border border-white/90 bg-white/82 p-4 backdrop-blur-xl sm:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-[0_10px_22px_rgba(16,185,129,0.15)] ring-1 ring-emerald-100">
+                      <MailCheck className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[16px] font-black text-[#2C2A28]">Verify new email</p>
+                      <p className="mt-1 text-[13px] font-semibold leading-relaxed text-[#6B6863]">
+                        Enter the 6-digit code sent to <span className="font-black text-[#2C2A28] break-all">{emailVerificationEmail}</span>.
+                      </p>
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[12px] font-bold text-emerald-700">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        Code expires in 10 minutes
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full lg:w-[280px]">
+                    <div className="relative rounded-[22px] border border-[#E5DCD0] bg-white/80 p-2.5 shadow-[0_10px_24px_rgba(44,42,40,0.08)] transition-all focus-within:border-emerald-300 focus-within:ring-[5px] focus-within:ring-emerald-100">
+                      <input
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={emailOtpCode}
+                        onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        onPaste={(e) => {
+                          e.preventDefault();
+                          setEmailOtpCode(e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6));
+                        }}
+                        aria-label="Email verification code"
+                        className="absolute inset-0 z-10 h-full w-full cursor-text opacity-0"
+                      />
+                      <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
+                        {Array.from({ length: 6 }).map((_, index) => {
+                          const digit = emailOtpCode[index] ?? "";
+                          return (
+                            <div
+                              key={index}
+                              className={`flex aspect-square min-h-[36px] items-center justify-center rounded-xl border text-[18px] font-black shadow-sm transition-all ${digit ? "border-violet-200 bg-violet-50 text-[#2C2A28]" : "border-[#D8CDEB] bg-white text-[#B9B1A7]"}`}
+                            >
+                              {digit}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                      <button
+                        type="button"
+                        onClick={verifyEmailChange}
+                        disabled={verifyingEmail}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2C2A28] px-4 text-[13px] font-black text-white shadow-sm transition-all hover:bg-[#1A1816] disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-3 lg:col-span-1"
+                      >
+                        {verifyingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <MailCheck className="h-4 w-4" />}
+                        Verify and save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resendEmailVerificationCode}
+                        disabled={emailResendSeconds > 0 || resendingEmail}
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#E3D8CA] bg-white/70 px-4 text-[12px] font-black text-[#2C2A28] shadow-sm transition-all hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 lg:col-span-1"
+                      >
+                        {resendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 text-emerald-600" />}
+                        {emailResendSeconds > 0 ? `Resend in ${emailResendSeconds}s` : "Resend code"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmailVerificationEmail("");
+                          setEmailOtpCode("");
+                          setEmailResendSeconds(0);
+                          setMessage(null);
+                        }}
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#E3D8CA] bg-white/50 px-4 text-[12px] font-black text-[#8C5D3E] shadow-sm transition-all hover:bg-white"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="rounded-[24px] border border-[#E8E2D8] bg-[#F8F3EA]/75 p-4 sm:p-5">
             <h3 className="text-[16px] font-bold text-[#2C2A28] mb-1">Change Password</h3>
