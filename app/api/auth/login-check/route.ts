@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { findUserByIdentifier } from "@/lib/user-lookup";
 
 export async function POST(req: NextRequest) {

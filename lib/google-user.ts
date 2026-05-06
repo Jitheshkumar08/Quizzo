@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 

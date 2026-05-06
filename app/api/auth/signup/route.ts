@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { z } from "zod";
 import { generateSignupOtp, hashSignupOtp, signupOtpExpiry, signupOtpTtlMinutes } from "@/lib/signup-otp";
 import { ResendNotConfiguredError, sendSignupOtpEmail } from "@/lib/resend-email";

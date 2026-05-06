@@ -4,7 +4,7 @@ import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { findUserByIdentifier } from "@/lib/user-lookup";
 import { upsertGoogleUser } from "@/lib/google-user";
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
