@@ -7,6 +7,7 @@ import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
 import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw, Info, X, AlertTriangle, Copy, Check, UploadCloud, MessageSquareText, FileDown, FileUp } from "lucide-react";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
+import { AiButtons } from "@/components/ui/AiButtons";
 import { appDatetimeLocalToISOString } from "@/lib/timezone";
 
 type Step = "upload" | "edit" | "publishing";
@@ -73,7 +74,7 @@ const guideSteps = [
   {
     icon: FileDown,
     title: "Download the JSON file",
-    description: "Ask the AI to create a downloadable .json file, then download it to your device.",
+    description: "AI will create a downloadable .json file, then download it to your device.",
   },
   {
     icon: FileUp,
@@ -660,6 +661,11 @@ export default function InstructorUploadPage() {
                     Direct PDF conversion may take a while as we are on a free-tier API. For instant, perfectly formatted results, use an advanced AI (like ChatGPT or Claude) to extract the questions first, then upload the <code className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded-md text-[13px] font-bold mx-0.5">.json</code> file here directly!
                   </p>
                 </div>
+              </div>
+
+              {/* AI Link Buttons */}
+              <div className="flex justify-center w-full">
+                <AiButtons />
               </div>
 
               {/* Code Section */}
