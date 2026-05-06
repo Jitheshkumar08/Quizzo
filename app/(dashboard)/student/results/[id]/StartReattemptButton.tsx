@@ -193,7 +193,7 @@ export default function StartReattemptButton({
           unattemptedCount={unattemptedCount}
         />
       )}
-      <div className="relative overflow-hidden rounded-[24px] border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 shadow-[0_14px_34px_rgba(20,184,166,0.14)] ring-1 ring-white/80 sm:p-5">
+      <div className="relative overflow-hidden mb-[20px] rounded-[24px] border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 shadow-[0_14px_34px_rgba(20,184,166,0.14)] ring-1 ring-white/80 sm:p-5">
         <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-teal-200/45 blur-2xl" />
         <div className="relative grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_240px] md:items-center">
           <div className="flex items-start gap-3">
