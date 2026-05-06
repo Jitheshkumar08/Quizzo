@@ -65,20 +65,26 @@ export default async function ReattemptQuizPage({ params }: Props) {
     redirect("/student/results");
   }
 
-  const allQuestions = await prisma.question.findMany({
-    where: { quizId: remedialSession.quizId },
+  const selectedQuestions = await prisma.question.findMany({
+    where: {
+      quizId: remedialSession.quizId,
+      id: { in: questionIds },
+    },
+    select: {
+      id: true,
+      questionText: true,
+      options: true,
+      order: true,
+    },
     orderBy: { order: "asc" },
   });
 
-  const questionSet = new Set(questionIds);
-  const questions = allQuestions
-    .filter((question) => questionSet.has(question.id))
-    .map((question) => ({
-      id: question.id,
-      questionText: question.questionText,
-      options: question.options as QuestionPayload["options"],
-      order: question.order,
-    }));
+  const questions = selectedQuestions.map((question) => ({
+    id: question.id,
+    questionText: question.questionText,
+    options: question.options as QuestionPayload["options"],
+    order: question.order,
+  }));
 
   if (questions.length === 0) {
     redirect("/student/results");

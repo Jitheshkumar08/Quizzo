@@ -11,11 +11,6 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-interface ResultMeta {
-  titleOverride: string | null;
-  questionIds: unknown;
-}
-
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
@@ -30,10 +25,36 @@ export default async function ResultDetailPage({ params }: Props) {
 
   const result = await prisma.result.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      quizId: true,
+      studentId: true,
+      score: true,
+      total: true,
+      timeTaken: true,
+      userAnswers: true,
+      titleOverride: true,
+      questionIds: true,
+      sourceResultId: true,
+      attemptType: true,
+      createdAt: true,
       quiz: {
-        include: {
-          questions: { orderBy: { order: "asc" } },
+        select: {
+          id: true,
+          title: true,
+          createdById: true,
+          shuffleOptions: true,
+          questions: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              questionText: true,
+              options: true,
+              correctAnswer: true,
+              explanation: true,
+              order: true,
+            },
+          },
         },
       },
       student: { select: { fullName: true, username: true } },
@@ -51,48 +72,41 @@ export default async function ResultDetailPage({ params }: Props) {
     redirect(session.user.role === "INSTRUCTOR" || session.user.role === "ADMIN" ? "/instructor/quizzes" : "/student/results");
   }
 
-  const [meta] = await prisma.$queryRaw<ResultMeta[]>`
-    SELECT "titleOverride", "questionIds"
-    FROM "Result"
-    WHERE "id" = ${id}
-    LIMIT 1
-  `;
-
   const isInstructorReview = !isStudentOwner && canReviewAsQuizOwner;
 
   const pct = Math.round((result.score / result.total) * 100);
   const userAnswers = result.userAnswers as Record<string, string>;
-  const coveredQuestionIds = parseStringArray(meta?.questionIds);
+  const coveredQuestionIds = parseStringArray(result.questionIds);
   const coveredQuestionSet = coveredQuestionIds ? new Set(coveredQuestionIds) : null;
   const reviewQuestions = coveredQuestionSet
     ? result.quiz.questions.filter((q) => coveredQuestionSet.has(q.id))
     : result.quiz.questions;
-  const displayTitle = meta?.titleOverride ?? result.quiz.title;
+  const displayTitle = result.titleOverride ?? result.quiz.title;
 
   const correct = reviewQuestions.filter((q) => userAnswers[q.id] === q.correctAnswer).length;
   const incorrect = reviewQuestions.filter((q) => userAnswers[q.id] && userAnswers[q.id] !== q.correctAnswer).length;
   const unattempted = reviewQuestions.filter((q) => !userAnswers[q.id]).length;
   const missedCount = incorrect + unattempted;
 
-  const sessionRecord = await prisma.quizSession.findFirst({
-    where: {
-      quizId: result.quizId,
-      studentId: result.studentId,
-      submittedAt: {
-        gte: new Date(result.createdAt.getTime() - 60000),
-        lte: new Date(result.createdAt.getTime() + 60000),
-      }
-    }
-  });
-  const remedialSessionRecord = sessionRecord
-    ? []
-    : await prisma.$queryRaw<{ id: string }[]>`
+  const isReattemptResult = result.attemptType !== "NORMAL" || !!result.sourceResultId;
+  const sessionId = isReattemptResult
+    ? (await prisma.$queryRaw<{ id: string }[]>`
         SELECT "id"
         FROM "RemedialQuizSession"
         WHERE "resultId" = ${result.id}
         LIMIT 1
-      `;
-  const sessionId = sessionRecord?.id || remedialSessionRecord[0]?.id || null;
+      `)[0]?.id ?? null
+    : (await prisma.quizSession.findFirst({
+        where: {
+          quizId: result.quizId,
+          studentId: result.studentId,
+          submittedAt: {
+            gte: new Date(result.createdAt.getTime() - 60000),
+            lte: new Date(result.createdAt.getTime() + 60000),
+          }
+        },
+        select: { id: true },
+      }))?.id ?? null;
 
   const pctColor = pct >= 75 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-rose-500";
   const pctAccent =

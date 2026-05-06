@@ -35,11 +35,6 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
   const resolvedSearchParams = await searchParams;
   const searchQuery = resolvedSearchParams?.q?.trim() || "";
 
-  let openSessions = await prisma.quizSession.findMany({
-    where: { studentId: session.user.id, submittedAt: null },
-    select: { quizId: true, startedAt: true }
-  });
-
   const whereClause: Prisma.QuizWhereInput = { isPublished: true };
   if (searchQuery) {
     whereClause.OR = [
@@ -48,21 +43,27 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
     ];
   }
 
-  const quizRows = await prisma.quiz.findMany({
-    where: whereClause,
-    include: {
-      createdBy: { select: { username: true } },
-      _count: { select: { questions: true, results: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const normalResultCounts = await prisma.$queryRaw<NormalResultCountRow[]>`
-    SELECT "quizId", COUNT(*) AS "count"
-    FROM "Result"
-    WHERE COALESCE("attemptType", 'NORMAL') = 'NORMAL'
-    GROUP BY "quizId"
-  `;
+  const [initialOpenSessions, quizRows, normalResultCounts] = await Promise.all([
+    prisma.quizSession.findMany({
+      where: { studentId: session.user.id, submittedAt: null },
+      select: { quizId: true, startedAt: true }
+    }),
+    prisma.quiz.findMany({
+      where: whereClause,
+      include: {
+        createdBy: { select: { username: true } },
+        _count: { select: { questions: true, results: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.$queryRaw<NormalResultCountRow[]>`
+      SELECT "quizId", COUNT(*) AS "count"
+      FROM "Result"
+      WHERE COALESCE("attemptType", 'NORMAL') = 'NORMAL'
+      GROUP BY "quizId"
+    `,
+  ]);
+  let openSessions = initialOpenSessions;
   const normalResultCountByQuiz = new Map(
     normalResultCounts.map((row) => [row.quizId, Number(row.count)])
   );

@@ -36,23 +36,24 @@ export default async function InstructorQuizzesPage() {
     include: { createdBy: { select: { fullName: true } }; _count: { select: { questions: true; results: true } } };
   }>>>[number];
 
-  const quizzes: QuizRow[] = await prisma.quiz.findMany({
-    where,
-    include: {
-      createdBy: { select: { fullName: true } },
-      _count: { select: { questions: true, results: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const normalResultCounts = await prisma.$queryRaw<NormalResultCountRow[]>`
-    SELECT r."quizId", COUNT(*) AS "count"
-    FROM "Result" r
-    INNER JOIN "Quiz" q ON q."id" = r."quizId"
-    WHERE COALESCE(r."attemptType", 'NORMAL') = 'NORMAL'
-      ${session.user.role === "ADMIN" ? Prisma.empty : Prisma.sql`AND q."createdById" = ${session.user.id}`}
-    GROUP BY r."quizId"
-  `;
+  const [quizzes, normalResultCounts] = await Promise.all([
+    prisma.quiz.findMany({
+      where,
+      include: {
+        createdBy: { select: { fullName: true } },
+        _count: { select: { questions: true, results: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }) as Promise<QuizRow[]>,
+    prisma.$queryRaw<NormalResultCountRow[]>`
+      SELECT r."quizId", COUNT(*) AS "count"
+      FROM "Result" r
+      INNER JOIN "Quiz" q ON q."id" = r."quizId"
+      WHERE COALESCE(r."attemptType", 'NORMAL') = 'NORMAL'
+        ${session.user.role === "ADMIN" ? Prisma.empty : Prisma.sql`AND q."createdById" = ${session.user.id}`}
+      GROUP BY r."quizId"
+    `,
+  ]);
   const normalResultCountByQuiz = new Map(
     normalResultCounts.map((row) => [row.quizId, Number(row.count)])
   );

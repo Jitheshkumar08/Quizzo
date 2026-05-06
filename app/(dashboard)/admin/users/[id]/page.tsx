@@ -6,6 +6,7 @@ import { ArrowLeft, BarChart3, BookOpen, Calendar, Clock3, Shield, UserCircle2 }
 import AdminUserAccountForm from "@/components/admin/AdminUserAccountForm";
 import DeleteUserButton from "@/components/admin/DeleteUserButton";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
+import { withDatabaseRetry } from "@/lib/db-retry";
 import type { Role } from "@prisma/client";
 
 interface Props {
@@ -49,25 +50,27 @@ export default async function AdminUserProfilePage({ params }: Props) {
 
   const { id } = await params;
 
-  const users = await prisma.$queryRaw<AdminUserDetail[]>`
-    SELECT
-      u."id",
-      u."fullName",
-      u."username",
-      u."email",
-      u."role",
-      u."lastLoginAt",
-      u."createdAt",
-      u."profileImageUrl",
-      COUNT(DISTINCT q."id") AS "quizCount",
-      COUNT(DISTINCT r."id") AS "resultCount"
-    FROM "User" u
-    LEFT JOIN "Quiz" q ON q."createdById" = u."id"
-    LEFT JOIN "Result" r ON r."studentId" = u."id"
-    WHERE u."id" = ${id}
-    GROUP BY u."id"
-    LIMIT 1
-  `;
+  const users = await withDatabaseRetry(() =>
+    prisma.$queryRaw<AdminUserDetail[]>`
+      SELECT
+        u."id",
+        u."fullName",
+        u."username",
+        u."email",
+        u."role",
+        u."lastLoginAt",
+        u."createdAt",
+        u."profileImageUrl",
+        COUNT(DISTINCT q."id") AS "quizCount",
+        COUNT(DISTINCT r."id") AS "resultCount"
+      FROM "User" u
+      LEFT JOIN "Quiz" q ON q."createdById" = u."id"
+      LEFT JOIN "Result" r ON r."studentId" = u."id"
+      WHERE u."id" = ${id}
+      GROUP BY u."id"
+      LIMIT 1
+    `
+  );
   const user = users[0] ?? null;
 
   if (!user) redirect("/admin/users");

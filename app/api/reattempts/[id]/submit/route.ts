@@ -72,7 +72,19 @@ export async function POST(
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: remedialSession.quizId },
-      include: { questions: { orderBy: { order: "asc" } } },
+      select: {
+        title: true,
+        questions: {
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            questionText: true,
+            options: true,
+            correctAnswer: true,
+            explanation: true,
+          },
+        },
+      },
     });
 
     if (!quiz) {

@@ -5,15 +5,6 @@ import { parseStringArray } from "@/lib/reattempt-utils";
 
 export const maxDuration = 30;
 
-interface ResultQuestion {
-  id: string;
-  correctAnswer: string;
-}
-
-interface ResultMeta {
-  questionIds: unknown;
-}
-
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -27,9 +18,14 @@ export async function POST(
     const { id } = await params;
     const result = await prisma.result.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        quizId: true,
+        studentId: true,
+        userAnswers: true,
+        questionIds: true,
         quiz: {
-          include: {
+          select: {
             questions: {
               orderBy: { order: "asc" },
               select: { id: true, correctAnswer: true },
@@ -43,16 +39,9 @@ export async function POST(
       return NextResponse.json({ error: "Result not found" }, { status: 404 });
     }
 
-    const [meta] = await prisma.$queryRaw<ResultMeta[]>`
-      SELECT "questionIds"
-      FROM "Result"
-      WHERE "id" = ${id}
-      LIMIT 1
-    `;
-
-    const coveredQuestionIds = parseStringArray(meta?.questionIds);
+    const coveredQuestionIds = parseStringArray(result.questionIds);
     const coveredSet = coveredQuestionIds ? new Set(coveredQuestionIds) : null;
-    const coveredQuestions = (result.quiz.questions as ResultQuestion[]).filter((question) =>
+    const coveredQuestions = result.quiz.questions.filter((question) =>
       coveredSet ? coveredSet.has(question.id) : true
     );
 
