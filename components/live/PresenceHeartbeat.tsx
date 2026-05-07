@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 
 const HEARTBEAT_INTERVAL_MS = 120_000;
-const FIRST_HEARTBEAT_DELAY_MS = 10_000;
 const DISABLED_STORAGE_KEY = "quizzo:presence-disabled-until";
 
 function isPresenceDisabledInBrowser() {
@@ -45,19 +44,18 @@ function sendHeartbeat() {
 
 export default function PresenceHeartbeat() {
   useEffect(() => {
-    const firstHeartbeat = window.setTimeout(sendHeartbeat, FIRST_HEARTBEAT_DELAY_MS);
+    sendHeartbeat();
 
     const interval = window.setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        window.setTimeout(sendHeartbeat, FIRST_HEARTBEAT_DELAY_MS);
+        sendHeartbeat();
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearTimeout(firstHeartbeat);
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };

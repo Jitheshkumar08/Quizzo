@@ -71,3 +71,24 @@ export async function getLastSeenByUserIds(userIds: string[]) {
     return new Map<string, Date | null>();
   }
 }
+
+export async function getActiveUserIds() {
+  if (shouldSkipPresence()) return [];
+
+  try {
+    const rows = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT "id"
+      FROM "User"
+      WHERE "lastSeenAt" >= NOW() - INTERVAL '2 minutes'
+    `;
+
+    return rows.map((row) => row.id);
+  } catch (error) {
+    if (isMissingLastSeenColumnError(error)) {
+      markMissingColumn();
+    } else {
+      console.error("[PRESENCE ACTIVE USERS ERROR]", error);
+    }
+    return [];
+  }
+}

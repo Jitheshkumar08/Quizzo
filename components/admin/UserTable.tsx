@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search } from "lucide-react";
+import { Activity, ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search } from "lucide-react";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 interface User {
@@ -17,6 +18,8 @@ interface User {
 }
 
 const ROLES = ["STUDENT", "INSTRUCTOR", "ADMIN"] as const;
+type SortField = "quizzes" | "attempts" | "joined";
+type SortDirection = "asc" | "desc";
 
 const roleConfig: Record<string, {
   gradient: string;
@@ -178,6 +181,11 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [usernameQuery, setUsernameQuery] = useState("");
+  const [sortField, setSortField] = useState<SortField>("joined");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [onlineOnly, setOnlineOnly] = useState(false);
+  const [activeUserIds, setActiveUserIds] = useState<Set<string>>(new Set());
+  const [activeLoading, setActiveLoading] = useState(false);
 
   const loadUsers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
@@ -198,6 +206,37 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
 
     return () => window.clearTimeout(timer);
   }, [loadUsers]);
+
+  useEffect(() => {
+    if (!onlineOnly) return;
+
+    const controller = new AbortController();
+
+    fetch("/api/admin/users/active", {
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(data.ids)) {
+          setActiveUserIds(new Set());
+          return;
+        }
+        setActiveUserIds(new Set(data.ids.filter((id: unknown): id is string => typeof id === "string")));
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setActiveUserIds(new Set());
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setActiveLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [onlineOnly]);
 
   async function changeRole(userId: string, role: string) {
     setUpdating(userId);
@@ -221,9 +260,85 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
   }
 
   const normalizedUsernameQuery = usernameQuery.trim().toLowerCase();
-  const filteredUsers = normalizedUsernameQuery
-    ? users.filter((user) => user.username.toLowerCase().includes(normalizedUsernameQuery))
-    : users;
+  const filteredUsers = useMemo(() => {
+    const direction = sortDirection === "asc" ? 1 : -1;
+    const usernameFiltered = normalizedUsernameQuery
+      ? users.filter((user) => user.username.toLowerCase().includes(normalizedUsernameQuery))
+      : users;
+    const presenceFiltered = onlineOnly
+      ? usernameFiltered.filter((user) => activeUserIds.has(user.id))
+      : usernameFiltered;
+
+    return [...presenceFiltered].sort((a, b) => {
+      if (sortField === "quizzes") {
+        const countDiff = a._count.quizzes - b._count.quizzes;
+        if (countDiff !== 0) return countDiff * direction;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+
+      if (sortField === "attempts") {
+        const countDiff = a._count.results - b._count.results;
+        if (countDiff !== 0) return countDiff * direction;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+
+      return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
+    });
+  }, [activeUserIds, normalizedUsernameQuery, onlineOnly, sortDirection, sortField, users]);
+
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortField(field);
+    setSortDirection("desc");
+  }
+
+  function renderSortIndicator(field: SortField, inverted = false) {
+    const iconClassName = "h-3.5 w-3.5 stroke-[2.6] text-[#B0A89E]";
+    const activeIconClassName = inverted
+      ? "h-3.5 w-3.5 stroke-[2.8] text-white"
+      : "h-3.5 w-3.5 stroke-[2.8] text-[#6B6357]";
+
+    if (sortField !== field) {
+      return <ArrowDownWideNarrow className={iconClassName} aria-hidden="true" />;
+    }
+
+    return sortDirection === "asc" ? (
+      <ArrowUpNarrowWide className={activeIconClassName} aria-hidden="true" />
+    ) : (
+      <ArrowDownWideNarrow className={activeIconClassName} aria-hidden="true" />
+    );
+  }
+
+  function renderSortHeader(field: SortField, label: string) {
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(field)}
+        className="inline-flex cursor-pointer select-none items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50] transition-colors hover:text-[#2C2A28]"
+        aria-label={`Sort by ${label}`}
+        aria-pressed={sortField === field}
+      >
+        {label}
+        {renderSortIndicator(field)}
+      </button>
+    );
+  }
+
+  function toggleOnlineOnly() {
+    setOnlineOnly((value) => {
+      const nextValue = !value;
+      if (nextValue) {
+        setActiveLoading(true);
+      } else {
+        setActiveLoading(false);
+      }
+      return nextValue;
+    });
+  }
 
   if (loading) {
     return (
@@ -237,20 +352,37 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
   return (
     <div>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="order-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#A09890] sm:order-1">
-          {filteredUsers.length} of {users.length} shown
-        </p>
-        <label className="relative order-1 block w-full sm:order-2 sm:max-w-sm">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A09890]" />
-          <input
-            type="search"
-            value={usernameQuery}
-            onChange={(e) => setUsernameQuery(e.target.value)}
-            placeholder="Search username..."
-            aria-label="Search users by username"
-            className="h-12 w-full rounded-2xl border border-[#E4DDD3] bg-white/78 pl-11 pr-4 text-sm font-semibold text-[#2C2A28] shadow-[0_8px_26px_rgba(44,42,40,0.06)] outline-none transition-all placeholder:text-[#AFA69A] focus:border-violet-200 focus:bg-white focus:ring-4 focus:ring-violet-100/70"
-          />
-        </label>
+        <div className="order-2 flex flex-wrap items-center gap-3 sm:order-1">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#A09890]">
+            {filteredUsers.length} of {users.length} shown
+          </p>
+        </div>
+        <div className="order-1 flex w-full flex-col gap-3 sm:order-2 sm:w-auto sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={toggleOnlineOnly}
+            className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl border px-4 text-xs font-black shadow-[0_8px_26px_rgba(44,42,40,0.06)] transition-colors ${
+              onlineOnly
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-[#E4DDD3] bg-white/78 text-[#6B6357] hover:bg-white"
+            }`}
+            aria-pressed={onlineOnly}
+          >
+            {activeLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Activity className="h-3.5 w-3.5" />}
+            Online now
+          </button>
+          <label className="relative block w-full sm:w-[min(24rem,38vw)]">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A09890]" />
+            <input
+              type="search"
+              value={usernameQuery}
+              onChange={(e) => setUsernameQuery(e.target.value)}
+              placeholder="Search username..."
+              aria-label="Search users by username"
+              className="h-12 w-full rounded-2xl border border-[#E4DDD3] bg-white/78 pl-11 pr-4 text-sm font-semibold text-[#2C2A28] shadow-[0_8px_26px_rgba(44,42,40,0.06)] outline-none transition-all placeholder:text-[#AFA69A] focus:border-violet-200 focus:bg-white focus:ring-4 focus:ring-violet-100/70"
+            />
+          </label>
+        </div>
       </div>
 
       {filteredUsers.length === 0 ? (
@@ -259,6 +391,8 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
           <p className="mt-1 text-xs font-semibold text-[#918B80]">
             {normalizedUsernameQuery
               ? `No username matches @${normalizedUsernameQuery}`
+              : onlineOnly
+                ? "No users are online right now."
               : "No users are on the platform yet."}
           </p>
         </div>
@@ -328,11 +462,21 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
           <table className="w-full">
             <thead>
               <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
-                {["User", "Email", "Role", "Quizzes", "Attempts", "Joined", "Access"].map((h) => (
+                {["User", "Email", "Role"].map((h) => (
                   <th key={h} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
                     {h}
                   </th>
                 ))}
+                <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "quizzes" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                  {renderSortHeader("quizzes", "Quizzes")}
+                </th>
+                <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "attempts" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                  {renderSortHeader("attempts", "Attempts")}
+                </th>
+                <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "joined" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                  {renderSortHeader("joined", "Joined")}
+                </th>
+                <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">Access</th>
               </tr>
             </thead>
             <tbody>
