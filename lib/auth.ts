@@ -93,6 +93,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           username: user.username,
           sessionVersion: sessionState?.sessionVersion ?? 0,
+          image: user.profileImageUrl,
+          profileImageUrl: user.profileImageUrl,
+          authProvider: user.authProvider,
         };
       },
     }),

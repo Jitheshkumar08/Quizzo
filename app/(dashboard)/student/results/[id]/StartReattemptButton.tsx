@@ -59,7 +59,7 @@ function MissedCountText({
       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${incorrectClass}`}>
         {incorrectCount} incorrect
       </span>{" "}
-      or{" "}
+      &{" "}
       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${unattemptedClass}`}>
         {unattemptedCount} unattempted
       </span>{" "}
