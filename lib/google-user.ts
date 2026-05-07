@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { touchUserPresence } from "@/lib/presence";
 
 type GoogleUserInput = {
   googleId: string;
@@ -48,7 +49,7 @@ export async function upsertGoogleUser(input: GoogleUserInput) {
   });
 
   if (byGoogleId) {
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: byGoogleId.id },
       data: {
         email,
@@ -57,6 +58,8 @@ export async function upsertGoogleUser(input: GoogleUserInput) {
         lastLoginAt: new Date(),
       },
     });
+    void touchUserPresence(user.id);
+    return user;
   }
 
   const byEmail = await prisma.user.findUnique({
@@ -64,7 +67,7 @@ export async function upsertGoogleUser(input: GoogleUserInput) {
   });
 
   if (byEmail) {
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: byEmail.id },
       data: {
         googleId,
@@ -74,12 +77,14 @@ export async function upsertGoogleUser(input: GoogleUserInput) {
         lastLoginAt: new Date(),
       },
     });
+    void touchUserPresence(user.id);
+    return user;
   }
 
   const username = await uniqueUsername(usernameFromEmail(email));
   const passwordHash = await bcrypt.hash(`google:${randomUUID()}`, 12);
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       fullName,
       username,
@@ -93,4 +98,6 @@ export async function upsertGoogleUser(input: GoogleUserInput) {
       role: "STUDENT",
     },
   });
+  void touchUserPresence(user.id);
+  return user;
 }

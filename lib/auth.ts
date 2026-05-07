@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { findUserByIdentifier } from "@/lib/user-lookup";
 import { upsertGoogleUser } from "@/lib/google-user";
+import { touchUserPresence } from "@/lib/presence";
 
 type GoogleProfile = {
   sub?: string;
@@ -85,6 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           WHERE "id" = ${user.id}
           RETURNING "sessionVersion"
         `;
+        void touchUserPresence(user.id);
 
         return {
           id: user.id,

@@ -2,11 +2,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, BarChart3, BookOpen, Calendar, Clock3, Shield, UserCircle2 } from "lucide-react";
+import { ArrowLeft, BarChart3, BookOpen, Calendar, Shield, UserCircle2, Wifi, WifiOff } from "lucide-react";
 import AdminUserAccountForm from "@/components/admin/AdminUserAccountForm";
 import DeleteUserButton from "@/components/admin/DeleteUserButton";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 import { withDatabaseRetry } from "@/lib/db-retry";
+import { getLastSeenByUserIds } from "@/lib/presence";
 import type { Role } from "@prisma/client";
 
 interface Props {
@@ -37,11 +38,31 @@ interface AdminUserDetail {
   username: string;
   email: string;
   role: Role;
-  lastLoginAt: Date | null;
   createdAt: Date;
   profileImageUrl: string | null;
   quizCount: bigint | number;
   resultCount: bigint | number;
+}
+
+const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
+function getPresence(lastSeenAt: Date | null) {
+  if (!lastSeenAt) {
+    return {
+      online: false,
+      label: "Offline",
+      detail: "Never online",
+    };
+  }
+
+  const online = Date.now() - lastSeenAt.getTime() <= ONLINE_WINDOW_MS;
+  const seen = formatDate(lastSeenAt);
+
+  return {
+    online,
+    label: online ? "Online" : "Offline",
+    detail: online ? "Active now" : `Last online ${seen.date} ${seen.time}`,
+  };
 }
 
 export default async function AdminUserProfilePage({ params }: Props) {
@@ -58,7 +79,6 @@ export default async function AdminUserProfilePage({ params }: Props) {
         u."username",
         u."email",
         u."role",
-        u."lastLoginAt",
         u."createdAt",
         u."profileImageUrl",
         COUNT(DISTINCT q."id") AS "quizCount",
@@ -76,7 +96,9 @@ export default async function AdminUserProfilePage({ params }: Props) {
   if (!user) redirect("/admin/users");
 
   const joined = formatDate(user.createdAt);
-  const lastLogin = user.lastLoginAt ? formatDate(user.lastLoginAt) : null;
+  const lastSeenByUser = await getLastSeenByUserIds([user.id]);
+  const presence = getPresence(lastSeenByUser.get(user.id) ?? null);
+  const PresenceIcon = presence.online ? Wifi : WifiOff;
   const quizCount = Number(user.quizCount);
   const resultCount = Number(user.resultCount);
 
@@ -116,11 +138,10 @@ export default async function AdminUserProfilePage({ params }: Props) {
 
             <div className="flex w-fit flex-wrap items-center gap-2 sm:justify-end">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#E8E2D8] bg-white/75 px-3 py-1.5 text-xs font-bold text-[#6B6357] shadow-sm">
-                <Clock3 className="w-3.5 h-3.5 text-[#8C6D50]" />
-                <span className="text-[#A09890]">Last login</span>
-                <span className="text-[#2C2A28]">
-                  {lastLogin ? `${lastLogin.date} ${lastLogin.time}` : "Never"}
-                </span>
+                <span className={`h-2 w-2 rounded-full ${presence.online ? "bg-emerald-500" : "bg-[#A09890]"}`} />
+                <PresenceIcon className={`w-3.5 h-3.5 ${presence.online ? "text-emerald-600" : "text-[#8C6D50]"}`} />
+                <span className={presence.online ? "text-emerald-700" : "text-[#A09890]"}>{presence.label}</span>
+                <span className="text-[#2C2A28]">{presence.detail}</span>
               </span>
               <span className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r px-3 py-1.5 text-xs font-bold tracking-wide shadow-sm ${roleStyles[user.role]}`}>
                 <Shield className="w-3.5 h-3.5" />
