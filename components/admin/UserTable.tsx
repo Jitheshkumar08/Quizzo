@@ -458,8 +458,9 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
 
       {/* ── DESKTOP: Premium Table ─────────────────────── */}
       <div className="hidden md:block">
-        <div className="glass rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
-          <table className="w-full">
+        <div className="glass rounded-2xl border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px]">
             <thead>
               <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
                 {["User", "Email", "Role"].map((h) => (
@@ -558,6 +559,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
               })}
             </tbody>
           </table>
+          </div>
 
           {/* Footer legend */}
           <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">

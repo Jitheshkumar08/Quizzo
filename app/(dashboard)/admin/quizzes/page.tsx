@@ -95,7 +95,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
       ) : (
       <>
       {/* ── MOBILE: Card list ─────────────────────────── */}
-      <div className="xl:hidden grid gap-5 pb-10">
+      <div className="md:hidden grid gap-5 pb-10">
         {quizzes.map((quiz) => {
           const created = formatDate(quiz.createdAt);
           const updated = formatDate(quiz.updatedAt);
@@ -178,10 +178,10 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
       </div>
 
       {/* ── DESKTOP: Premium Table ─────────────────────── */}
-      <div className="hidden xl:block">
-        <div className="glass rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
-          <div className="overflow-hidden">
-          <table className="w-full table-fixed">
+      <div className="hidden md:block">
+        <div className="glass rounded-2xl border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[1000px] table-fixed">
             <colgroup>
               <col className="w-[15%]" />
               <col className="w-[13%]" />
