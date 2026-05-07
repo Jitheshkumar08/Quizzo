@@ -22,7 +22,7 @@ export default function ForgotPasswordForm() {
 
   function startResendTimer() {
     setResendSeconds(30);
-    window.clearInterval((window as typeof window & { mcqifyPasswordResetTimer?: number }).mcqifyPasswordResetTimer);
+    window.clearInterval((window as typeof window & { quizzoPasswordResetTimer?: number }).quizzoPasswordResetTimer);
     const timer = window.setInterval(() => {
       setResendSeconds((seconds) => {
         if (seconds <= 1) {
@@ -32,7 +32,7 @@ export default function ForgotPasswordForm() {
         return seconds - 1;
       });
     }, 1000);
-    (window as typeof window & { mcqifyPasswordResetTimer?: number }).mcqifyPasswordResetTimer = timer;
+    (window as typeof window & { quizzoPasswordResetTimer?: number }).quizzoPasswordResetTimer = timer;
   }
 
   async function requestCode(nextIdentifier = identifier) {

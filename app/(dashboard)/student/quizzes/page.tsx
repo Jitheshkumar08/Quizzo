@@ -13,7 +13,7 @@ import ScheduleBoundaryRefresh from "@/components/live/ScheduleBoundaryRefresh";
 import QuizSearch from "@/components/quiz/QuizSearch";
 import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
 
-export const metadata = { title: "Browse Quizzes — MCQify" };
+export const metadata = { title: "Browse Quizzes — Quizzo" };
 
 interface NormalResultCountRow {
   quizId: string;

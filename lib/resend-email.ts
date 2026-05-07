@@ -57,7 +57,7 @@ async function sendOtpEmail({
       from,
       to,
       subject,
-      text: `Hi ${fullName},\n\nYour MCQify verification code is ${code}.\n\n${textAction}\n\nThis code expires in ${ttlMinutes} minutes.\n\nIf you did not request this, you can ignore this email.`,
+      text: `Hi ${fullName},\n\nYour Quizzo verification code is ${code}.\n\n${textAction}\n\nThis code expires in ${ttlMinutes} minutes.\n\nIf you did not request this, you can ignore this email.`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:28px;color:#1f1d1b">
           <h1 style="margin:0 0 12px;font-size:24px">${escapeHtml(subject)}</h1>
@@ -78,7 +78,7 @@ async function sendOtpEmail({
 export async function sendSignupOtpEmail(args: SendSignupOtpEmailArgs) {
   return sendOtpEmail({
     ...args,
-    subject: "Verify your MCQify email",
+    subject: "Verify your Quizzo email",
     intro: "use this code to finish creating your account.",
     textAction: "Use this code to finish creating your account.",
     ttlMinutes: signupOtpTtlMinutes(),
@@ -88,7 +88,7 @@ export async function sendSignupOtpEmail(args: SendSignupOtpEmailArgs) {
 export async function sendPasswordResetOtpEmail(args: SendAccountOtpEmailArgs) {
   return sendOtpEmail({
     ...args,
-    subject: "Reset your MCQify password",
+    subject: "Reset your Quizzo password",
     intro: "use this code to set a new password.",
     textAction: "Use this code to set a new password.",
     ttlMinutes: ACCOUNT_OTP_TTL_MINUTES,
@@ -98,7 +98,7 @@ export async function sendPasswordResetOtpEmail(args: SendAccountOtpEmailArgs) {
 export async function sendEmailChangeOtpEmail(args: SendAccountOtpEmailArgs) {
   return sendOtpEmail({
     ...args,
-    subject: "Verify your new MCQify email",
+    subject: "Verify your new Quizzo email",
     intro: "use this code to confirm this email address.",
     textAction: "Use this code to confirm this email address.",
     ttlMinutes: ACCOUNT_OTP_TTL_MINUTES,

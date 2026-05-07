@@ -1,8 +1,8 @@
 import LoginForm from "@/components/auth/LoginForm";
 
 export const metadata = {
-  title: "Sign In — MCQify",
-  description: "Sign in to your MCQify account",
+  title: "Sign In — Quizzo",
+  description: "Sign in to your Quizzo account",
 };
 
 export default function LoginPage() {

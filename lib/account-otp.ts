@@ -8,7 +8,7 @@ export const ACCOUNT_OTP_PURPOSES = {
 } as const;
 
 function otpSecret() {
-  return process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || process.env.RESEND_API_KEY || "mcqify-dev-secret";
+  return process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || process.env.RESEND_API_KEY || "quizzo-dev-secret";
 }
 
 export function accountOtpExpiry() {

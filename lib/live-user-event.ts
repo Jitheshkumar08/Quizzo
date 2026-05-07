@@ -1,6 +1,6 @@
 "use client";
 
-export const LIVE_USER_UPDATED_EVENT = "mcqify:live-user-updated";
+export const LIVE_USER_UPDATED_EVENT = "quizzo:live-user-updated";
 
 export interface LiveUser {
   name: string;

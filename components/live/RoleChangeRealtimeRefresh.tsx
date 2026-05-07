@@ -72,7 +72,7 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
     };
 
     const channel = supabase
-      .channel(`mcqify-role-change-events-${userId}`)
+      .channel(`quizzo-role-change-events-${userId}`)
       .on(
         "postgres_changes",
         {

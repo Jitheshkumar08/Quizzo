@@ -10,7 +10,7 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "MCQify — AI-Powered Quiz Platform",
+  title: "Quizzo - Quiz Platform",
   description:
     "Upload PDFs and let AI generate comprehensive multiple-choice quizzes instantly. Built for instructors, loved by students.",
   keywords: ["quiz", "MCQ", "AI", "education", "pdf", "exam"],

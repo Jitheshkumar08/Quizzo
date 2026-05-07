@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-const COOKIE_PREFIX = "mcqify_qa_";
+const COOKIE_PREFIX = "quizzo_qa_";
 
 export function quizAccessCookieName(quizId: string) {
   return `${COOKIE_PREFIX}${quizId}`;

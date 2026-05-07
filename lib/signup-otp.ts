@@ -3,7 +3,7 @@ import { createHmac, randomInt, timingSafeEqual } from "crypto";
 const OTP_TTL_MINUTES = 10;
 
 function otpSecret() {
-  return process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || process.env.RESEND_API_KEY || "mcqify-dev-secret";
+  return process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || process.env.RESEND_API_KEY || "quizzo-dev-secret";
 }
 
 export function signupOtpExpiry() {

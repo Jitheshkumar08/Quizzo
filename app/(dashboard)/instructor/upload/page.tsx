@@ -79,7 +79,7 @@ const guideSteps = [
   {
     icon: FileUp,
     title: "Upload JSON here",
-    description: "Return to MCQify and upload that .json file to load your questions instantly.",
+    description: "Return to Quizzo and upload that .json file to load your questions instantly.",
   },
 ];
 

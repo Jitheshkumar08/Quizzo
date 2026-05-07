@@ -1,8 +1,8 @@
 import SignupForm from "@/components/auth/SignupForm";
 
 export const metadata = {
-  title: "Create Account — MCQify",
-  description: "Join MCQify and start learning",
+  title: "Create Account — Quizzo",
+  description: "Join Quizzo and start learning",
 };
 
 export default function SignupPage() {

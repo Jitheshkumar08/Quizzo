@@ -1,8 +1,8 @@
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 export const metadata = {
-  title: "Reset Password — MCQify",
-  description: "Reset your MCQify password",
+  title: "Reset Password — Quizzo",
+  description: "Reset your Quizzo password",
 };
 
 export default function ForgotPasswordPage() {

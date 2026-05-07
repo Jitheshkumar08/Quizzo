@@ -16,13 +16,13 @@ export default function Navbar() {
                         <Link href="/" className="flex items-center gap-2 group">
                             <img
                                 src="/brand-icon.svg"
-                                alt="MCQify logo"
+                                alt="Quizzo logo"
                                 width={40}
                                 height={40}
                                 className="w-9 h-9 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105 duration-300"
                             />
-                            <span className="font-bold text-[20px] sm:text-[22px] tracking-tight text-[#2C2A28] max-[380px]:hidden">
-                                MCQify
+                            <span className="text-[21px] sm:text-[24px] font-black leading-none tracking-normal bg-gradient-to-br from-[#1F1B19] via-[#3A2B25] to-[#A56A43] bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] max-[380px]:hidden">
+                                Quizzo
                             </span>
                         </Link>
                     </div>

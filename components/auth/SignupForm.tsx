@@ -101,7 +101,7 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
 
   function startResendTimer() {
     setResendSeconds(30);
-    window.clearInterval((window as typeof window & { mcqifySignupResendTimer?: number }).mcqifySignupResendTimer);
+    window.clearInterval((window as typeof window & { quizzoSignupResendTimer?: number }).quizzoSignupResendTimer);
     const timer = window.setInterval(() => {
       setResendSeconds((seconds) => {
         if (seconds <= 1) {
@@ -111,7 +111,7 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
         return seconds - 1;
       });
     }, 1000);
-    (window as typeof window & { mcqifySignupResendTimer?: number }).mcqifySignupResendTimer = timer;
+    (window as typeof window & { quizzoSignupResendTimer?: number }).quizzoSignupResendTimer = timer;
   }
 
   async function resendCode() {
@@ -211,7 +211,7 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
       <div className={verificationEmail ? "text-center mb-4" : "text-center mb-8"}>
         <h1 className={`${verificationEmail ? "text-[26px]" : "text-[32px]"} font-bold text-[#1A1A1A] mb-2 tracking-tight leading-tight`}>Create account</h1>
         <p className="text-[#6B6863] text-[15px] font-medium">
-          {verificationEmail ? "Verify your email to continue" : "Join MCQify and start learning"}
+          {verificationEmail ? "Verify your email to continue" : "Join Quizzo and start learning"}
         </p>
       </div>
 

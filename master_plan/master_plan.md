@@ -1,7 +1,7 @@
-# MCQify — Master Implementation Plan
+# Quizzo — Master Implementation Plan
 
 ## Project Vision
-A full-stack AI-powered quiz platform where Instructors/Admins upload PDFs, AI extracts MCQs, and Students take exams in a clean, timed, exam-like environment.
+A full-stack  quiz platform where Instructors/Admins upload PDFs, AI extracts MCQs, and Students take exams in a clean, timed, exam-like environment.
 
 ---
 
@@ -100,7 +100,7 @@ model Result {
 ## Project Folder Structure
 
 ```
-mcqify/
+quizzo/
 ├── app/
 │   ├── (auth)/
 │   │   ├── login/page.tsx
@@ -159,7 +159,7 @@ mcqify/
 ## Step-by-Step Build Plan
 
 ### Phase 1 — Project Bootstrap
-1. `npx create-next-app@latest mcqify --typescript --tailwind --app`
+1. `npx create-next-app@latest quizzo --typescript --tailwind --app`
 2. Install: `prisma`, `@prisma/client`, `next-auth@beta`, `pdf-parse`, `openai`, `@vercel/blob`, `shadcn-ui`, `bcryptjs`, `zod`
 3. Initialize Prisma, connect to Postgres, run first migration
 4. Configure `.env`:
@@ -297,7 +297,7 @@ QuizTaker state:
 
 ```env
 # Database
-DATABASE_URL="postgresql://user:pass@host:5432/mcqify?pgbouncer=true"
+DATABASE_URL="postgresql://user:pass@host:5432/quizzo?pgbouncer=true"
 
 # Auth
 NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"

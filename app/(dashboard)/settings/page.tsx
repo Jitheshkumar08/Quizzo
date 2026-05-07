@@ -108,7 +108,7 @@ export default function SettingsForm() {
 
   function startEmailResendTimer() {
     setEmailResendSeconds(30);
-    window.clearInterval((window as typeof window & { mcqifyEmailChangeTimer?: number }).mcqifyEmailChangeTimer);
+    window.clearInterval((window as typeof window & { quizzoEmailChangeTimer?: number }).quizzoEmailChangeTimer);
     const timer = window.setInterval(() => {
       setEmailResendSeconds((seconds) => {
         if (seconds <= 1) {
@@ -118,7 +118,7 @@ export default function SettingsForm() {
         return seconds - 1;
       });
     }, 1000);
-    (window as typeof window & { mcqifyEmailChangeTimer?: number }).mcqifyEmailChangeTimer = timer;
+    (window as typeof window & { quizzoEmailChangeTimer?: number }).quizzoEmailChangeTimer = timer;
   }
 
   async function submitSettingsForVerification() {

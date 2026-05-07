@@ -26,7 +26,7 @@ export default function QuizListRealtimeRefresh() {
     };
 
     const channel = supabase
-      .channel("mcqify-quiz-list-events")
+      .channel("quizzo-quiz-list-events")
       .on(
         "postgres_changes",
         {

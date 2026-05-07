@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Upload, ClipboardList, Users, BookOpen, ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: "Dashboard — MCQify",
+  title: "Dashboard — Quizzo",
 };
 
 export default async function DashboardPage() {

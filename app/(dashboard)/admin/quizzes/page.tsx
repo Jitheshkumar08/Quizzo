@@ -10,7 +10,7 @@ import { formatAppDate, formatAppTime } from "@/lib/timezone";
 import AdminQuizDeleteButton from "@/components/admin/AdminQuizDeleteButton";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 
-export const metadata = { title: "All Quizzes — MCQify Admin" };
+export const metadata = { title: "All Quizzes — Quizzo Admin" };
 
 interface AdminQuizzesPageProps {
   searchParams?: Promise<{ username?: string }>;
