@@ -281,9 +281,9 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
   }
 
   const fields = [
-    { name: "fullName", label: "Full Name", type: "text", placeholder: "Jithesh Kumar" },
-    { name: "username", label: "Username", type: "text", placeholder: "jithesh_123" },
-    { name: "email", label: "Email Address", type: "email", placeholder: "jithesh@example.com" },
+    { name: "fullName", label: "Full Name", type: "text", placeholder: "Ex: Johnny Sins" },
+    { name: "username", label: "Username", type: "text", placeholder: "johnnysins123" },
+    { name: "email", label: "Email Address", type: "email", placeholder: "johnnysins@email.com" },
     { name: "password", label: "Password", type: "password", placeholder: "Min 8 characters" },
     { name: "confirmPassword", label: "Confirm Password", type: "password", placeholder: "Repeat password" },
   ];
