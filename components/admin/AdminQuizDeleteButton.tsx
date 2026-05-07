@@ -46,7 +46,7 @@ export default function AdminQuizDeleteButton({
         onClick={() => setOpen(true)}
         aria-label={`Delete ${quizTitle}`}
         title="Delete quiz"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-100 hover:text-red-700 hover:shadow-md active:translate-y-0"
+        className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-100 hover:text-red-700 hover:shadow-md active:translate-y-0"
       >
         <Trash2 className="h-4 w-4" />
       </button>
