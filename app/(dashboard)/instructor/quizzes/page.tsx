@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { BookOpen, Eye, FileJson, BarChart3, Pencil, Timer } from "lucide-react";
+import { BookOpen, Eye, FileJson, BarChart3, Pencil, Timer, Infinity as InfinityIcon } from "lucide-react";
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
@@ -133,84 +133,93 @@ export default async function InstructorQuizzesPage() {
                 : "ended";
 
             return (
-            <div key={quiz.id} className="glass glass-hover rounded-[24px] p-5 sm:p-6 flex flex-col lg:flex-row items-stretch lg:items-center gap-5 lg:gap-6 border border-white/10 shadow-sm hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 overflow-hidden">
-              <div className="flex items-start gap-4 flex-1 min-w-0 max-w-full">
-                {/* Icon */}
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center flex-shrink-0 border border-purple-500/10">
-                  <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-purple-500" />
-                </div>
+              <div key={quiz.id} className="glass glass-hover rounded-[24px] p-5 sm:p-6 flex flex-col lg:flex-row items-stretch lg:items-center gap-5 lg:gap-6 border border-white/10 shadow-sm hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 overflow-hidden">
+                <div className="flex items-start gap-4 flex-1 min-w-0 max-w-full">
+                  {/* Icon */}
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center flex-shrink-0 border border-purple-500/10">
+                    <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-purple-500" />
+                  </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0 max-w-full space-y-2">
-                  <h3 className="font-bold text-base sm:text-lg text-[#2C2A28] leading-tight min-w-0 max-w-full break-words [overflow-wrap:anywhere]">{quiz.title}</h3>
-                  {quiz.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed break-words [overflow-wrap:anywhere]">{quiz.description}</p>
-                  )}
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${quiz.isPublished
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 max-w-full space-y-2">
+                    <h3 className="font-bold text-base sm:text-lg text-[#2C2A28] leading-tight min-w-0 max-w-full break-words [overflow-wrap:anywhere]">{quiz.title}</h3>
+                    {quiz.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed break-words [overflow-wrap:anywhere]">{quiz.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${quiz.isPublished
                         ? "text-green-500 bg-green-500/10 border-green-500/20"
                         : "text-amber-500 bg-amber-500/10 border-amber-500/20"
-                      }`}>
-                      {quiz.isPublished ? "Published" : "Draft"}
-                    </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${
-                      scheduleStatus === "upcoming"
-                        ? "text-blue-700 bg-blue-50 border-blue-100"
-                        : scheduleStatus === "open"
-                          ? "text-emerald-700 bg-emerald-50 border-emerald-100"
-                          : "text-gray-600 bg-gray-100 border-gray-200"
-                    }`}>
-                      {scheduleStatus === "upcoming" ? "Upcoming" : scheduleStatus === "open" ? "Open" : "Closed"}
-                    </span>
-                    {quiz.timeLimitMinutes && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-100 bg-purple-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-800">
-                        <Timer className="h-3 w-3 flex-shrink-0" />
-                        Time limit {formatTimeLimit(quiz.timeLimitMinutes)}
+                        }`}>
+                        {quiz.isPublished ? "Published" : "Draft"}
                       </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${scheduleStatus === "upcoming"
+                          ? "text-blue-700 bg-blue-50 border-blue-100"
+                          : scheduleStatus === "open"
+                            ? "text-emerald-700 bg-emerald-50 border-emerald-100"
+                            : "text-gray-600 bg-gray-100 border-gray-200"
+                        }`}>
+                        {scheduleStatus === "upcoming" ? "Upcoming" : scheduleStatus === "open" ? "Open" : "Closed"}
+                      </span>
+                      {quiz.timeLimitMinutes && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-100 bg-purple-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-800">
+                          <Timer className="h-3 w-3 flex-shrink-0" />
+                          Time limit {formatTimeLimit(quiz.timeLimitMinutes)}
+                        </span>
+                      )}
+                      {quiz.allowMultipleAttempts ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                          <InfinityIcon className="h-4 w-4 flex-shrink-0" />
+                          attempts
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                          1 attempt
+                        </span>
+                      )}
+                    </div>
+                    {hasSchedule && (
+                      <p className="max-w-full text-[12px] font-semibold leading-relaxed text-slate-500 break-words [overflow-wrap:anywhere]">
+                        <span className="font-black uppercase tracking-[0.12em] text-blue-600">Schedule</span>{" "}
+                        Starts {formatScheduleTime(quiz.scheduledStart!)} | Ends {formatScheduleTime(quiz.scheduledEnd!)}
+                      </p>
                     )}
-                  </div>
-                  {hasSchedule && (
-                    <p className="max-w-full text-[12px] font-semibold leading-relaxed text-slate-500 break-words [overflow-wrap:anywhere]">
-                      <span className="font-black uppercase tracking-[0.12em] text-blue-600">Schedule</span>{" "}
-                      Starts {formatScheduleTime(quiz.scheduledStart!)} | Ends {formatScheduleTime(quiz.scheduledEnd!)}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs font-medium text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><BarChart3 className="w-3.5 h-3.5 text-blue-400" /> {quiz._count.questions} Questions</span>
-                    <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-cyan-400" /> {normalResultCountByQuiz.get(quiz.id) ?? 0} Attempts</span>
-                    {session.user.role === "ADMIN" && (
-                      <span className="bg-black/5 px-2 py-0.5 rounded-md">by {quiz.createdBy.fullName}</span>
-                    )}
-                    <span className="opacity-70">{formatAppDate(quiz.createdAt)}</span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs font-medium text-muted-foreground">
+                      <span className="flex items-center gap-1.5"><BarChart3 className="w-3.5 h-3.5 text-blue-400" /> {quiz._count.questions} Questions</span>
+                      <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-cyan-400" /> {normalResultCountByQuiz.get(quiz.id) ?? 0} Attempts</span>
+                      {session.user.role === "ADMIN" && (
+                        <span className="bg-black/5 px-2 py-0.5 rounded-md">by {quiz.createdBy.fullName}</span>
+                      )}
+                      <span className="opacity-70">{formatAppDate(quiz.createdAt)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex flex-wrap items-center justify-end gap-3 self-end lg:self-center lg:ml-0 shrink-0">
-                {quiz.jsonBlobUrl && (
-                  <a
-                    href={quiz.jsonBlobUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-xl text-muted-foreground hover:text-cyan-600 hover:bg-cyan-50 border border-transparent hover:border-cyan-100 transition-all"
-                    title="Download JSON"
+                {/* Actions */}
+                <div className="flex flex-wrap items-center justify-end gap-3 self-end lg:self-center lg:ml-0 shrink-0">
+                  {quiz.jsonBlobUrl && (
+                    <a
+                      href={quiz.jsonBlobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl text-muted-foreground hover:text-cyan-600 hover:bg-cyan-50 border border-transparent hover:border-cyan-100 transition-all"
+                      title="Download JSON"
+                    >
+                      <FileJson className="w-5 h-5" />
+                    </a>
+                  )}
+
+                  <InstructorAnalyticsModalButton quizId={quiz.id} />
+
+                  <Link
+                    href={`/instructor/quizzes/${quiz.id}/edit`}
+                    className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100"
                   >
-                    <FileJson className="w-5 h-5" />
-                  </a>
-                )}
-
-                <InstructorAnalyticsModalButton quizId={quiz.id} />
-
-                <Link
-                  href={`/instructor/quizzes/${quiz.id}/edit`}
-                  className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100"
-                >
-                  <Pencil className="w-4 h-4" /> Edit
-                </Link>
+                    <Pencil className="w-4 h-4" /> Edit
+                  </Link>
+                </div>
               </div>
-            </div>
-          );
+            );
           })}
         </div>
       )}

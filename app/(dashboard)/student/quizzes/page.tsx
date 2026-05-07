@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import Link from "next/link";
-import { BookOpen, Users, Lock, CalendarRange, Timer } from "lucide-react";
+import { BookOpen, Users, Lock, CalendarRange, Timer, Infinity as InfinityIcon } from "lucide-react";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
 import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
@@ -203,7 +203,11 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
                         Closed
                       </span>
                     )}
-                    {!quiz.allowMultipleAttempts && (
+                    {quiz.allowMultipleAttempts ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-50 text-slate-700 border border-slate-100">
+                        <InfinityIcon className="w-4 h-4" /> attempts
+                      </span>
+                    ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-50 text-slate-700 border border-slate-100">
                         1 attempt
                       </span>
