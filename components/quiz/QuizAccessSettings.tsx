@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarClock, KeyRound, Repeat, Timer } from "lucide-react";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 export interface QuizAccessSettingsProps {
   /** `light` = edit quiz white/gray cards; `glass` = instructor upload (warm gray + glass panel) */
@@ -133,8 +134,7 @@ export default function QuizAccessSettings({
       </label>
       {requireQuizPassword && (
         <div className="space-y-1 pl-7">
-          <input
-            type="password"
+          <PasswordInput
             value={quizAccessPassword}
             onChange={(e) => onQuizAccessPassword(e.target.value)}
             placeholder={hasExistingPassword ? "New password (leave blank to keep current)" : "Min. 4 characters"}

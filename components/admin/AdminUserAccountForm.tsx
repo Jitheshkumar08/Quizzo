@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, Lock, Mail, Save, Shield, User, XCircle } from "lucide-react";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 type Role = "STUDENT" | "INSTRUCTOR" | "ADMIN";
 
@@ -250,11 +251,11 @@ export default function AdminUserAccountForm({
             <Lock className="w-3.5 h-3.5 text-[#918B80]" />
             New Password
           </span>
-          <input
-            type="password"
+          <PasswordInput
             value={form.newPassword}
             onChange={(e) => updateField("newPassword", e.target.value)}
             placeholder="Leave blank to keep current"
+            autoComplete="new-password"
             className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-medium text-[#2C2A28] outline-none transition placeholder:text-[#B0A89E] focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10"
           />
         </label>

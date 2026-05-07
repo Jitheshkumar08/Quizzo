@@ -4,8 +4,9 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, Loader2, MailCheck, RefreshCw, UserPlus } from "lucide-react";
+import { ArrowLeft, Loader2, MailCheck, RefreshCw, UserPlus } from "lucide-react";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
@@ -16,7 +17,6 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
     password: "",
     confirmPassword: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
@@ -341,33 +341,29 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
                 <label htmlFor={field.name} className="text-[14px] font-bold text-[#2C2A28] ml-2 mb-2 transition-colors group-focus-within:text-[#8C5D3E]">
                   {field.label}
                 </label>
-                <div className="relative">
+                {field.type === "password" ? (
+                  <PasswordInput
+                    id={field.name}
+                    name={field.name}
+                    value={form[field.name as keyof typeof form]}
+                    onChange={handleChange}
+                    placeholder={field.placeholder}
+                    autoComplete={field.name === "password" ? "new-password" : "new-password"}
+                    required
+                    className="w-full rounded-full border border-white/80 bg-white/40 px-5 py-4 text-[15px] font-medium text-[#2C2A28] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02),0_4px_12px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 placeholder:text-[#A8A296] focus:border-[#8C5D3E] focus:bg-white/90 focus:outline-none focus:ring-[4px] focus:ring-[#8C5D3E]/15"
+                  />
+                ) : (
                   <input
                     id={field.name}
                     name={field.name}
-                    type={
-                      field.type === "password"
-                        ? showPassword
-                          ? "text"
-                          : "password"
-                        : field.type
-                    }
+                    type={field.type}
                     value={form[field.name as keyof typeof form]}
                     onChange={handleChange}
                     placeholder={field.placeholder}
                     required
-                    className="w-full px-5 py-4 rounded-full bg-white/40 border border-white/80 text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white/90 focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02),0_4px_12px_rgba(0,0,0,0.04)] backdrop-blur-xl font-medium"
+                    className="w-full rounded-full border border-white/80 bg-white/40 px-5 py-4 text-[15px] font-medium text-[#2C2A28] shadow-[inset_0_2px_6px_rgba(0,0,0,0.02),0_4px_12px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 placeholder:text-[#A8A296] focus:border-[#8C5D3E] focus:bg-white/90 focus:outline-none focus:ring-[4px] focus:ring-[#8C5D3E]/15"
                   />
-                  {field.type === "password" && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 text-[#A8A296] hover:text-[#2C2A28] transition-colors rounded-full hover:bg-black/5"
-                    >
-                      {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             ))}
 

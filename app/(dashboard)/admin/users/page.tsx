@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import UserTable from "@/components/admin/UserTable";
 import { Shield } from "lucide-react";
 
-export const metadata = { title: "Manage Users — Quizzo Admin" };
+export const metadata = { title: "Manage Users - Admin" };
 
 export default async function AdminUsersPage() {
   const session = await auth();

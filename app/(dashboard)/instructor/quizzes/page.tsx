@@ -9,7 +9,7 @@ import { getScheduleStatus } from "@/lib/quiz-student-access";
 import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 
-export const metadata = { title: "My Quizzes — Quizzo" };
+export const metadata = { title: "My Quizzes" };
 
 interface NormalResultCountRow {
   quizId: string;

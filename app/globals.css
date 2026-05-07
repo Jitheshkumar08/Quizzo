@@ -360,3 +360,15 @@ body {
   cursor: not-allowed;
   pointer-events: none;
 }
+
+.no-native-password-toggle::-ms-reveal,
+.no-native-password-toggle::-ms-clear {
+  display: none;
+}
+
+.no-native-password-toggle::-webkit-credentials-auto-fill-button,
+.no-native-password-toggle::-webkit-caps-lock-indicator {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+}

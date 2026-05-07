@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Lock, CalendarClock, Ban, ArrowLeft, KeyRound } from "lucide-react";
 import { TypewriterLoader } from "@/components/ui/TypewriterLoader";
+import PasswordInput from "@/components/ui/PasswordInput";
 import QuizTaker from "./QuizTaker";
 import { formatAppDateTime } from "@/lib/timezone";
 
@@ -175,11 +176,11 @@ export default function QuizGate({ quizId }: { quizId: string }) {
             <form onSubmit={tryUnlock} className="space-y-3">
               <label className="block">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Quiz password</span>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 w-full px-4 py-3 rounded-xl border border-black/10 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400/40"
+                  wrapperClassName="mt-1"
+                  className="w-full px-4 py-3 rounded-xl border border-black/10 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400/40"
                   placeholder="Enter password"
                   autoComplete="off"
                 />

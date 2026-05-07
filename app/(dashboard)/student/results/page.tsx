@@ -7,7 +7,7 @@ import ViewAnalyticsButton from "@/components/ui/ViewAnalyticsButton";
 import { formatAppDateTime } from "@/lib/timezone";
 import ResultListRealtimeRefresh from "@/components/live/ResultListRealtimeRefresh";
 
-export const metadata = { title: "My Results — Quizzo" };
+export const metadata = { title: "My Results" };
 
 interface ResultListRow {
   id: string;

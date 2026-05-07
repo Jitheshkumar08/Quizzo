@@ -1,7 +1,7 @@
 import LoginForm from "@/components/auth/LoginForm";
 
 export const metadata = {
-  title: "Sign In — Quizzo",
+  title: "Sign In",
   description: "Sign in to your Quizzo account",
 };
 

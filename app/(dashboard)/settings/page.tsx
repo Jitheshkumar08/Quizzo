@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Loader2, Save, User as UserIcon, Mail, Lock, CheckCircle2, XCircle, MailCheck, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 export default function SettingsForm() {
   const { update } = useSession();
@@ -413,12 +414,12 @@ export default function SettingsForm() {
                   <Lock className="w-4 h-4 text-[#918B80] group-focus-within:text-[#8C5D3E] transition-colors" />
                   Current Password
                 </label>
-                <input
+                <PasswordInput
                   name="currentPassword"
-                  type="password"
                   value={form.currentPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
                 />
               </div>
@@ -427,12 +428,12 @@ export default function SettingsForm() {
                   <Lock className="w-4 h-4 text-[#918B80] group-focus-within:text-[#8C5D3E] transition-colors" />
                   New Password
                 </label>
-                <input
+                <PasswordInput
                   name="newPassword"
-                  type="password"
                   value={form.newPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   className="w-full px-5 py-3.5 rounded-2xl bg-[#FFFDF9] border border-[#DED6CA] text-[#2C2A28] placeholder-[#A8A296] focus:outline-none focus:bg-white focus:border-[#8C5D3E] focus:ring-[4px] focus:ring-[#8C5D3E]/15 transition-all duration-300 text-[15px] shadow-[inset_0_1px_3px_rgba(44,42,40,0.035)] font-medium"
                 />
               </div>
