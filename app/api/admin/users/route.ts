@@ -236,6 +236,12 @@ export async function DELETE(req: NextRequest) {
     }
 
     await prisma.$transaction(async (tx) => {
+      await recordUserChangeEvent(tx, {
+        targetUserId: userId,
+        actorId: session.user.id,
+        action: "user.account.deleted",
+      });
+
       const ownedQuizzes = await tx.quiz.findMany({
         where: { createdById: userId },
         select: { id: true },

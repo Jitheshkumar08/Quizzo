@@ -5,18 +5,80 @@ import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { getSupabaseRealtimeClient } from "@/lib/supabase-realtime-client";
 import { dispatchLiveUserUpdated } from "@/lib/live-user-event";
-import { KeyRound, Loader2, ShieldAlert } from "lucide-react";
+import { Ban, KeyRound, Loader2, ShieldAlert } from "lucide-react";
 
 interface Props {
   userId: string;
 }
+
+const ACCOUNT_DELETED_REDIRECT_SECONDS = 60;
 
 export default function RoleChangeRealtimeRefresh({ userId }: Props) {
   const router = useRouter();
   const { update } = useSession();
   const refreshTimer = useRef<number | null>(null);
   const signOutTimer = useRef<number | null>(null);
+  const countdownTimer = useRef<number | null>(null);
   const [passwordChanged, setPasswordChanged] = useState(false);
+  const [accountDeleted, setAccountDeleted] = useState(false);
+  const [deletedRedirectSeconds, setDeletedRedirectSeconds] = useState(ACCOUNT_DELETED_REDIRECT_SECONDS);
+
+  function scheduleDeletedRedirect() {
+    setPasswordChanged(false);
+    setDeletedRedirectSeconds(ACCOUNT_DELETED_REDIRECT_SECONDS);
+    setAccountDeleted(true);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (signOutTimer.current !== null) {
+        window.clearTimeout(signOutTimer.current);
+      }
+      if (countdownTimer.current !== null) {
+        window.clearInterval(countdownTimer.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!accountDeleted) return;
+
+    if (countdownTimer.current !== null) {
+      window.clearInterval(countdownTimer.current);
+      countdownTimer.current = null;
+    }
+
+    if (signOutTimer.current !== null) {
+      window.clearTimeout(signOutTimer.current);
+      signOutTimer.current = null;
+    }
+
+    countdownTimer.current = window.setInterval(() => {
+      setDeletedRedirectSeconds((seconds) => {
+        const nextSeconds = Math.max(0, seconds - 1);
+        if (nextSeconds === 0 && countdownTimer.current !== null) {
+          window.clearInterval(countdownTimer.current);
+          countdownTimer.current = null;
+        }
+        return nextSeconds;
+      });
+    }, 1000);
+
+    signOutTimer.current = window.setTimeout(() => {
+      void signOut({ callbackUrl: "/signup" });
+    }, ACCOUNT_DELETED_REDIRECT_SECONDS * 1000);
+
+    return () => {
+      if (countdownTimer.current !== null) {
+        window.clearInterval(countdownTimer.current);
+        countdownTimer.current = null;
+      }
+      if (signOutTimer.current !== null) {
+        window.clearTimeout(signOutTimer.current);
+        signOutTimer.current = null;
+      }
+    };
+  }, [accountDeleted]);
 
   useEffect(() => {
     const supabase = getSupabaseRealtimeClient();
@@ -29,6 +91,11 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
       });
       if (statusRes.ok) {
         const status = await statusRes.json().catch(() => ({}));
+        if (status.accountDeleted === true) {
+          scheduleDeletedRedirect();
+          return;
+        }
+
         if (status.requiresReauth === true) {
           setPasswordChanged(true);
           if (signOutTimer.current === null) {
@@ -44,6 +111,10 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
         credentials: "include",
         cache: "no-store",
       });
+      if (res.status === 404) {
+        scheduleDeletedRedirect();
+        return;
+      }
       if (!res.ok) return;
 
       const user = await res.json();
@@ -88,9 +159,6 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
       if (refreshTimer.current !== null) {
         window.clearTimeout(refreshTimer.current);
       }
-      if (signOutTimer.current !== null) {
-        window.clearTimeout(signOutTimer.current);
-      }
       void supabase.removeChannel(channel);
     };
   }, [router, update, userId]);
@@ -101,6 +169,54 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
       signOutTimer.current = null;
     }
     void signOut({ callbackUrl: "/login" });
+  }
+
+  function signUpAgain() {
+    if (signOutTimer.current !== null) {
+      window.clearTimeout(signOutTimer.current);
+      signOutTimer.current = null;
+    }
+    if (countdownTimer.current !== null) {
+      window.clearInterval(countdownTimer.current);
+      countdownTimer.current = null;
+    }
+    void signOut({ callbackUrl: "/signup" });
+  }
+
+  if (accountDeleted) {
+    return (
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#1F1B19]/78 p-4 backdrop-blur-lg">
+        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-white/95 bg-[#FFFDF9] p-7 text-center shadow-[0_34px_110px_rgba(0,0,0,0.46),0_0_0_1px_rgba(31,27,25,0.08)]">
+          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-rose-100/80 to-transparent" />
+          <div className="absolute -right-14 -top-16 h-36 w-36 rounded-full bg-rose-100 blur-3xl" />
+          <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[24px] bg-rose-100 text-rose-700 shadow-[0_12px_28px_rgba(190,18,60,0.16)] ring-1 ring-rose-200">
+            <Ban className="h-8 w-8" />
+          </div>
+          <div className="relative space-y-2">
+            <h2 className="text-2xl font-black tracking-tight text-[#1F1B19]">Account removed</h2>
+            <p className="mx-auto max-w-sm text-sm font-semibold leading-relaxed text-[#6B6357]">
+              Your Quizzo account was removed by an administrator. This session is no longer active.
+            </p>
+            <p className="mx-auto max-w-sm text-xs font-bold leading-relaxed text-[#918B80]">
+              If you think this was a mistake, contact your administrator. Otherwise, create a new account to continue.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={signUpAgain}
+            className="relative mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[18px] bg-[#1F1B19] px-5 py-3.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(31,27,25,0.24)] transition-colors hover:bg-[#14110F]"
+          >
+            <Ban className="h-4 w-4" />
+            Continue to sign up
+          </button>
+          <div className="relative mt-4 flex items-center justify-center gap-2 text-xs font-bold text-[#A49A8D]">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Redirecting automatically in {Math.floor(deletedRedirectSeconds / 60)}:
+            {String(deletedRedirectSeconds % 60).padStart(2, "0")}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!passwordChanged) return null;

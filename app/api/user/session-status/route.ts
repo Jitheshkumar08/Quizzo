@@ -16,7 +16,14 @@ export async function GET() {
       LIMIT 1
     `;
 
-    const currentVersion = rows[0]?.sessionVersion ?? 0;
+    if (!rows[0]) {
+      return NextResponse.json({
+        accountDeleted: true,
+        requiresReauth: true,
+      });
+    }
+
+    const currentVersion = rows[0].sessionVersion;
     const tokenVersion = Number(session.user.sessionVersion ?? 0);
 
     return NextResponse.json({
