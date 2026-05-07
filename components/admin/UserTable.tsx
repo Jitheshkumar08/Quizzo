@@ -413,8 +413,8 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
                     <p className="text-[11px] font-semibold text-[#A09890] mt-0.5">@{user.username}</p>
                   </div>
                 </div>
-                {isYou ? (
-                  <RolePill role={user.role} isYou />
+                {isYou || user.role === "ADMIN" ? (
+                  <RolePill role={user.role} isYou={isYou} />
                 ) : (
                   <RoleDropdown role={user.role} userId={user.id} updating={updating} onChange={changeRole} />
                 )}
@@ -514,8 +514,8 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
 
                     {/* Role */}
                     <td className="px-5 py-4">
-                      {isYou ? (
-                        <RolePill role={user.role} isYou />
+                      {isYou || user.role === "ADMIN" ? (
+                        <RolePill role={user.role} isYou={isYou} />
                       ) : (
                         <RoleDropdown role={user.role} userId={user.id} updating={updating} onChange={changeRole} />
                       )}

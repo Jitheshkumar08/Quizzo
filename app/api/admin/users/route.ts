@@ -94,6 +94,11 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "Invalid role" }, { status: 400 });
       }
 
+      // Prevent admins from changing another admin's role
+      if (userId !== session.user.id && existingUser.role === "ADMIN" && role !== existingUser.role) {
+        return NextResponse.json({ error: "You cannot change another admin's role" }, { status: 400 });
+      }
+
       // Prevent admin from demoting themselves
       if (userId === session.user.id && role !== existingUser.role) {
         return NextResponse.json({ error: "You cannot change your own role" }, { status: 400 });
