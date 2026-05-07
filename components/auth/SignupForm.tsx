@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,8 +8,12 @@ import { ArrowLeft, Loader2, MailCheck, RefreshCw, UserPlus } from "lucide-react
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 import PasswordInput from "@/components/ui/PasswordInput";
 
+const CODE_LENGTH = 6;
+
 export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
+  const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const resendTimerRef = useRef<number | null>(null);
   const [form, setForm] = useState({
     fullName: "",
     username: "",
@@ -20,11 +24,20 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
-  const [otpCode, setOtpCode] = useState("");
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [verifying, setVerifying] = useState(false);
   const [notice, setNotice] = useState("");
   const [resendSeconds, setResendSeconds] = useState(0);
   const [resending, setResending] = useState(false);
+  const otpCode = otpDigits.join("");
+
+  useEffect(() => {
+    return () => {
+      if (resendTimerRef.current !== null) {
+        window.clearInterval(resendTimerRef.current);
+      }
+    };
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -90,8 +103,10 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
       }
 
       setVerificationEmail(email);
+      setOtpDigits(Array(CODE_LENGTH).fill(""));
       setNotice(`We sent a 6-digit code to ${email}.`);
       startResendTimer();
+      window.setTimeout(() => focusCodeInput(0), 0);
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
@@ -101,17 +116,81 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
 
   function startResendTimer() {
     setResendSeconds(30);
-    window.clearInterval((window as typeof window & { quizzoSignupResendTimer?: number }).quizzoSignupResendTimer);
+    if (resendTimerRef.current !== null) {
+      window.clearInterval(resendTimerRef.current);
+    }
     const timer = window.setInterval(() => {
       setResendSeconds((seconds) => {
         if (seconds <= 1) {
           window.clearInterval(timer);
+          resendTimerRef.current = null;
           return 0;
         }
         return seconds - 1;
       });
     }, 1000);
-    (window as typeof window & { quizzoSignupResendTimer?: number }).quizzoSignupResendTimer = timer;
+    resendTimerRef.current = timer;
+  }
+
+  function focusCodeInput(index: number) {
+    codeInputRefs.current[index]?.focus();
+    codeInputRefs.current[index]?.select();
+  }
+
+  function setOtpDigit(index: number, digit: string) {
+    setOtpDigits((current) => {
+      const next = [...current];
+      next[index] = digit;
+      return next;
+    });
+  }
+
+  function fillOtpDigits(value: string, startIndex = 0) {
+    const digits = value.replace(/\D/g, "").slice(0, CODE_LENGTH - startIndex).split("");
+    if (digits.length === 0) return;
+
+    setOtpDigits((current) => {
+      const next = [...current];
+      digits.forEach((digit, offset) => {
+        next[startIndex + offset] = digit;
+      });
+      return next;
+    });
+
+    const nextIndex = Math.min(startIndex + digits.length, CODE_LENGTH - 1);
+    window.setTimeout(() => focusCodeInput(nextIndex), 0);
+  }
+
+  function handleOtpChange(value: string, index: number) {
+    const digits = value.replace(/\D/g, "");
+
+    if (!digits) {
+      setOtpDigit(index, "");
+      return;
+    }
+
+    if (digits.length === 1) {
+      setOtpDigit(index, digits);
+      if (index < CODE_LENGTH - 1) {
+        window.setTimeout(() => focusCodeInput(index + 1), 0);
+      }
+      return;
+    }
+
+    fillOtpDigits(digits, index);
+  }
+
+  function handleOtpBackspace(index: number) {
+    if (otpDigits[index]) {
+      setOtpDigit(index, "");
+      window.setTimeout(() => focusCodeInput(index), 0);
+      return;
+    }
+
+    if (index > 0) {
+      setOtpDigit(index - 1, "");
+      window.setTimeout(() => focusCodeInput(index - 1), 0);
+    }
   }
 
   async function resendCode() {
@@ -141,8 +220,10 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
         return;
       }
 
+      setOtpDigits(Array(CODE_LENGTH).fill(""));
       setNotice(`A new code was sent to ${email}.`);
       startResendTimer();
+      window.setTimeout(() => focusCodeInput(0), 0);
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
@@ -160,6 +241,8 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
 
     if (!/^\d{6}$/.test(code)) {
       setError("Enter the 6-digit verification code.");
+      const firstEmptyIndex = otpDigits.findIndex((digit) => !digit);
+      focusCodeInput(firstEmptyIndex === -1 ? CODE_LENGTH - 1 : firstEmptyIndex);
       return;
     }
 
@@ -235,58 +318,84 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
         </div>
 
         {verificationEmail ? (
-          <form onSubmit={handleVerify} className="space-y-4 relative z-10">
-            <div className="overflow-hidden rounded-[24px] border border-emerald-100 bg-gradient-to-b from-emerald-50 to-white p-1 shadow-[0_16px_34px_rgba(16,185,129,0.10)]">
-              <div className="rounded-[20px] border border-white/90 bg-white/78 px-4 py-5 text-center backdrop-blur-xl">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-[0_10px_22px_rgba(16,185,129,0.15)] ring-1 ring-emerald-100">
-                  <MailCheck className="h-6 w-6" />
-                </div>
-                <p className="text-[17px] font-black text-[#2C2A28]">Check your email</p>
-                <p className="mx-auto mt-1.5 max-w-[280px] text-[13px] font-semibold leading-relaxed text-[#6B6863]">
-                  Enter the 6-digit code sent to <span className="font-black text-[#2C2A28]">{verificationEmail}</span>.
-                </p>
-                <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[12px] font-bold text-emerald-700">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  Code expires in 10 minutes
-                </div>
+          <form onSubmit={handleVerify} className="space-y-5 relative z-10">
+            <div className="rounded-[28px] border border-[#E8E0D5] bg-[#FFFDF9]/90 px-5 py-6 text-center shadow-[0_16px_36px_rgba(44,42,40,0.08)]">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#8C5D3E] shadow-[0_10px_22px_rgba(44,42,40,0.08)] ring-1 ring-[#E8E0D5]">
+                <MailCheck className="h-6 w-6" />
+              </div>
+              <p className="text-[18px] font-black text-[#2C2A28]">Check your email</p>
+              <p className="mx-auto mt-2 max-w-[295px] text-[14px] font-semibold leading-relaxed text-[#6B6863]">
+                Enter the 6-digit code sent to <span className="font-black text-[#2C2A28]">{verificationEmail}</span>.
+              </p>
+              <div className="mx-auto mt-4 flex max-w-[320px] items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] font-black text-emerald-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                Code expires in 10 minutes
               </div>
             </div>
 
-            <div className="flex flex-col group">
-              <label htmlFor="otpCode" className="text-[14px] font-bold text-[#2C2A28] ml-2 mb-2 transition-colors group-focus-within:text-[#8C5D3E]">
+            <div>
+              <label className="mb-3 block text-[15px] font-black text-[#2C2A28]">
                 Verification Code
               </label>
-              <div className="relative rounded-[24px] border border-[#E5DCD0] bg-white/70 p-3 shadow-[0_12px_28px_rgba(44,42,40,0.08)] transition-all duration-300 group-focus-within:border-emerald-300 group-focus-within:ring-[5px] group-focus-within:ring-emerald-100">
-                <input
-                  id="otpCode"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  onPaste={(e) => {
-                    e.preventDefault();
-                    setOtpCode(e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6));
-                  }}
-                  required
-                  className="absolute inset-0 z-10 h-full w-full cursor-text opacity-0"
-                  aria-label="Verification code"
-                />
-                <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
-                  {Array.from({ length: 6 }).map((_, index) => {
-                    const digit = otpCode[index] ?? "";
-                    return (
-                      <div
-                        key={index}
-                        className={`flex aspect-square min-h-[44px] items-center justify-center rounded-xl border text-[22px] font-black shadow-sm transition-all ${digit
-                          ? "border-violet-200 bg-violet-50 text-[#2C2A28]"
-                          : "border-[#D8CDEB] bg-white text-[#B9B1A7]"
-                          }`}
-                      >
-                        {digit || ""}
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="grid grid-cols-6 gap-2 sm:gap-3">
+                {otpDigits.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(input) => {
+                      codeInputRefs.current[index] = input;
+                    }}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(e.target.value, index)}
+                    onClick={(e) => e.currentTarget.select()}
+                    onFocus={(e) => e.target.select()}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      fillOtpDigits(e.clipboardData.getData("text"), index);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.ctrlKey || e.metaKey || e.altKey) {
+                        return;
+                      }
+                      if (/^\d$/.test(e.key)) {
+                        e.preventDefault();
+                        setOtpDigit(index, e.key);
+                        if (index < CODE_LENGTH - 1) {
+                          window.setTimeout(() => focusCodeInput(index + 1), 0);
+                        }
+                        return;
+                      }
+                      if (e.key === "Backspace") {
+                        e.preventDefault();
+                        handleOtpBackspace(index);
+                        return;
+                      }
+                      if (e.key === "Delete") {
+                        e.preventDefault();
+                        setOtpDigit(index, "");
+                        return;
+                      }
+                      if (e.key === "ArrowLeft" && index > 0) {
+                        e.preventDefault();
+                        focusCodeInput(index - 1);
+                        return;
+                      }
+                      if (e.key === "ArrowRight" && index < CODE_LENGTH - 1) {
+                        e.preventDefault();
+                        focusCodeInput(index + 1);
+                        return;
+                      }
+                      if (e.key.length === 1) {
+                        e.preventDefault();
+                      }
+                    }}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete={index === 0 ? "one-time-code" : "off"}
+                    aria-label={`Verification code digit ${index + 1}`}
+                    className="aspect-square min-h-[52px] w-full rounded-2xl border border-[#E1D8CE] bg-[#F8F7F5] text-center text-[25px] font-black text-[#1F1B19] shadow-[0_8px_18px_rgba(44,42,40,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] transition-all placeholder:text-transparent focus:border-[#1F1B19] focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-[#1F1B19]/10"
+                    maxLength={index === 0 ? CODE_LENGTH : 1}
+                  />
+                ))}
               </div>
             </div>
 
@@ -322,10 +431,14 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
                 type="button"
                 onClick={() => {
                   setVerificationEmail("");
-                  setOtpCode("");
+                  setOtpDigits(Array(CODE_LENGTH).fill(""));
                   setError("");
                   setNotice("");
                   setResendSeconds(0);
+                  if (resendTimerRef.current !== null) {
+                    window.clearInterval(resendTimerRef.current);
+                    resendTimerRef.current = null;
+                  }
                 }}
                 className="inline-flex cursor-pointer h-11 items-center justify-center gap-2 rounded-2xl border border-[#E3D8CA] bg-white/50 px-4 text-[13px] font-black text-[#8C5D3E] shadow-sm transition-all hover:bg-white"
               >
