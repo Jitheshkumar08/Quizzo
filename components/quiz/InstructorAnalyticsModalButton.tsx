@@ -11,6 +11,7 @@ interface AnalyticsResult {
     id: string;
     studentName: string;
     username: string;
+    profileImageUrl: string | null;
     score: number;
     totalQuestions: number;
     percentage: number;
@@ -331,10 +332,21 @@ export default function InstructorAnalyticsModalButton({
                                                             <tr key={r.id} className="bg-white hover:bg-slate-50/80 transition-colors">
                                                                 <td className="px-5 py-4">
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-100 to-fuchsia-100 ring-1 ring-purple-200/70 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                                                            <span className="text-sm font-black text-purple-700">
-                                                                                {r.studentName?.[0]?.toUpperCase() ?? "?"}
-                                                                            </span>
+                                                                        <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-100 to-fuchsia-100 ring-1 ring-purple-200/70 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                                                                            {r.profileImageUrl ? (
+                                                                                <>
+                                                                                    <span aria-hidden="true" className="absolute inset-0 bg-[#F6F1E8]" />
+                                                                                    <span
+                                                                                        aria-hidden="true"
+                                                                                        className="relative h-full w-full bg-cover bg-center"
+                                                                                        style={{ backgroundImage: `url("${r.profileImageUrl}")` }}
+                                                                                    />
+                                                                                </>
+                                                                            ) : (
+                                                                                <span className="text-sm font-black text-purple-700">
+                                                                                    {r.studentName?.[0]?.toUpperCase() ?? "?"}
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                         <div className="min-w-0">
                                                                             <p className="font-bold text-slate-950 text-sm truncate">{r.studentName}</p>

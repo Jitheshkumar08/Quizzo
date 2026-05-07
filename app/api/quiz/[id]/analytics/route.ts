@@ -13,6 +13,7 @@ interface AnalyticsResultRow {
   id: string;
   studentName: string | null;
   username: string | null;
+  profileImageUrl: string | null;
   score: number;
   total: number;
   timeTaken: number | null;
@@ -50,6 +51,7 @@ export async function GET(
         r."id",
         u."fullName" AS "studentName",
         u."username",
+        u."profileImageUrl",
         r."score",
         r."total",
         r."timeTaken",
@@ -65,6 +67,7 @@ export async function GET(
       id: r.id,
       studentName: r.studentName ?? "Unknown",
       username: r.username ?? "",
+      profileImageUrl: r.profileImageUrl,
       score: r.score,
       totalQuestions: r.total,
       percentage: r.total > 0 ? Math.round((r.score / r.total) * 100) : 0,

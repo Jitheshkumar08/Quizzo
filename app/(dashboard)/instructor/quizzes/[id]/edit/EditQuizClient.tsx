@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
 import {
   Save, Send, Loader2, Plus, UnfoldVertical, FoldVertical,
-  Shuffle, RotateCcw, ArrowLeft, BookOpen, CheckCircle2,
-  Trash2, EyeOff, Eye, BarChart2, X, Clock, Award, User,
+  Shuffle, ArrowLeft, BookOpen, CheckCircle2,
+  Trash2, EyeOff, Eye, BarChart2, X, Clock,
   ChevronLeft, ChevronRight, AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
@@ -21,7 +21,7 @@ interface EditQuizClientProps {
     title: string;
     description: string | null;
     isPublished: boolean;
-    questions: any[];
+    questions: QuizQuestion[];
     scheduledStart: Date | null;
     scheduledEnd: Date | null;
     allowMultipleAttempts: boolean;
@@ -31,6 +31,27 @@ interface EditQuizClientProps {
     timeLimitMinutes: number | null;
   };
 }
+
+type QuizQuestion = {
+  id?: string;
+  questionText: string;
+  options: unknown;
+  correctAnswer: string;
+  explanation?: string | null;
+  order: number;
+};
+
+type AnalyticsResult = {
+  id: string;
+  studentName: string;
+  username: string;
+  profileImageUrl: string | null;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  timeTaken: number | null;
+  submittedAt: string;
+};
 
 export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const router = useRouter();
@@ -48,7 +69,6 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
     }))
   );
 
-  const [originalQuestions] = useState<QuestionData[]>([...questions]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -61,9 +81,15 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [mounted, setMounted] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setMounted(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsResult[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
@@ -697,7 +723,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                 <div>
                   <h3 className="text-xl font-black text-gray-900 mb-2">Delete Quiz?</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
-                    Are you sure you want to permanently delete <span className="font-bold text-gray-700">"{title || "this quiz"}"</span>? This action cannot be undone.
+                    Are you sure you want to permanently delete <span className="font-bold text-gray-700">&quot;{title || "this quiz"}&quot;</span>? This action cannot be undone.
                   </p>
                 </div>
               </div>
@@ -857,14 +883,25 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                               <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                      <span className="text-xs font-bold text-purple-600">
-                                        {r.studentName?.[0]?.toUpperCase() ?? "?"}
-                                      </span>
+                                    <div className="relative w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 overflow-hidden ring-1 ring-purple-200/70">
+                                      {r.profileImageUrl ? (
+                                        <>
+                                          <span aria-hidden="true" className="absolute inset-0 bg-[#F6F1E8]" />
+                                          <span
+                                            aria-hidden="true"
+                                            className="relative h-full w-full bg-cover bg-center"
+                                            style={{ backgroundImage: `url("${r.profileImageUrl}")` }}
+                                          />
+                                        </>
+                                      ) : (
+                                        <span className="text-xs font-bold text-purple-600">
+                                          {r.studentName?.[0]?.toUpperCase() ?? "?"}
+                                        </span>
+                                      )}
                                     </div>
                                     <div>
                                       <p className="font-semibold text-gray-900 text-xs">{r.studentName}</p>
-                                      <p className="text-gray-400 text-xs">{r.email}</p>
+                                      <p className="text-gray-400 text-xs">@{r.username}</p>
                                     </div>
                                   </div>
                                 </td>
