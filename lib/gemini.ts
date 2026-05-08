@@ -83,7 +83,7 @@ export async function generateQuestionsFromText(
     });
 
     let responseText = response.choices[0]?.message?.content?.trim() || "[]";
-    
+
     // NVIDIA sometimes wraps json in an object if response_format is used
     // or it might just be the array. Let's be safe.
     let questions: unknown;

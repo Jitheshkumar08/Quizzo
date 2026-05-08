@@ -173,28 +173,28 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
 
     const channel = supabase
       ? supabase
-          .channel(`quizzo-role-change-events-${userId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "RoleChangeEvent",
-              filter: `targetUserId=eq.${userId}`,
-            },
-            scheduleInstantSessionRefresh
-          )
-          .on(
-            "postgres_changes",
-            {
-              event: "UPDATE",
-              schema: "public",
-              table: "User",
-              filter: `id=eq.${userId}`,
-            },
-            scheduleInstantSessionRefresh
-          )
-          .subscribe()
+        .channel(`quizzo-role-change-events-${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "RoleChangeEvent",
+            filter: `targetUserId=eq.${userId}`,
+          },
+          scheduleInstantSessionRefresh
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "User",
+            filter: `id=eq.${userId}`,
+          },
+          scheduleInstantSessionRefresh
+        )
+        .subscribe()
       : null;
 
     const handleWindowFocus = () => {
