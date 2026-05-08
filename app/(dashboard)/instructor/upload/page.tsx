@@ -114,29 +114,7 @@ export default function InstructorUploadPage() {
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  function normalizeQuestion(q: unknown, i: number): QuestionData {
-    const obj = (q as Record<string, unknown>) || {};
-    const questionText = typeof obj.question === "string" ? obj.question : typeof obj.questionText === "string" ? obj.questionText : "";
-    const opts = (obj.options as Record<string, unknown> | undefined) || {};
-    const options = {
-      A: typeof opts.A === "string" ? opts.A : "",
-      B: typeof opts.B === "string" ? opts.B : "",
-      C: typeof opts.C === "string" ? opts.C : "",
-      D: typeof opts.D === "string" ? opts.D : "",
-    };
-    const correctAnswer = (typeof obj.correct_answer === "string" ? obj.correct_answer : typeof obj.correctAnswer === "string" ? obj.correctAnswer : "A") as "A" | "B" | "C" | "D";
-    const explanation = typeof obj.explanation === "string" ? obj.explanation : "";
-    return {
-      questionText,
-      options,
-      correctAnswer,
-      explanation,
-      order: i,
-    };
-  }
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -169,7 +147,13 @@ export default function InstructorUploadPage() {
           throw new Error("JSON must contain an array of questions.");
         }
 
-        const mapped: QuestionData[] = questionsArray.map((q: unknown, i: number) => normalizeQuestion(q, i));
+        const mapped: QuestionData[] = questionsArray.map((q: any, i: number) => ({
+          questionText: q.question || q.questionText || "",
+          options: q.options || { A: "", B: "", C: "", D: "" },
+          correctAnswer: q.correct_answer || q.correctAnswer || "A",
+          explanation: q.explanation || "",
+          order: i,
+        }));
 
         setQuestions(mapped);
         setBackupQuestions(JSON.parse(JSON.stringify(mapped))); // Prevent Reset button break
@@ -193,9 +177,15 @@ export default function InstructorUploadPage() {
         return;
       }
 
-      const mapped: QuestionData[] = Array.isArray(data.questions)
-        ? data.questions.map((q: unknown, i: number) => normalizeQuestion(q, i))
-        : [];
+      const mapped: QuestionData[] = data.questions.map(
+        (q: any, i: number) => ({
+          questionText: q.question,
+          options: q.options,
+          correctAnswer: q.correct_answer,
+          explanation: q.explanation || "",
+          order: i,
+        })
+      );
 
       let currentQuestions = [...mapped];
       setQuestions(currentQuestions);
@@ -206,7 +196,7 @@ export default function InstructorUploadPage() {
 
       // Auto-loop to fetch remaining questions
       if (data.totalQuestions > currentQuestions.length) {
-        const currentFullText = data.fullText || "";
+        let currentFullText = data.fullText || "";
         let fails = 0;
 
         while (currentQuestions.length < data.totalQuestions && fails < 3) {
@@ -236,9 +226,15 @@ export default function InstructorUploadPage() {
               continue; // Try again
             }
 
-            const mappedMore: QuestionData[] = Array.isArray(dataMore.questions)
-              ? dataMore.questions.map((q: unknown, i: number) => ({ ...normalizeQuestion(q, i), order: currentQuestions.length + i }))
-              : [];
+            const mappedMore: QuestionData[] = dataMore.questions.map(
+              (q: any, i: number) => ({
+                questionText: q.question,
+                options: q.options,
+                correctAnswer: q.correct_answer,
+                explanation: q.explanation || "",
+                order: currentQuestions.length + i,
+              })
+            );
 
             currentQuestions = [...currentQuestions, ...mappedMore];
             setQuestions(currentQuestions);
@@ -253,9 +249,8 @@ export default function InstructorUploadPage() {
 
       setStep("edit");
       setShowReport(true);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error ?? "");
-      setGenerateError(message || "An unexpected error occurred");
+    } catch (error: any) {
+      setGenerateError(error.message || "An unexpected error occurred");
     } finally {
       setGenerating(false);
     }
@@ -460,7 +455,7 @@ export default function InstructorUploadPage() {
                     Done — All {questions.length} questions extracted in order!
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    I have successfully parsed the PDF <strong>&quot;{file?.name}&quot;</strong> and verified the structure.
+                    I have successfully parsed the PDF <strong>"{file?.name}"</strong> and verified the structure.
                     All questions have been normalized into the correct format while preserving verbatim accuracy.
                   </p>
                 </div>

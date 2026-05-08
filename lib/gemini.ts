@@ -83,10 +83,10 @@ export async function generateQuestionsFromText(
     });
 
     let responseText = response.choices[0]?.message?.content?.trim() || "[]";
-
+    
     // NVIDIA sometimes wraps json in an object if response_format is used
     // or it might just be the array. Let's be safe.
-    let questions: unknown;
+    let questions: any;
     try {
       const parsed = JSON.parse(responseText);
       questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
@@ -98,7 +98,7 @@ export async function generateQuestionsFromText(
       questions = JSON.parse(responseText);
     }
 
-    return Array.isArray(questions) ? (questions as GeneratedQuestion[]) : [];
+    return Array.isArray(questions) ? questions : [];
   } catch (error) {
     console.error("[NVIDIA EXTRACTION ERROR]", error);
     throw error;
@@ -135,7 +135,7 @@ Text:
     });
 
     let responseText = response.choices[0]?.message?.content?.trim() || "[]";
-    let questions: unknown;
+    let questions: any;
     try {
       const parsed = JSON.parse(responseText);
       questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
@@ -146,7 +146,7 @@ Text:
       questions = JSON.parse(responseText);
     }
 
-    return Array.isArray(questions) ? (questions as GeneratedQuestion[]) : [];
+    return Array.isArray(questions) ? questions : [];
   } catch (error) {
     console.error("[NVIDIA MORE EXTRACTION ERROR]", error);
     throw error;

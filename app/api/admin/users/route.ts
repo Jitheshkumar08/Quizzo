@@ -171,12 +171,6 @@ export async function PATCH(req: NextRequest) {
       updateData.passwordHash = await bcrypt.hash(password, 12);
     }
 
-    const shouldInvalidateSessions = passwordChanged;
-    if (shouldInvalidateSessions) {
-      // Invalidate existing JWT sessions when password changes.
-      updateData.sessionVersion = { increment: 1 };
-    }
-
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: "No changes provided" }, { status: 400 });
     }
@@ -194,6 +188,16 @@ export async function PATCH(req: NextRequest) {
         select: { id: true, fullName: true, username: true, email: true, role: true },
       })
     );
+
+    if (passwordChanged) {
+      await withDatabaseRetry(() =>
+        prisma.$executeRaw`
+          UPDATE "User"
+          SET "sessionVersion" = "sessionVersion" + 1
+          WHERE "id" = ${userId}
+        `
+      );
+    }
 
     if (sessionVisibleFieldsChanged || passwordChanged) {
       await recordUserChangeEvent(prisma, {

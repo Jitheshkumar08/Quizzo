@@ -27,7 +27,6 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
 
   useEffect(() => {
     if (globalCollapsed !== undefined) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollapsed(globalCollapsed);
     }
   }, [globalCollapsed]);
@@ -97,8 +96,8 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
                   type="button"
                   onClick={() => update({ correctAnswer: key })}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-150 border ${question.correctAnswer === key
-                    ? "bg-green-100 border-green-300 text-green-600 shadow-sm"
-                    : "bg-gray-100 border-black/5 text-gray-500 hover:border-gray-300"
+                      ? "bg-green-100 border-green-300 text-green-600 shadow-sm"
+                      : "bg-gray-100 border-black/5 text-gray-500 hover:border-gray-300"
                     }`}
                 >
                   {question.correctAnswer === key ? <Check className="w-4 h-4" /> : key}

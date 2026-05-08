@@ -28,7 +28,6 @@ export default function ReviewSidebar({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
@@ -39,12 +38,12 @@ export default function ReviewSidebar({
             const el = document.getElementById(`question-${index}`);
             const scrollArea = document.getElementById("dashboard-scroll-area");
             if (el && scrollArea) {
-                const scrollAreaRect = scrollArea.getBoundingClientRect();
-                const elRect = el.getBoundingClientRect();
-                scrollArea.scrollTo({
-                    top: scrollArea.scrollTop + (elRect.top - scrollAreaRect.top) - 24,
-                    behavior: 'smooth'
-                });
+              const scrollAreaRect = scrollArea.getBoundingClientRect();
+              const elRect = el.getBoundingClientRect();
+              scrollArea.scrollTo({
+                top: scrollArea.scrollTop + (elRect.top - scrollAreaRect.top) - 24,
+                behavior: 'smooth'
+              });
             } else if (el) {
                 const y = el.getBoundingClientRect().top + window.scrollY - 120;
                 window.scrollTo({ top: y, behavior: "smooth" });
@@ -97,55 +96,55 @@ export default function ReviewSidebar({
 
     return createPortal(
         <>
-            {toggleTab}
-            <div
-                className="fixed right-0 top-[88px] bottom-0 z-40 flex items-start py-6"
-                style={{
-                    width: "260px",
-                    transform: isOpen ? "translateX(0)" : "translateX(100%)",
-                    transition: "transform 300ms cubic-bezier(0.4,0,0.2,1)",
-                    willChange: "transform",
-                }}
-            >
+        {toggleTab}
+        <div
+            className="fixed right-0 top-[88px] bottom-0 z-40 flex items-start py-6"
+            style={{
+                width: "260px",
+                transform: isOpen ? "translateX(0)" : "translateX(100%)",
+                transition: "transform 300ms cubic-bezier(0.4,0,0.2,1)",
+                willChange: "transform",
+            }}
+        >
 
-                <div className="w-[calc(100%-24px)] h-full bg-white/80 backdrop-blur-xl rounded-l-3xl border border-black/5 border-r-0 shadow-[-10px_0_30px_rgba(0,0,0,0.05)] overflow-y-auto px-5 py-6 no-scrollbar relative overflow-hidden">
-                    <div className="space-y-4 relative z-10">
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Review Questions</h3>
+            <div className="w-[calc(100%-24px)] h-full bg-white/80 backdrop-blur-xl rounded-l-3xl border border-black/5 border-r-0 shadow-[-10px_0_30px_rgba(0,0,0,0.05)] overflow-y-auto px-5 py-6 no-scrollbar relative overflow-hidden">
+                <div className="space-y-4 relative z-10">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Review Questions</h3>
 
-                        <div className="grid grid-cols-5 gap-1.5">
-                            {questions.map((q, i) => {
-                                const status = getStatus(q);
-                                return (
-                                    <button
-                                        key={q.id}
-                                        onClick={() => handleJump(i)}
-                                        className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 hover:scale-105 ${statusStyles[status]}`}
-                                        title={`Question ${i + 1}: ${status}`}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        <div className="space-y-1.5 pt-4 border-t border-gray-100">
-                            {[
-                                { color: "bg-green-500", label: `Correct (${stats.correct})` },
-                                { color: "bg-red-500", label: `Incorrect (${stats.incorrect})` },
-                                { color: "bg-gray-200", label: `Skipped (${stats.unattempted})` },
-                            ].map(({ color, label }) => (
-                                <div key={label} className="flex items-center gap-2">
-                                    <span className={`w-3 h-3 rounded-sm flex-shrink-0 ${color} shadow-sm border border-black/5`} />
-                                    <span className="text-xs text-gray-500 font-medium">{label}</span>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="grid grid-cols-5 gap-1.5">
+                        {questions.map((q, i) => {
+                            const status = getStatus(q);
+                            return (
+                                <button
+                                    key={q.id}
+                                    onClick={() => handleJump(i)}
+                                    className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all duration-150 hover:scale-105 ${statusStyles[status]}`}
+                                    title={`Question ${i + 1}: ${status}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    {/* Decorative background element exactly like QuizTaker */}
-                    <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="space-y-1.5 pt-4 border-t border-gray-100">
+                        {[
+                            { color: "bg-green-500", label: `Correct (${stats.correct})` },
+                            { color: "bg-red-500", label: `Incorrect (${stats.incorrect})` },
+                            { color: "bg-gray-200", label: `Skipped (${stats.unattempted})` },
+                        ].map(({ color, label }) => (
+                            <div key={label} className="flex items-center gap-2">
+                                <span className={`w-3 h-3 rounded-sm flex-shrink-0 ${color} shadow-sm border border-black/5`} />
+                                <span className="text-xs text-gray-500 font-medium">{label}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
+                {/* Decorative background element exactly like QuizTaker */}
+                <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
             </div>
+        </div>
         </>,
         document.body
     );
