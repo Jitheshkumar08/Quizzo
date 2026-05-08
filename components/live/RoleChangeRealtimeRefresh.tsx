@@ -15,16 +15,18 @@ const ACCOUNT_DELETED_REDIRECT_SECONDS = 60;
 
 export default function RoleChangeRealtimeRefresh({ userId }: Props) {
   const router = useRouter();
-  const { update } = useSession();
+  const { update, data: sessionData } = useSession();
   const refreshTimer = useRef<number | null>(null);
   const signOutTimer = useRef<number | null>(null);
   const countdownTimer = useRef<number | null>(null);
-  const [passwordChanged, setPasswordChanged] = useState(false);
+  const periodicSyncTimer = useRef<number | null>(null);
+  const didInitialSync = useRef(false);
+  const [sessionInvalidated, setSessionInvalidated] = useState(false);
   const [accountDeleted, setAccountDeleted] = useState(false);
   const [deletedRedirectSeconds, setDeletedRedirectSeconds] = useState(ACCOUNT_DELETED_REDIRECT_SECONDS);
 
   function scheduleDeletedRedirect() {
-    setPasswordChanged(false);
+    setSessionInvalidated(false);
     setDeletedRedirectSeconds(ACCOUNT_DELETED_REDIRECT_SECONDS);
     setAccountDeleted(true);
   }
@@ -81,8 +83,8 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
   }, [accountDeleted]);
 
   useEffect(() => {
+    if (!userId) return;
     const supabase = getSupabaseRealtimeClient();
-    if (!supabase || !userId) return;
 
     const refreshVisibleUser = async () => {
       const statusRes = await fetch("/api/user/session-status", {
@@ -97,7 +99,7 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
         }
 
         if (status.requiresReauth === true) {
-          setPasswordChanged(true);
+          setSessionInvalidated(true);
           if (signOutTimer.current === null) {
             signOutTimer.current = window.setTimeout(() => {
               void signOut({ callbackUrl: "/login" });
@@ -115,9 +117,18 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
         scheduleDeletedRedirect();
         return;
       }
-      if (!res.ok) return;
+      if (!res.ok) return { shouldRefreshRoute: false };
 
       const user = await res.json();
+      const currentUser = sessionData?.user;
+      const shouldRefreshRoute =
+        (typeof user.role === "string" && user.role !== currentUser?.role) ||
+        (typeof user.username === "string" && user.username !== currentUser?.username) ||
+        (typeof user.email === "string" && user.email !== currentUser?.email) ||
+        (typeof user.fullName === "string" && user.fullName !== currentUser?.name) ||
+        ((typeof user.profileImageUrl === "string" ? user.profileImageUrl : null) !==
+          (currentUser?.profileImageUrl ?? null));
+
       dispatchLiveUserUpdated({
         name: typeof user.fullName === "string" ? user.fullName : "",
         email: typeof user.email === "string" ? user.email : "",
@@ -125,43 +136,109 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
         role: typeof user.role === "string" ? user.role : "STUDENT",
         profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : null,
       });
+      return { shouldRefreshRoute };
     };
 
-    const scheduleSessionRefresh = () => {
+    const scheduleSessionRefresh = (delayMs = 350) => {
       if (refreshTimer.current !== null) {
         window.clearTimeout(refreshTimer.current);
       }
 
       refreshTimer.current = window.setTimeout(() => {
         refreshTimer.current = null;
-        void refreshVisibleUser()
-          .finally(() => update({ refreshUser: true }))
-          .finally(() => {
-            router.refresh();
-          });
-      }, 350);
+        void (async () => {
+          const result = await refreshVisibleUser().catch(() => undefined);
+          if (!result?.shouldRefreshRoute) return;
+
+          // Race the session update with a short timeout so the UI updates quickly
+          // for returning users even if token refresh is slow. Avoids long delays
+          // while still attempting a proper session refresh.
+          const updatePromise = update({ refreshUser: true }).catch(() => undefined);
+          const timeoutPromise = new Promise((res) => setTimeout(res, 1200));
+
+          try {
+            await Promise.race([updatePromise, timeoutPromise]);
+          } catch (e) {
+            /* ignore errors from update */
+          }
+
+          router.refresh();
+        })();
+      }, delayMs);
+    };
+
+    const scheduleInstantSessionRefresh = () => {
+      scheduleSessionRefresh(0);
     };
 
     const channel = supabase
-      .channel(`quizzo-role-change-events-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "RoleChangeEvent",
-        },
-        scheduleSessionRefresh
-      )
-      .subscribe();
+      ? supabase
+          .channel(`quizzo-role-change-events-${userId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "RoleChangeEvent",
+              filter: `targetUserId=eq.${userId}`,
+            },
+            scheduleInstantSessionRefresh
+          )
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "User",
+              filter: `id=eq.${userId}`,
+            },
+            scheduleInstantSessionRefresh
+          )
+          .subscribe()
+      : null;
+
+    const handleWindowFocus = () => {
+      scheduleSessionRefresh();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        scheduleSessionRefresh();
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Fallback safety net for direct DB edits when realtime isn't delivered.
+    periodicSyncTimer.current = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        scheduleSessionRefresh();
+      }
+    }, 90_000);
+
+    // Refresh once on mount so role/profile changes made while offline are applied.
+    // Route refresh runs only when user fields changed, preventing loops.
+    if (!didInitialSync.current) {
+      didInitialSync.current = true;
+      scheduleSessionRefresh();
+    }
 
     return () => {
       if (refreshTimer.current !== null) {
         window.clearTimeout(refreshTimer.current);
       }
-      void supabase.removeChannel(channel);
+      if (periodicSyncTimer.current !== null) {
+        window.clearInterval(periodicSyncTimer.current);
+        periodicSyncTimer.current = null;
+      }
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (supabase && channel) {
+        void supabase.removeChannel(channel);
+      }
     };
-  }, [router, update, userId]);
+  }, [router, sessionData?.user, update, userId]);
 
   function signOutNow() {
     if (signOutTimer.current !== null) {
@@ -219,7 +296,7 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
     );
   }
 
-  if (!passwordChanged) return null;
+  if (!sessionInvalidated) return null;
 
   return (
     <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
@@ -229,9 +306,9 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
           <ShieldAlert className="h-8 w-8" />
         </div>
         <div className="relative space-y-2">
-          <h2 className="text-xl font-black tracking-tight text-slate-950">Password changed</h2>
+          <h2 className="text-xl font-black tracking-tight text-slate-950">Account updated</h2>
           <p className="mx-auto max-w-sm text-sm font-medium leading-relaxed text-slate-600">
-            An administrator updated your password. For your account security, this session will close now. Please sign in again with your new password.
+            An administrator updated your account permissions or security settings. This session will close now so your access stays correct. Please sign in again.
           </p>
         </div>
         <button

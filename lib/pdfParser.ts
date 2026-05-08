@@ -1,5 +1,6 @@
 // Polyfill DOMMatrix for pdf-parse in Node 24+ environments
 if (typeof global.DOMMatrix === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (global as any).DOMMatrix = class DOMMatrix {};
 }
 

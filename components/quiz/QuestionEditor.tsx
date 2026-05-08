@@ -27,6 +27,7 @@ export default function QuestionEditor({ question, index, globalCollapsed, onCha
 
   useEffect(() => {
     if (globalCollapsed !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollapsed(globalCollapsed);
     }
   }, [globalCollapsed]);
