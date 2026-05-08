@@ -83,7 +83,7 @@ export default function ReviewQuestionsClient({
               <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-gray-100 flex items-center justify-center text-[11px] sm:text-xs font-bold text-gray-700 flex-shrink-0 mt-0.5 sm:mt-0">
                 {globalIndex + 1}
               </span>
-              <p className="font-medium text-sm sm:text-base text-gray-900 flex-1 leading-snug sm:leading-relaxed">
+              <p className="font-medium text-sm sm:text-base text-gray-900 flex-1 leading-snug sm:leading-relaxed whitespace-pre-wrap">
                 {q.questionText}
               </p>
               {isCorrect ? (
@@ -154,7 +154,7 @@ export default function ReviewQuestionsClient({
             {/* Explanation */}
             {q.explanation && (
               <div className="pl-9 sm:pl-11 mt-2">
-                <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-blue-50 border border-blue-100 text-[13px] sm:text-sm text-blue-900">
+                <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-blue-50 border border-blue-100 text-[13px] sm:text-sm text-blue-900 whitespace-pre-wrap">
                   <strong className="text-blue-700">Explanation: </strong>
                   {q.explanation}
                 </div>

@@ -71,7 +71,7 @@ export default function QuestionCard({
           }`}>
           {index + 1}
         </span>
-        <p className={`text-sm sm:text-base font-medium flex-1 leading-snug sm:leading-relaxed ${isAnswered ? "text-gray-900" : "text-gray-700"}`}>
+        <p className={`text-sm sm:text-base font-medium flex-1 leading-snug sm:leading-relaxed whitespace-pre-wrap ${isAnswered ? "text-gray-900" : "text-gray-700"}`}>
           {question.questionText}
         </p>
         <div className="flex items-center gap-2 flex-shrink-0 mt-0.5 sm:mt-0">
