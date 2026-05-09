@@ -26,8 +26,15 @@ export default auth((req) => {
   const role = session?.user?.role ?? "";
 
   // Role-based access control
-  if (pathname.startsWith("/admin") && role !== "ADMIN") {
+  if (pathname === "/settings" && role === "MOD") {
     return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  if (pathname.startsWith("/admin")) {
+    const modAllowedAdminPath = pathname === "/admin/users" || pathname === "/admin/quizzes";
+    if (role !== "ADMIN" && !(role === "MOD" && modAllowedAdminPath)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
   }
 
   if (
@@ -35,6 +42,11 @@ export default auth((req) => {
     role !== "INSTRUCTOR" &&
     role !== "ADMIN"
   ) {
+    const modAllowedInstructorPath = pathname === "/instructor/upload" || pathname === "/instructor/quizzes";
+    if (role === "MOD" && modAllowedInstructorPath) {
+      return NextResponse.next();
+    }
+
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

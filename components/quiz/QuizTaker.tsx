@@ -106,7 +106,7 @@ export default function QuizTaker({
     setVisited(new Set());
     setCurrentPage(0);
     setTargetQuestionIndex(null);
-  }, [shuffleQuestions, questions]);
+  }, [attemptStartedAt, sessionId, shuffleQuestions, questions]);
 
   const answersRef = useRef(answers);
   const elapsedRef = useRef(0);

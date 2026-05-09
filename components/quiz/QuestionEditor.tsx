@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Trash2, Plus, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { Trash2, Check, ChevronDown, ChevronUp } from "lucide-react";
 
 export interface QuestionData {
   id?: string;
@@ -24,12 +24,14 @@ const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
 export default function QuestionEditor({ question, index, globalCollapsed, onChange, onDelete }: QuestionEditorProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [lastGlobalCollapsed, setLastGlobalCollapsed] = useState<boolean | undefined>(globalCollapsed);
 
-  useEffect(() => {
+  if (globalCollapsed !== lastGlobalCollapsed) {
+    setLastGlobalCollapsed(globalCollapsed);
     if (globalCollapsed !== undefined) {
       setCollapsed(globalCollapsed);
     }
-  }, [globalCollapsed]);
+  }
 
   function update(patch: Partial<QuestionData>) {
     onChange(index, { ...question, ...patch });

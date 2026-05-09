@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
@@ -10,9 +11,6 @@ import {
   Users,
   ClipboardList,
   History,
-  Brain,
-  ChevronRight,
-  Settings,
   ShieldAlert,
   Menu,
   X,
@@ -30,21 +28,20 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"], group: "Main" },
-  { href: "/instructor/upload", label: "Set a Quiz", icon: FilePlus, roles: ["INSTRUCTOR", "ADMIN"], group: "Main" },
-  { href: "/instructor/quizzes", label: "My Quizzes", icon: BookOpen, roles: ["INSTRUCTOR", "ADMIN"], group: "Main" },
-  { href: "/student/quizzes", label: "Browse Quizzes", icon: ClipboardList, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"], group: "Main" },
-  { href: "/student/results", label: "My Results", icon: History, roles: ["STUDENT", "INSTRUCTOR", "ADMIN"], group: "Main" },
-  { href: "/admin/users", label: "Manage Users", icon: Users, roles: ["ADMIN"], group: "Admin" },
-  { href: "/admin/quizzes", label: "All Quizzes", icon: ShieldAlert, roles: ["ADMIN"], group: "Admin" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["STUDENT", "INSTRUCTOR", "MOD", "ADMIN"], group: "Main" },
+  { href: "/instructor/upload", label: "Set a Quiz", icon: FilePlus, roles: ["INSTRUCTOR", "MOD", "ADMIN"], group: "Main" },
+  { href: "/instructor/quizzes", label: "My Quizzes", icon: BookOpen, roles: ["INSTRUCTOR", "MOD", "ADMIN"], group: "Main" },
+  { href: "/student/quizzes", label: "Browse Quizzes", icon: ClipboardList, roles: ["STUDENT", "INSTRUCTOR", "MOD", "ADMIN"], group: "Main" },
+  { href: "/student/results", label: "My Results", icon: History, roles: ["STUDENT", "INSTRUCTOR", "MOD", "ADMIN"], group: "Main" },
+  { href: "/admin/users", label: "Manage Users", icon: Users, roles: ["MOD", "ADMIN"], group: "Admin" },
+  { href: "/admin/quizzes", label: "All Quizzes", icon: ShieldAlert, roles: ["MOD", "ADMIN"], group: "Admin" },
 ];
 
 interface SidebarProps {
   role: string;
-  userName: string;
 }
 
-export default function Sidebar({ role, userName }: SidebarProps) {
+export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const [liveRole, setLiveRole] = useState<string | null>(null);
   const currentRole = liveRole ?? role;
@@ -99,7 +96,7 @@ export default function Sidebar({ role, userName }: SidebarProps) {
         {/* Logo - precisely h-[88px] to align mathematically with the main TopBar */}
         <div className="h-[88px] flex items-center border-b border-[#E9E4DC]/60 relative z-10 px-6">
           <Link href="/" className="flex items-center gap-3 group px-1">
-            <img
+            <Image
               src="/brand-icon.svg"
               alt="Quizzo logo"
               width={40}
@@ -135,7 +132,9 @@ export default function Sidebar({ role, userName }: SidebarProps) {
 
           {adminNav.length > 0 && (
             <>
-              <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">Admin Controls</div>
+              <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">
+                {currentRole === "MOD" ? "Mod Controls" : "Admin Controls"}
+              </div>
               {adminNav.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");

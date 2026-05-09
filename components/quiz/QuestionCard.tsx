@@ -1,7 +1,7 @@
 "use client";
 
 import { Flag } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { hashCode, mulberry32 } from "@/lib/utils";
 
 interface Question {
