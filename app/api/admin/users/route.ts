@@ -4,13 +4,14 @@ import bcrypt from "bcrypt";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { recordUserChangeEvent } from "@/lib/role-change-events";
+import { canAccessAdminControls, canAssignRole, isAdminRole, isModRole } from "@/lib/roles";
 import { withDatabaseRetry } from "@/lib/db-retry";
 
 // GET all users (Admin only)
 export async function GET() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session || !canAccessAdminControls(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -24,6 +25,7 @@ export async function GET() {
             email: true,
             role: true,
             createdAt: true,
+            lastSeenAt: true,
             profileImageUrl: true,
           },
           orderBy: { createdAt: "desc" },
@@ -61,7 +63,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session || !canAccessAdminControls(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -90,12 +92,16 @@ export async function PATCH(req: NextRequest) {
     const updateData: Prisma.UserUpdateInput = {};
 
     if (typeof role !== "undefined") {
-      if (!["STUDENT", "INSTRUCTOR", "ADMIN"].includes(role)) {
+      if (!canAssignRole(session.user.role, role)) {
         return NextResponse.json({ error: "Invalid role" }, { status: 400 });
       }
 
+      if (isModRole(session.user.role) && !["STUDENT", "INSTRUCTOR"].includes(existingUser.role)) {
+        return NextResponse.json({ error: "Moderators can only change student and instructor roles" }, { status: 403 });
+      }
+
       // Prevent admins from changing another admin's role
-      if (userId !== session.user.id && existingUser.role === "ADMIN" && role !== existingUser.role) {
+      if (isAdminRole(session.user.role) && userId !== session.user.id && existingUser.role === "ADMIN" && role !== existingUser.role) {
         return NextResponse.json({ error: "You cannot change another admin's role" }, { status: 400 });
       }
 
@@ -106,6 +112,18 @@ export async function PATCH(req: NextRequest) {
 
       if (role !== existingUser.role) {
         updateData.role = role;
+      }
+    }
+
+    if (isModRole(session.user.role)) {
+      const attemptedProfileOrPasswordChange =
+        typeof fullName !== "undefined" ||
+        typeof username !== "undefined" ||
+        typeof email !== "undefined" ||
+        (typeof newPassword !== "undefined" && String(newPassword).trim().length > 0);
+
+      if (attemptedProfileOrPasswordChange) {
+        return NextResponse.json({ error: "Moderators can only change student/instructor roles" }, { status: 403 });
       }
     }
 

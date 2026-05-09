@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canAccessQuizAnalytics, canManageQuizGlobally } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session || !canAccessQuizAnalytics(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -42,7 +43,7 @@ export async function GET(
     const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
     if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
 
-    if (quiz.createdById !== session.user.id && session.user.role !== "ADMIN") {
+    if (quiz.createdById !== session.user.id && !canManageQuizGlobally(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

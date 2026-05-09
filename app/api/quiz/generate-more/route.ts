@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { generateMoreQuestionsFromText } from "@/lib/gemini";
+import { canAccessInstructorArea } from "@/lib/roles";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session || !canAccessInstructorArea(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

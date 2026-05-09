@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getActiveUserIds, isPresenceTemporarilyDisabled } from "@/lib/presence";
+import { canAccessAdminControls } from "@/lib/roles";
 
 export async function GET() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session || !canAccessAdminControls(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

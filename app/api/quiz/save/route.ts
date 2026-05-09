@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { recordQuizListEvent } from "@/lib/quiz-list-events";
+import { canAccessInstructorArea, canEditInstructorQuiz } from "@/lib/roles";
 
 const QuestionSchema = z.object({
   questionText: z.string().min(1),
@@ -101,7 +102,7 @@ async function buildAccessUpdateData(
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session || !canAccessInstructorArea(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -119,6 +120,9 @@ export async function POST(req: NextRequest) {
     let accessFields;
     try {
       if (quizId) {
+        if (!canEditInstructorQuiz(session.user.role)) {
+          return NextResponse.json({ error: "Moderators cannot edit existing quizzes" }, { status: 403 });
+        }
         const existing = await prisma.quiz.findUnique({ where: { id: quizId } });
         if (!existing || (existing.createdById !== session.user.id && session.user.role !== "ADMIN")) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -211,7 +215,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session || !canEditInstructorQuiz(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

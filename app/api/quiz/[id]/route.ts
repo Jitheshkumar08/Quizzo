@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
 import { ensureOpenQuizSession, finalizeExpiredOpenSession } from "@/lib/quiz-session";
 import { recordQuizListEvent } from "@/lib/quiz-list-events";
+import { canAccessQuizAnalytics, canManageQuizGlobally } from "@/lib/roles";
 
 function quizIdFromPathname(pathname: string): string | undefined {
   const m = pathname.match(/\/api\/quiz\/([^/]+)\/?$/);
@@ -116,7 +117,7 @@ export async function PATCH(
 ) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session || !canAccessQuizAnalytics(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -126,7 +127,7 @@ export async function PATCH(
     const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
     if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
 
-    if (quiz.createdById !== session.user.id && session.user.role !== "ADMIN") {
+    if (quiz.createdById !== session.user.id && !canManageQuizGlobally(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -167,7 +168,13 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.role === "MOD") {
+      return NextResponse.json({ error: "Moderators cannot delete quizzes" }, { status: 403 });
+    }
+    if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

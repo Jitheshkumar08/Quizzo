@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET — list all quizzes (admin sees all, instructor sees own)
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,6 +30,6 @@ export async function GET(req: NextRequest) {
 }
 
 // GET published quizzes for students
-export async function HEAD(req: NextRequest) {
+export async function HEAD() {
   return NextResponse.json({ ok: true });
 }

@@ -3,13 +3,14 @@ import { auth } from "@/lib/auth";
 import { parsePdfBuffer } from "@/lib/pdfParser";
 import { generateQuestionsFromText, getTotalQuestionsCount } from "@/lib/gemini";
 import { uploadJsonToBlob } from "@/lib/blobStorage";
+import { canAccessInstructorArea } from "@/lib/roles";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    if (!session || !canAccessInstructorArea(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
