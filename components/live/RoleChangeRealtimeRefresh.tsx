@@ -189,6 +189,7 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
     };
   }, [refreshVisibleUser, status, userId]);
 
+  // Supabase Realtime — mirrors the quiz publish/draft pattern exactly
   useEffect(() => {
     const supabase = getSupabaseRealtimeClient();
     if (!supabase || !userId || status === "loading") return;
@@ -201,9 +202,13 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
           event: "INSERT",
           schema: "public",
           table: "RoleChangeEvent",
-          filter: `"targetUserId"=eq.${userId}`,
         },
-        () => {
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          const targetId = row["targetUserId"] ?? row["targetuserid"];
+          // If targetId is undefined, payload.new was stripped by RLS — still refresh
+          // because this channel is unique per-user (quizzo-role-change-events-${userId})
+          if (targetId !== undefined && targetId !== userId) return;
           void refreshVisibleUser({ force: true });
         }
       )
