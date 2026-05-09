@@ -438,6 +438,14 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
         {/* Header action buttons */}
         <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
           <button
+            type="button"
+            onClick={handleViewAnalytics}
+            className="eq-action-btn flex items-center gap-2 text-blue-700 bg-blue-50 hover:bg-blue-100"
+          >
+            <BarChart2 className="w-4 h-4" />
+            Analytics
+          </button>
+          <button
             onClick={handleTogglePublish}
             disabled={saving}
             className={`eq-action-btn flex items-center gap-2 transition-colors ${isPublished

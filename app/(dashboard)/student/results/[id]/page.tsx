@@ -66,10 +66,11 @@ export default async function ResultDetailPage({ params }: Props) {
   const isStudentOwner = result.studentId === session.user.id;
   const canReviewAsQuizOwner =
     (session.user.role === "INSTRUCTOR" && result.quiz.createdById === session.user.id) ||
-    session.user.role === "ADMIN";
+    session.user.role === "ADMIN" ||
+    session.user.role === "MOD";
 
   if (!isStudentOwner && !canReviewAsQuizOwner) {
-    redirect(session.user.role === "INSTRUCTOR" || session.user.role === "ADMIN" ? "/instructor/quizzes" : "/student/results");
+    redirect(session.user.role === "INSTRUCTOR" || session.user.role === "ADMIN" || session.user.role === "MOD" ? "/dashboard" : "/student/results");
   }
 
   const isInstructorReview = !isStudentOwner && canReviewAsQuizOwner;
@@ -135,7 +136,7 @@ export default async function ResultDetailPage({ params }: Props) {
 
       {/* Back */}
       <Link
-        href={isInstructorReview ? "/instructor/quizzes" : "/student/results"}
+        href={isInstructorReview ? (session.user.role === "MOD" ? "/admin/quizzes" : "/instructor/quizzes") : "/student/results"}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> {isInstructorReview ? "Back to Quizzes" : "Back to Results"}

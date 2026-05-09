@@ -46,6 +46,7 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
   const currentRoleName =
     currentUser.role?.charAt(0).toUpperCase() + currentUser.role?.slice(1).toLowerCase() ||
     roleName;
+  const settingsDisabled = currentUser.role === "MOD";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -139,14 +140,25 @@ export default function ProfileDropdown({ user, roleName }: ProfileDropdownProps
           </div>
 
           <div className="relative z-10 flex flex-col p-2">
-            <Link
-              href="/settings"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-[16px] text-[15px] font-bold text-[#2C2A28] hover:bg-white hover:shadow-sm transition-all group"
-            >
-              <Settings className="w-4 h-4 text-[#918B80] group-hover:text-[#2C2A28] transition-colors" />
-              Settings
-            </Link>
+            {settingsDisabled ? (
+              <span
+                aria-disabled="true"
+                title="Moderators cannot access account settings"
+                className="flex cursor-not-allowed items-center gap-3 rounded-[16px] px-3 py-3 text-[15px] font-bold text-[#A09890] opacity-60"
+              >
+                <Settings className="w-4 h-4 text-[#A09890]" />
+                Settings
+              </span>
+            ) : (
+              <Link
+                href="/settings"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-[16px] text-[15px] font-bold text-[#2C2A28] hover:bg-white hover:shadow-sm transition-all group"
+              >
+                <Settings className="w-4 h-4 text-[#918B80] group-hover:text-[#2C2A28] transition-colors" />
+                Settings
+              </Link>
+            )}
           </div>
         </div>
       )}

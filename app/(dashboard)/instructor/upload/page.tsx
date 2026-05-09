@@ -1,16 +1,86 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
-import { Brain, Plus, Send, Loader2, Save, Eye, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Rocket, RotateCcw, Info, X, AlertTriangle, Copy, Check, UploadCloud, MessageSquareText, FileDown, FileUp } from "lucide-react";
+import { Brain, Plus, Loader2, Save, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Info, X, AlertTriangle, Copy, Check, UploadCloud, MessageSquareText, FileDown, FileUp } from "lucide-react";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 import { AiButtons } from "@/components/ui/AiButtons";
 import { appDatetimeLocalToISOString } from "@/lib/timezone";
 
 type Step = "upload" | "edit" | "publishing";
+type JsonQuestion = {
+  question?: unknown;
+  questionText?: unknown;
+  options?: unknown;
+  correct_answer?: unknown;
+  correctAnswer?: unknown;
+  explanation?: unknown;
+};
+
+type GenerateResponse = {
+  error?: string;
+  questions?: JsonQuestion[];
+  fullText?: string;
+  totalQuestions?: number;
+  jsonBlobUrl?: string;
+};
+
+const emptyOptions: QuestionData["options"] = { A: "", B: "", C: "", D: "" };
+
+function subscribeMounted() {
+  return () => {};
+}
+
+function getClientMountedSnapshot() {
+  return true;
+}
+
+function getServerMountedSnapshot() {
+  return false;
+}
+
+function asText(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+
+function asAnswer(value: unknown): QuestionData["correctAnswer"] {
+  return value === "A" || value === "B" || value === "C" || value === "D" ? value : "A";
+}
+
+function asOptions(value: unknown): QuestionData["options"] {
+  if (!value || typeof value !== "object") return emptyOptions;
+  const options = value as Partial<Record<keyof QuestionData["options"], unknown>>;
+  return {
+    A: asText(options.A),
+    B: asText(options.B),
+    C: asText(options.C),
+    D: asText(options.D),
+  };
+}
+
+function mapJsonQuestion(q: JsonQuestion, order: number): QuestionData {
+  return {
+    questionText: asText(q.question ?? q.questionText),
+    options: asOptions(q.options),
+    correctAnswer: asAnswer(q.correct_answer ?? q.correctAnswer),
+    explanation: asText(q.explanation),
+    order,
+  };
+}
+
+function cloneQuestions(questions: QuestionData[]) {
+  return questions.map((question) => ({
+    ...question,
+    options: { ...question.options },
+  }));
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "An unexpected error occurred";
+}
 
 const PROMPT_TEXT = `I will upload a PDF that contains MCQ questions and an answer key / highlighted correct answers.
 
@@ -92,12 +162,12 @@ export default function InstructorUploadPage() {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
   const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const [backupQuestions, setBackupQuestions] = useState<QuestionData[]>([]);
-  const [fullText, setFullText] = useState("");
+  const [, setBackupQuestions] = useState<QuestionData[]>([]);
+  const [, setFullText] = useState("");
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [jsonBlobUrl, setJsonBlobUrl] = useState("");
   const [publishing, setPublishing] = useState(false);
-  const [fetchingMore, setFetchingMore] = useState(false);
+  const [fetchingMore] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [globalCollapsed, setGlobalCollapsed] = useState(false);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -112,11 +182,7 @@ export default function InstructorUploadPage() {
   const [shuffleOptions, setShuffleOptions] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(subscribeMounted, getClientMountedSnapshot, getServerMountedSnapshot);
 
   function handleCopyPrompt() {
     navigator.clipboard.writeText(PROMPT_TEXT);
@@ -134,29 +200,27 @@ export default function InstructorUploadPage() {
       // Direct JSON parsing logic
       if (file.name.endsWith(".json") || file.type === "application/json") {
         const text = await file.text();
-        let parsedData;
+        let parsedData: unknown;
         try {
           parsedData = JSON.parse(text);
-        } catch (e) {
+        } catch {
           throw new Error("Invalid JSON format. Could not parse file.");
         }
 
         // Handle both simple arrays and wrapped objects
-        const questionsArray = Array.isArray(parsedData) ? parsedData : parsedData.questions || [];
+        const questionsArray = Array.isArray(parsedData)
+          ? parsedData
+          : parsedData && typeof parsedData === "object" && Array.isArray((parsedData as { questions?: unknown }).questions)
+            ? (parsedData as { questions: unknown[] }).questions
+            : [];
         if (!Array.isArray(questionsArray) || questionsArray.length === 0) {
           throw new Error("JSON must contain an array of questions.");
         }
 
-        const mapped: QuestionData[] = questionsArray.map((q: any, i: number) => ({
-          questionText: q.question || q.questionText || "",
-          options: q.options || { A: "", B: "", C: "", D: "" },
-          correctAnswer: q.correct_answer || q.correctAnswer || "A",
-          explanation: q.explanation || "",
-          order: i,
-        }));
+        const mapped = questionsArray.map((q, i) => mapJsonQuestion(q as JsonQuestion, i));
 
         setQuestions(mapped);
-        setBackupQuestions(JSON.parse(JSON.stringify(mapped))); // Prevent Reset button break
+        setBackupQuestions(cloneQuestions(mapped));
         setFullText("");
         setTotalQuestions(mapped.length);
         setJsonBlobUrl("");
@@ -170,39 +234,31 @@ export default function InstructorUploadPage() {
       formData.append("title", title);
 
       const res = await fetch("/api/quiz/generate", { method: "POST", body: formData });
-      const data = await res.json();
+      const data = await res.json() as GenerateResponse;
 
       if (!res.ok) {
         setGenerateError(data.error || "Generation failed");
         return;
       }
 
-      const mapped: QuestionData[] = data.questions.map(
-        (q: any, i: number) => ({
-          questionText: q.question,
-          options: q.options,
-          correctAnswer: q.correct_answer,
-          explanation: q.explanation || "",
-          order: i,
-        })
-      );
+      const mapped = (data.questions || []).map((q, i) => mapJsonQuestion(q, i));
 
       let currentQuestions = [...mapped];
       setQuestions(currentQuestions);
-      setBackupQuestions(JSON.parse(JSON.stringify(currentQuestions))); // Deep copy for backup
+      setBackupQuestions(cloneQuestions(currentQuestions));
       setFullText(data.fullText || "");
       setTotalQuestions(data.totalQuestions || 0);
-      setJsonBlobUrl(data.jsonBlobUrl || undefined);
+      setJsonBlobUrl(data.jsonBlobUrl || "");
 
       // Auto-loop to fetch remaining questions
-      if (data.totalQuestions > currentQuestions.length) {
-        let currentFullText = data.fullText || "";
+      if ((data.totalQuestions || 0) > currentQuestions.length) {
+        const currentFullText = data.fullText || "";
         let fails = 0;
 
-        while (currentQuestions.length < data.totalQuestions && fails < 3) {
+        while (currentQuestions.length < (data.totalQuestions || 0) && fails < 3) {
           const lastQuestion = currentQuestions[currentQuestions.length - 1];
           const lastQuestionText = lastQuestion?.questionText;
-          const limit = Math.min(25, data.totalQuestions - currentQuestions.length);
+          const limit = Math.min(25, (data.totalQuestions || 0) - currentQuestions.length);
 
           // TOKEN OPTIMIZATION: Slice text to only send what comes after the last question
           let slicedText = currentFullText;
@@ -219,38 +275,30 @@ export default function InstructorUploadPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ fullText: slicedText, lastQuestionText, limit }),
             });
-            const dataMore = await resMore.json();
+            const dataMore = await resMore.json() as GenerateResponse;
 
             if (!resMore.ok) {
               fails++;
               continue; // Try again
             }
 
-            const mappedMore: QuestionData[] = dataMore.questions.map(
-              (q: any, i: number) => ({
-                questionText: q.question,
-                options: q.options,
-                correctAnswer: q.correct_answer,
-                explanation: q.explanation || "",
-                order: currentQuestions.length + i,
-              })
-            );
+            const mappedMore = (dataMore.questions || []).map((q, i) => mapJsonQuestion(q, currentQuestions.length + i));
 
             currentQuestions = [...currentQuestions, ...mappedMore];
             setQuestions(currentQuestions);
-            setBackupQuestions(JSON.parse(JSON.stringify(currentQuestions))); // Deep copy for backup
+            setBackupQuestions(cloneQuestions(currentQuestions));
             fails = 0; // reset fails on success
-          } catch (e) {
+          } catch (error) {
             fails++;
-            console.error(e);
+            console.error(error);
           }
         }
       }
 
       setStep("edit");
       setShowReport(true);
-    } catch (error: any) {
-      setGenerateError(error.message || "An unexpected error occurred");
+    } catch (error) {
+      setGenerateError(getErrorMessage(error));
     } finally {
       setGenerating(false);
     }
@@ -455,7 +503,7 @@ export default function InstructorUploadPage() {
                     Done — All {questions.length} questions extracted in order!
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    I have successfully parsed the PDF <strong>"{file?.name}"</strong> and verified the structure.
+                    I have successfully parsed the PDF <strong>&quot;{file?.name}&quot;</strong> and verified the structure.
                     All questions have been normalized into the correct format while preserving verbatim accuracy.
                   </p>
                 </div>

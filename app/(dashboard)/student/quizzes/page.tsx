@@ -12,6 +12,7 @@ import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 import ScheduleBoundaryRefresh from "@/components/live/ScheduleBoundaryRefresh";
 import QuizSearch from "@/components/quiz/QuizSearch";
 import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
+import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizTagFilterValue } from "@/components/quiz/QuizAvailabilityFilter";
 
 export const metadata = { title: "Browse Quizzes" };
 
@@ -28,12 +29,45 @@ function formatTimeLimit(minutes: number) {
   return `${minutes} min${minutes === 1 ? "" : "s"}`;
 }
 
-export default async function StudentQuizzesPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
+function parseAvailabilityFilter(value?: string): QuizAvailabilityFilterValue {
+  return value === "open" || value === "upcoming" ? value : "all";
+}
+
+function parseTagFilters(value?: string): QuizTagFilterValue[] {
+  const allowed = new Set<QuizTagFilterValue>(["single-attempt", "multi-attempt", "password", "time-limit"]);
+  if (!value) return [];
+
+  return value
+    .split(",")
+    .filter((tag): tag is QuizTagFilterValue => allowed.has(tag as QuizTagFilterValue));
+}
+
+function quizMatchesTagFilter(
+  quiz: {
+    allowMultipleAttempts: boolean;
+    passwordProtected: boolean;
+    timeLimitMinutes: number | null;
+  },
+  tag: QuizTagFilterValue
+) {
+  if (tag === "single-attempt") return !quiz.allowMultipleAttempts;
+  if (tag === "multi-attempt") return quiz.allowMultipleAttempts;
+  if (tag === "password") return quiz.passwordProtected;
+  return !!quiz.timeLimitMinutes;
+}
+
+export default async function StudentQuizzesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ q?: string; availability?: string; status?: string; tags?: string }>;
+}) {
   const session = await auth();
   if (!session) redirect("/login");
 
   const resolvedSearchParams = await searchParams;
   const searchQuery = resolvedSearchParams?.q?.trim() || "";
+  const availabilityFilter = parseAvailabilityFilter(resolvedSearchParams?.status);
+  const tagFilters = parseTagFilters(resolvedSearchParams?.tags);
 
   const whereClause: Prisma.QuizWhereInput = { isPublished: true };
   if (searchQuery) {
@@ -96,12 +130,40 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
   }
 
   const openQuizMap = new Map(openSessions.map((s) => [s.quizId, s.startedAt]));
-  const quizzes = quizRows.map(({ accessPasswordHash, ...quiz }) => ({
-    ...quiz,
-    passwordProtected: !!accessPasswordHash,
-  }));
-
   const now = new Date();
+  const quizzes = quizRows
+    .map(({ accessPasswordHash, ...quiz }) => {
+      const hasSchedule = !!(quiz.scheduledStart && quiz.scheduledEnd);
+      const scheduleStatus = hasSchedule
+        ? getScheduleStatus(now, quiz.scheduledStart, quiz.scheduledEnd)
+        : "none";
+
+      return {
+        ...quiz,
+        passwordProtected: !!accessPasswordHash,
+        scheduleStatus,
+      };
+    })
+    .filter((quiz) => {
+      if (availabilityFilter === "open" && !(quiz.scheduleStatus === "open" || quiz.scheduleStatus === "none")) return false;
+      if (availabilityFilter === "upcoming" && quiz.scheduleStatus !== "upcoming") return false;
+      return tagFilters.every((tag) => quizMatchesTagFilter(quiz, tag));
+    })
+    .sort((a, b) => {
+      const rank = { open: 0, upcoming: 1, none: 2, ended: 3 } as const;
+      const rankDiff = rank[a.scheduleStatus] - rank[b.scheduleStatus];
+      if (rankDiff !== 0) return rankDiff;
+
+      const aSchedule = a.scheduledStart?.getTime() ?? a.scheduledEnd?.getTime();
+      const bSchedule = b.scheduledStart?.getTime() ?? b.scheduledEnd?.getTime();
+      if (typeof aSchedule === "number" && typeof bSchedule === "number") {
+        return a.scheduleStatus === "ended" ? bSchedule - aSchedule : aSchedule - bSchedule;
+      }
+      if (typeof aSchedule === "number") return -1;
+      if (typeof bSchedule === "number") return 1;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
   const scheduleBoundaries = Array.from(
     new Set(
       quizzes.flatMap((quiz) =>
@@ -126,7 +188,10 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
               : `${quizzes.length} published quiz${quizzes.length !== 1 ? "zes" : ""} available`}
           </p>
         </div>
-        <QuizSearch initialValue={searchQuery} />
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <QuizAvailabilityFilter initialValue={availabilityFilter} initialTags={tagFilters} />
+          <QuizSearch initialValue={searchQuery} />
+        </div>
       </div>
 
       {/* Quiz cards */}
@@ -140,9 +205,7 @@ export default async function StudentQuizzesPage({ searchParams }: { searchParam
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {quizzes.map((quiz) => {
             const hasSchedule = !!(quiz.scheduledStart && quiz.scheduledEnd);
-            const sched = hasSchedule
-              ? getScheduleStatus(now, quiz.scheduledStart, quiz.scheduledEnd)
-              : "none";
+            const sched = quiz.scheduleStatus;
             return (
               <div
                 key={quiz.id}

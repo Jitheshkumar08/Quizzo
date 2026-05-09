@@ -34,7 +34,7 @@ export default async function DashboardLayout({
       {/* Texture Layer */}
       <div className="absolute inset-0 bg-[radial-gradient(#D6C9B3_1px,transparent_1px)] [background-size:24px_24px] opacity-40 z-0 pointer-events-none"></div>
 
-      <Sidebar role={session.user.role} userName={session.user.name} />
+      <Sidebar role={session.user.role} />
 
       <main className="flex-1 flex flex-col min-w-0 relative z-10 w-full overflow-hidden">
         {/* Top bar */}
