@@ -14,6 +14,68 @@ export interface GeneratedQuestion {
   explanation: string;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? value as Record<string, unknown> : null;
+}
+
+function asString(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+
+function asAnswer(value: unknown): GeneratedQuestion["correct_answer"] {
+  return value === "A" || value === "B" || value === "C" || value === "D" ? value : "A";
+}
+
+function asOptions(value: unknown): GeneratedQuestion["options"] {
+  const options = asRecord(value);
+  return {
+    A: asString(options?.A),
+    B: asString(options?.B),
+    C: asString(options?.C),
+    D: asString(options?.D),
+  };
+}
+
+function toGeneratedQuestion(value: unknown): GeneratedQuestion | null {
+  const question = asRecord(value);
+  if (!question) return null;
+
+  return {
+    question: asString(question.question),
+    options: asOptions(question.options),
+    correct_answer: asAnswer(question.correct_answer),
+    explanation: asString(question.explanation),
+  };
+}
+
+function extractQuestionArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+
+  const record = asRecord(value);
+  if (!record) return [];
+  if (Array.isArray(record.questions)) return record.questions;
+  if (Array.isArray(record.data)) return record.data;
+  return [];
+}
+
+function parseQuestionResponse(responseText: string): GeneratedQuestion[] {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    let cleaned = responseText;
+    if (cleaned.includes("```json")) {
+      cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+    }
+    parsed = JSON.parse(cleaned);
+  }
+
+  return extractQuestionArray(parsed)
+    .map(toGeneratedQuestion)
+    .filter((question): question is GeneratedQuestion => question !== null);
+}
+
 const MCQ_PROMPT_TEMPLATE = (start: number, end: number) => `You are a strict data extraction engine. 
 I am providing you with the text of an exam paper or quiz document that ALREADY CONTAINS multiple-choice questions.
 
@@ -55,8 +117,8 @@ export async function getTotalQuestionsCount(text: string): Promise<number> {
       response_format: { type: "json_object" },
     });
 
-    const parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
-    return parsed.count || 0;
+    const parsed = asRecord(JSON.parse(response.choices[0]?.message?.content || "{}"));
+    return typeof parsed?.count === "number" ? parsed.count : 0;
   } catch (error) {
     console.error("[NVIDIA COUNT ERROR]", error);
     return 0;
@@ -82,23 +144,8 @@ export async function generateQuestionsFromText(
       response_format: { type: "json_object" },
     });
 
-    let responseText = response.choices[0]?.message?.content?.trim() || "[]";
-    
-    // NVIDIA sometimes wraps json in an object if response_format is used
-    // or it might just be the array. Let's be safe.
-    let questions: any;
-    try {
-      const parsed = JSON.parse(responseText);
-      questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
-    } catch (e) {
-      // Fallback: cleaning markdown
-      if (responseText.includes("```json")) {
-        responseText = responseText.split("```json")[1].split("```")[0].trim();
-      }
-      questions = JSON.parse(responseText);
-    }
-
-    return Array.isArray(questions) ? questions : [];
+    const responseText = response.choices[0]?.message?.content?.trim() || "[]";
+    return parseQuestionResponse(responseText);
   } catch (error) {
     console.error("[NVIDIA EXTRACTION ERROR]", error);
     throw error;
@@ -134,19 +181,8 @@ Text:
       response_format: { type: "json_object" },
     });
 
-    let responseText = response.choices[0]?.message?.content?.trim() || "[]";
-    let questions: any;
-    try {
-      const parsed = JSON.parse(responseText);
-      questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
-    } catch (e) {
-      if (responseText.includes("```json")) {
-        responseText = responseText.split("```json")[1].split("```")[0].trim();
-      }
-      questions = JSON.parse(responseText);
-    }
-
-    return Array.isArray(questions) ? questions : [];
+    const responseText = response.choices[0]?.message?.content?.trim() || "[]";
+    return parseQuestionResponse(responseText);
   } catch (error) {
     console.error("[NVIDIA MORE EXTRACTION ERROR]", error);
     throw error;

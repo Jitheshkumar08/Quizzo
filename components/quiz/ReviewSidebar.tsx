@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -18,6 +18,18 @@ interface ReviewSidebarProps {
     onJump?: (index: number) => void;
 }
 
+function subscribeMounted() {
+    return () => {};
+}
+
+function getClientMountedSnapshot() {
+    return true;
+}
+
+function getServerMountedSnapshot() {
+    return false;
+}
+
 export default function ReviewSidebar({
     questions,
     userAnswers,
@@ -25,11 +37,7 @@ export default function ReviewSidebar({
     onToggle,
     onJump,
 }: ReviewSidebarProps) {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    const mounted = useSyncExternalStore(subscribeMounted, getClientMountedSnapshot, getServerMountedSnapshot);
 
     function handleJump(index: number) {
         if (onJump) {

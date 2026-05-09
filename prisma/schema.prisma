@@ -17,6 +17,7 @@ datasource db {
 enum Role {
   STUDENT
   INSTRUCTOR
+  MOD
   ADMIN
 }
 
@@ -32,12 +33,15 @@ model User {
   emailVerifiedAt DateTime?
   role         Role          @default(STUDENT)
   lastLoginAt  DateTime?
+  lastSeenAt   DateTime?
   sessionVersion Int        @default(0)
   createdAt    DateTime      @default(now())
   quizzes      Quiz[]
   results      Result[]
   quizSessions QuizSession[]
   remedialQuizSessions RemedialQuizSession[]
+
+  @@index([lastSeenAt])
 }
 
 model EmailSignupVerification {
