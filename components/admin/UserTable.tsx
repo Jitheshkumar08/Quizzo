@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "
 import { useMemo } from "react";
 import Link from "next/link";
 import { Activity, ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search, Clock3, LayoutGrid, Table2 } from "lucide-react";
+import PaginationControls from "@/components/ui/PaginationControls";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 import { ADMIN_ASSIGNABLE_ROLES, MOD_ASSIGNABLE_ROLES, type AppRole } from "@/lib/roles";
 
@@ -22,6 +23,7 @@ interface User {
 type SortField = "quizzes" | "attempts" | "joined" | "lastOnline";
 type SortDirection = "asc" | "desc";
 type ViewMode = "table" | "grid";
+const PAGE_SIZE = 20;
 
 function subscribeToViewport(callback: () => void) {
   const media = window.matchMedia("(min-width: 768px)");
@@ -247,6 +249,7 @@ export default function UserTable({
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [activeUserIds, setActiveUserIds] = useState<Set<string>>(new Set());
   const [activeLoading, setActiveLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const isDesktop = useSyncExternalStore(
     subscribeToViewport,
     getDesktopSnapshot,
@@ -369,8 +372,15 @@ export default function UserTable({
       return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
     });
   }, [activeUserIds, normalizedUsernameQuery, onlineOnly, sortDirection, sortField, users]);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const page = Math.min(currentPage, totalPages);
+  const pageStartIndex = (page - 1) * PAGE_SIZE;
+  const paginatedUsers = filteredUsers.slice(pageStartIndex, pageStartIndex + PAGE_SIZE);
+  const startItem = filteredUsers.length === 0 ? 0 : pageStartIndex + 1;
+  const endItem = Math.min(pageStartIndex + paginatedUsers.length, filteredUsers.length);
 
   function toggleSort(field: SortField) {
+    setCurrentPage(1);
     if (sortField === field) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
       return;
@@ -378,6 +388,14 @@ export default function UserTable({
 
     setSortField(field);
     setSortDirection("desc");
+  }
+
+  function goToPreviousPage() {
+    setCurrentPage((value) => Math.max(1, Math.min(value, totalPages) - 1));
+  }
+
+  function goToNextPage() {
+    setCurrentPage((value) => Math.min(totalPages, Math.min(value, totalPages) + 1));
   }
 
   function renderSortIndicator(field: SortField) {
@@ -419,6 +437,7 @@ export default function UserTable({
   }
 
   function toggleOnlineOnly() {
+    setCurrentPage(1);
     setOnlineOnly((value) => {
       const nextValue = !value;
       if (nextValue) {
@@ -517,7 +536,7 @@ export default function UserTable({
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="order-2 flex flex-wrap items-center gap-3 sm:order-1">
           <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#A09890]">
-            {filteredUsers.length} of {users.length} shown
+            {filteredUsers.length} of {users.length} matched
           </p>
         </div>
         <div className="order-1 flex w-full flex-wrap items-center justify-between gap-3 sm:order-2 sm:w-auto sm:flex-nowrap sm:justify-start">
@@ -570,7 +589,10 @@ export default function UserTable({
             <input
               type="search"
               value={usernameQuery}
-              onChange={(e) => setUsernameQuery(e.target.value)}
+              onChange={(e) => {
+                setCurrentPage(1);
+                setUsernameQuery(e.target.value);
+              }}
               placeholder="Search username..."
               aria-label="Search users by username"
               className="h-12 w-full rounded-2xl border border-[#E4DDD3] bg-white/78 pl-11 pr-4 text-sm font-semibold text-[#2C2A28] shadow-[0_8px_26px_rgba(44,42,40,0.06)] outline-none transition-all placeholder:text-[#AFA69A] focus:border-violet-200 focus:bg-white focus:ring-4 focus:ring-violet-100/70"
@@ -594,13 +616,13 @@ export default function UserTable({
         <>
           {/* ── MOBILE + DESKTOP: Card / Grid ──────────────── */}
           <div className={`grid gap-5 ${viewMode === "grid" ? "block" : "hidden"} md:hidden`}>
-            {filteredUsers.map(renderUserCard)}
+            {paginatedUsers.map(renderUserCard)}
           </div>
 
           {/* ── DESKTOP: Grid cards ───────────────────────── */}
           {viewMode === "grid" && (
             <div className="hidden gap-5 md:grid md:grid-cols-2 xl:grid-cols-3">
-              {filteredUsers.map(renderUserCard)}
+              {paginatedUsers.map(renderUserCard)}
             </div>
           )}
 
@@ -633,7 +655,7 @@ export default function UserTable({
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUsers.map((user, i) => {
+                      {paginatedUsers.map((user, i) => {
                         const { date, time } = formatDate(user.createdAt);
                         const lastOnline = formatLastOnline(user.lastSeenAt);
                         const isYou = user.id === currentUserId;
@@ -642,7 +664,7 @@ export default function UserTable({
                             key={user.id}
                             className={`
                       group transition-colors duration-150 border-b border-[#EDE8E0] last:border-0
-                      ${i % 2 === 0 ? "bg-white/20" : "bg-[#FAF7F3]/40"}
+                      ${(pageStartIndex + i) % 2 === 0 ? "bg-white/20" : "bg-[#FAF7F3]/40"}
                       hover:bg-[#F5EDE2]/60
                     `}
                           >
@@ -751,6 +773,15 @@ export default function UserTable({
               </div>
             </div>
           )}
+          <PaginationControls
+            currentPage={page}
+            endItem={endItem}
+            onNext={goToNextPage}
+            onPrevious={goToPreviousPage}
+            startItem={startItem}
+            totalItems={filteredUsers.length}
+            totalPages={totalPages}
+          />
         </>
       )}
     </div>

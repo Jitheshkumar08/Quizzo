@@ -163,7 +163,7 @@ export default function QuizAvailabilityFilter({
   }
 
   return (
-    <div ref={ref} className="flex w-full flex-row flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-start">
+    <div ref={ref} className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:w-auto sm:justify-start">
       <div className="relative">
         <RaisedFilterButton
           active={initialValue !== "all"}
@@ -175,7 +175,7 @@ export default function QuizAvailabilityFilter({
         />
 
         {openMenu === "availability" && (
-          <div className="absolute left-0 top-full z-50 mt-2 w-full min-w-[14.5rem] overflow-hidden rounded-[20px] border border-[#E8E2D9] bg-white shadow-[0_14px_34px_rgba(44,42,40,0.14)] sm:w-[15.5rem]">
+          <div className="absolute right-0 top-full z-50 mt-2 w-[min(14.5rem,calc(100vw-2rem))] overflow-hidden rounded-[20px] border border-[#E8E2D9] bg-white shadow-[0_14px_34px_rgba(44,42,40,0.14)] sm:left-0 sm:right-auto sm:w-[15.5rem]">
             <div className="bg-[#F8F3EB] px-3.5 pb-2 pt-3">
               <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B0A89E]">Availability</p>
             </div>
@@ -220,7 +220,7 @@ export default function QuizAvailabilityFilter({
         />
 
         {openMenu === "tags" && (
-          <div className="absolute left-0 top-full z-50 mt-2 w-full min-w-[14.5rem] overflow-hidden rounded-[20px] border border-[#E8E2D9] bg-white shadow-[0_14px_34px_rgba(44,42,40,0.14)] sm:w-[15.5rem]">
+          <div className="absolute right-0 top-full z-50 mt-2 w-[min(14.5rem,calc(100vw-2rem))] overflow-hidden rounded-[20px] border border-[#E8E2D9] bg-white shadow-[0_14px_34px_rgba(44,42,40,0.14)] sm:left-0 sm:right-auto sm:w-[15.5rem]">
             <div className="bg-[#F8F3EB] px-3.5 pb-2 pt-3">
               <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B0A89E]">Quiz Tags</p>
             </div>

@@ -5,9 +5,11 @@ import { BarChart3, BookOpen, Calendar, Clock, LayoutGrid, Table2 } from "lucide
 import AdminQuizDeleteButton from "@/components/admin/AdminQuizDeleteButton";
 import AdminQuizStatusDropdown from "@/components/admin/AdminQuizStatusDropdown";
 import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalyticsModalButton";
+import PaginationControls from "@/components/ui/PaginationControls";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 type ViewMode = "table" | "grid";
+const PAGE_SIZE = 20;
 
 function subscribeToViewport(callback: () => void) {
   const media = window.matchMedia("(min-width: 768px)");
@@ -142,13 +144,28 @@ export default function AdminQuizList({
     getServerDesktopSnapshot
   );
   const [selectedViewMode, setSelectedViewMode] = useState<ViewMode | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const viewMode = selectedViewMode ?? (isDesktop ? "table" : "grid");
+  const totalPages = Math.max(1, Math.ceil(quizzes.length / PAGE_SIZE));
+  const page = Math.min(currentPage, totalPages);
+  const pageStartIndex = (page - 1) * PAGE_SIZE;
+  const paginatedQuizzes = quizzes.slice(pageStartIndex, pageStartIndex + PAGE_SIZE);
+  const startItem = quizzes.length === 0 ? 0 : pageStartIndex + 1;
+  const endItem = Math.min(pageStartIndex + paginatedQuizzes.length, quizzes.length);
+
+  function goToPreviousPage() {
+    setCurrentPage((value) => Math.max(1, Math.min(value, totalPages) - 1));
+  }
+
+  function goToNextPage() {
+    setCurrentPage((value) => Math.min(totalPages, Math.min(value, totalPages) + 1));
+  }
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#A09890]">
-          {quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""} shown
+          {quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""} matched
         </p>
         <div
           className="inline-flex h-12 items-center rounded-2xl border border-[#D8CFC3] bg-white/78 p-1 shadow-[0_10px_24px_rgba(44,42,40,0.12)]"
@@ -184,8 +201,8 @@ export default function AdminQuizList({
       </div>
 
       {viewMode === "grid" && (
-        <div className="grid gap-5 pb-10 md:grid-cols-2 xl:grid-cols-3">
-          {quizzes.map((quiz) => (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {paginatedQuizzes.map((quiz) => (
             <QuizCard key={quiz.id} quiz={quiz} isMod={isMod} />
           ))}
         </div>
@@ -226,14 +243,14 @@ export default function AdminQuizList({
                 </tr>
               </thead>
               <tbody>
-                {quizzes.map((quiz, i) => {
+                {paginatedQuizzes.map((quiz, i) => {
                   const created = formatDate(quiz.createdAt);
                   const updated = formatDate(quiz.updatedAt);
 
                   return (
                     <tr
                       key={quiz.id}
-                      className={`border-b border-[#EDE8E0] transition-colors duration-150 last:border-0 ${i % 2 === 0 ? "bg-white/20" : "bg-[#FAF7F3]/40"} hover:bg-[#F5EDE2]/60`}
+                      className={`border-b border-[#EDE8E0] transition-colors duration-150 last:border-0 ${(pageStartIndex + i) % 2 === 0 ? "bg-white/20" : "bg-[#FAF7F3]/40"} hover:bg-[#F5EDE2]/60`}
                     >
                       <td className="px-4 py-4">
                         <div className="min-w-0">
@@ -306,6 +323,16 @@ export default function AdminQuizList({
           </div>
         </div>
       )}
+
+      <PaginationControls
+        currentPage={page}
+        endItem={endItem}
+        onNext={goToNextPage}
+        onPrevious={goToPreviousPage}
+        startItem={startItem}
+        totalItems={quizzes.length}
+        totalPages={totalPages}
+      />
     </div>
   );
 }
