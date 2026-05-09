@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { getSupabaseRealtimeClient } from "@/lib/supabase-realtime-client";
@@ -12,22 +12,107 @@ interface Props {
 }
 
 const ACCOUNT_DELETED_REDIRECT_SECONDS = 60;
+const RESUME_SYNC_COOLDOWN_MS = 2000;
+
+type VisibleUserResponse = {
+  username?: string | null;
+  email?: string | null;
+  fullName?: string | null;
+  role?: string | null;
+  profileImageUrl?: string | null;
+  requiresReauth?: boolean;
+};
 
 export default function RoleChangeRealtimeRefresh({ userId }: Props) {
   const router = useRouter();
-  const { update } = useSession();
-  const refreshTimer = useRef<number | null>(null);
+  const { data: session, status, update } = useSession();
   const signOutTimer = useRef<number | null>(null);
   const countdownTimer = useRef<number | null>(null);
+  const syncInFlight = useRef<Promise<void> | null>(null);
+  const lastSyncAt = useRef(0);
+  const sessionUser = useRef(session?.user);
   const [passwordChanged, setPasswordChanged] = useState(false);
   const [accountDeleted, setAccountDeleted] = useState(false);
   const [deletedRedirectSeconds, setDeletedRedirectSeconds] = useState(ACCOUNT_DELETED_REDIRECT_SECONDS);
 
-  function scheduleDeletedRedirect() {
+  const scheduleDeletedRedirect = useCallback(() => {
     setPasswordChanged(false);
     setDeletedRedirectSeconds(ACCOUNT_DELETED_REDIRECT_SECONDS);
     setAccountDeleted(true);
-  }
+  }, []);
+
+  const handlePasswordChanged = useCallback(() => {
+    setPasswordChanged(true);
+    if (signOutTimer.current === null) {
+      signOutTimer.current = window.setTimeout(() => {
+        void signOut({ callbackUrl: "/login" });
+      }, 4500);
+    }
+  }, []);
+
+  const refreshVisibleUser = useCallback(
+    async ({ force = false }: { force?: boolean } = {}) => {
+      if (!userId || status === "loading") return;
+
+      const now = Date.now();
+      if (!force && now - lastSyncAt.current < RESUME_SYNC_COOLDOWN_MS) return;
+      if (syncInFlight.current) return syncInFlight.current;
+
+      lastSyncAt.current = now;
+
+      syncInFlight.current = (async () => {
+        const res = await fetch("/api/user/me", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (res.status === 404) {
+          scheduleDeletedRedirect();
+          return;
+        }
+        if (!res.ok) return;
+
+        const user = (await res.json().catch(() => null)) as VisibleUserResponse | null;
+        if (!user) return;
+
+        if (user.requiresReauth === true) {
+          handlePasswordChanged();
+          return;
+        }
+
+        const liveUser = {
+          name: typeof user.fullName === "string" ? user.fullName : "",
+          email: typeof user.email === "string" ? user.email : "",
+          username: typeof user.username === "string" ? user.username : undefined,
+          role: typeof user.role === "string" ? user.role : "STUDENT",
+          profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : null,
+        };
+
+        const currentUser = sessionUser.current;
+        const sessionChanged =
+          currentUser?.name !== liveUser.name ||
+          currentUser?.email !== liveUser.email ||
+          currentUser?.username !== liveUser.username ||
+          currentUser?.role !== liveUser.role ||
+          (currentUser?.profileImageUrl ?? currentUser?.image ?? null) !== liveUser.profileImageUrl;
+
+        if (!sessionChanged) return;
+
+        dispatchLiveUserUpdated(liveUser);
+        await update({ refreshUser: true });
+        router.refresh();
+      })().finally(() => {
+        syncInFlight.current = null;
+      });
+
+      return syncInFlight.current;
+    },
+    [handlePasswordChanged, router, scheduleDeletedRedirect, status, update, userId]
+  );
+
+  useEffect(() => {
+    sessionUser.current = session?.user;
+  }, [session?.user]);
 
   useEffect(() => {
     return () => {
@@ -81,66 +166,32 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
   }, [accountDeleted]);
 
   useEffect(() => {
+    if (!userId || status === "loading") return;
+
+    void refreshVisibleUser({ force: true });
+
+    const syncOnResume = () => {
+      if (document.visibilityState === "visible") {
+        void refreshVisibleUser();
+      }
+    };
+
+    const syncOnReconnect = () => {
+      void refreshVisibleUser();
+    };
+
+    window.addEventListener("online", syncOnReconnect);
+    document.addEventListener("visibilitychange", syncOnResume);
+
+    return () => {
+      window.removeEventListener("online", syncOnReconnect);
+      document.removeEventListener("visibilitychange", syncOnResume);
+    };
+  }, [refreshVisibleUser, status, userId]);
+
+  useEffect(() => {
     const supabase = getSupabaseRealtimeClient();
-    if (!supabase || !userId) return;
-
-    const refreshVisibleUser = async () => {
-      const statusRes = await fetch("/api/user/session-status", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      if (statusRes.ok) {
-        const status = await statusRes.json().catch(() => ({}));
-        if (status.accountDeleted === true) {
-          scheduleDeletedRedirect();
-          return;
-        }
-
-        if (status.requiresReauth === true) {
-          setPasswordChanged(true);
-          if (signOutTimer.current === null) {
-            signOutTimer.current = window.setTimeout(() => {
-              void signOut({ callbackUrl: "/login" });
-            }, 4500);
-          }
-          return;
-        }
-      }
-
-      const res = await fetch("/api/user/me", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      if (res.status === 404) {
-        scheduleDeletedRedirect();
-        return;
-      }
-      if (!res.ok) return;
-
-      const user = await res.json();
-      dispatchLiveUserUpdated({
-        name: typeof user.fullName === "string" ? user.fullName : "",
-        email: typeof user.email === "string" ? user.email : "",
-        username: typeof user.username === "string" ? user.username : undefined,
-        role: typeof user.role === "string" ? user.role : "STUDENT",
-        profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : null,
-      });
-    };
-
-    const scheduleSessionRefresh = () => {
-      if (refreshTimer.current !== null) {
-        window.clearTimeout(refreshTimer.current);
-      }
-
-      refreshTimer.current = window.setTimeout(() => {
-        refreshTimer.current = null;
-        void refreshVisibleUser()
-          .finally(() => update({ refreshUser: true }))
-          .finally(() => {
-            router.refresh();
-          });
-      }, 350);
-    };
+    if (!supabase || !userId || status === "loading") return;
 
     const channel = supabase
       .channel(`quizzo-role-change-events-${userId}`)
@@ -150,18 +201,18 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
           event: "INSERT",
           schema: "public",
           table: "RoleChangeEvent",
+          filter: `targetUserId=eq.${userId}`,
         },
-        scheduleSessionRefresh
+        () => {
+          void refreshVisibleUser({ force: true });
+        }
       )
       .subscribe();
 
     return () => {
-      if (refreshTimer.current !== null) {
-        window.clearTimeout(refreshTimer.current);
-      }
       void supabase.removeChannel(channel);
     };
-  }, [router, update, userId]);
+  }, [refreshVisibleUser, status, userId]);
 
   function signOutNow() {
     if (signOutTimer.current !== null) {

@@ -175,8 +175,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No changes provided" }, { status: 400 });
     }
 
-    const sessionVisibleFieldsChanged =
-      (typeof updateData.role !== "undefined" && updateData.role !== existingUser.role) ||
+    const sessionProfileFieldsChanged =
       (typeof updateData.fullName !== "undefined" && updateData.fullName !== existingUser.fullName) ||
       (typeof updateData.username !== "undefined" && updateData.username !== existingUser.username) ||
       (typeof updateData.email !== "undefined" && updateData.email !== existingUser.email);
@@ -199,7 +198,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    if (sessionVisibleFieldsChanged || passwordChanged) {
+    if (sessionProfileFieldsChanged || passwordChanged) {
       await recordUserChangeEvent(prisma, {
         targetUserId: userId,
         actorId: session.user.id,

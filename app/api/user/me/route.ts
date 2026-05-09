@@ -18,6 +18,7 @@ export async function GET() {
         role: true,
         profileImageUrl: true,
         authProvider: true,
+        sessionVersion: true,
       }
     });
 
@@ -25,7 +26,15 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      profileImageUrl: user.profileImageUrl,
+      authProvider: user.authProvider,
+      requiresReauth: user.sessionVersion > Number(session.user.sessionVersion ?? 0),
+    });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
