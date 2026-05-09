@@ -201,7 +201,7 @@ export default function RoleChangeRealtimeRefresh({ userId }: Props) {
           event: "INSERT",
           schema: "public",
           table: "RoleChangeEvent",
-          filter: `targetUserId=eq.${userId}`,
+          filter: `"targetUserId"=eq.${userId}`,
         },
         () => {
           void refreshVisibleUser({ force: true });

@@ -196,7 +196,8 @@ export async function PATCH(req: NextRequest) {
     const sessionProfileFieldsChanged =
       (typeof updateData.fullName !== "undefined" && updateData.fullName !== existingUser.fullName) ||
       (typeof updateData.username !== "undefined" && updateData.username !== existingUser.username) ||
-      (typeof updateData.email !== "undefined" && updateData.email !== existingUser.email);
+      (typeof updateData.email !== "undefined" && updateData.email !== existingUser.email) ||
+      (typeof updateData.role !== "undefined" && updateData.role !== existingUser.role);
 
     const updated = await withDatabaseRetry(() =>
       prisma.user.update({
