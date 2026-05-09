@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Loader2, Save, User as UserIcon, Mail, Lock, CheckCircle2, XCircle, MailCheck, RefreshCw } from "lucide-react";
+import { ArrowLeft, Loader2, Save, User as UserIcon, Mail, Lock, CheckCircle2, XCircle, MailCheck, RefreshCw, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import PasswordInput from "@/components/ui/PasswordInput";
 
 export default function SettingsForm() {
-  const { update } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
 
   const [form, setForm] = useState({
     username: "",
@@ -27,7 +30,7 @@ export default function SettingsForm() {
   const [verifyingEmail, setVerifyingEmail] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [emailResendSeconds, setEmailResendSeconds] = useState(0);
-  
+
   // Track original loaded data to prevent unnecessary API checks on load
   const [originalData, setOriginalData] = useState({ username: "", email: "" });
 
@@ -44,6 +47,7 @@ export default function SettingsForm() {
             fullName: data.fullName || "",
             email: data.email || ""
           }));
+          setProfileImageUrl(data.profileImageUrl || session?.user?.image || null);
           setOriginalData({
             username: data.username || "",
             email: data.email || ""
@@ -54,20 +58,20 @@ export default function SettingsForm() {
       }
     };
     loadUser();
-  }, []);
+  }, [session?.user?.image]);
 
   useEffect(() => {
     if (!form.username || form.username === originalData.username) {
       const timer = window.setTimeout(() => setUsernameStatus('idle'), 0);
       return () => window.clearTimeout(timer);
     }
-    
+
     const delayDebounceFn = setTimeout(async () => {
       if (form.username.length < 3 || ['admin', 'root'].includes(form.username.toLowerCase())) {
         setUsernameStatus('unavailable');
         return;
       }
-      
+
       setUsernameStatus('checking');
       try {
         const res = await fetch('/api/user/check-availability', {
@@ -77,7 +81,7 @@ export default function SettingsForm() {
         });
         const data = await res.json();
         setUsernameStatus(data.available ? 'available' : 'unavailable');
-        
+
         if (data.available) setTimeout(() => setUsernameStatus('idle'), 2500);
       } catch {
         setUsernameStatus('unavailable');
@@ -155,10 +159,10 @@ export default function SettingsForm() {
         startEmailResendTimer();
       } else {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        
+
         setOriginalData({ username: form.username, email: form.email });
         setForm(prev => ({ ...prev, currentPassword: "", newPassword: "" }));
-        
+
         await update({ name: form.fullName, username: form.username, email: form.email });
         router.refresh();
       }
@@ -244,19 +248,60 @@ export default function SettingsForm() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6 text-center mt-2">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm border border-[#E8E2D8]">
-          <UserIcon className="w-6 h-6 text-[#8C5D3E]" />
-        </div>
+        {profileImageUrl ? (
+          <button
+            type="button"
+            onClick={() => setImagePreviewOpen(true)}
+            className="mx-auto mb-4 flex h-25 w-25 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-[#E8E2D8] bg-white p-1 shadow-[0_12px_28px_rgba(44,42,40,0.14)] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(44,42,40,0.18)]"
+            aria-label="Open profile image preview"
+          >
+            <span
+              aria-hidden="true"
+              className="h-full w-full rounded-full bg-cover bg-center"
+              style={{ backgroundImage: `url("${profileImageUrl}")` }}
+            />
+          </button>
+        ) : (
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_28px_rgba(44,42,40,0.14)] border border-[#E8E2D8]">
+            <UserIcon className="w-9 h-9 text-[#8C5D3E]" />
+          </div>
+        )}
         <h1 className="text-2xl sm:text-3xl font-bold text-[#1E1C1A] mb-2 tracking-tight">Account Settings</h1>
         <p className="text-[#6B6357] font-medium text-sm sm:text-base">Update your profile, email, and password.</p>
       </div>
+
+      {imagePreviewOpen && profileImageUrl && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center bg-black/92 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Profile image preview"
+          onClick={() => setImagePreviewOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setImagePreviewOpen(false)}
+            className="absolute right-5 top-5 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/35 bg-black/30 text-white shadow-lg transition-all hover:bg-white/15"
+            aria-label="Close profile image preview"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={profileImageUrl}
+            alt="Profile"
+            className="h-[min(82vw,82dvh)] w-[min(82vw,82dvh)] max-h-[92dvh] max-w-[92vw] object-contain"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+        , document.body)}
 
       <div className="bg-white/[0.88] backdrop-blur-2xl rounded-[28px] p-5 sm:p-7 shadow-[0_20px_55px_rgba(44,42,40,0.10),inset_0_1px_0_rgba(255,255,255,0.95)] border border-white/95 relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#FFFDF8] to-transparent pointer-events-none" />
         <div className="absolute -top-20 -right-16 h-44 w-44 rounded-full bg-[#F4EFE6] blur-3xl opacity-80 pointer-events-none" />
 
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col group relative">
               <div className="flex items-center justify-between ml-2 mb-2">
@@ -264,9 +309,9 @@ export default function SettingsForm() {
                   <UserIcon className="w-4 h-4 text-[#918B80] group-focus-within:text-[#8C5D3E] transition-colors" />
                   Username
                 </label>
-                {usernameStatus === 'checking' && <span className="text-[12px] font-bold text-[#8C5D3E] flex items-center gap-1 animate-pulse"><Loader2 className="w-3 h-3 animate-spin"/> Checking</span>}
-                {usernameStatus === 'available' && <span className="text-[12px] font-bold text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Available</span>}
-                {usernameStatus === 'unavailable' && <span className="text-[12px] font-bold text-red-500 flex items-center gap-1"><XCircle className="w-3 h-3"/> Unavailable</span>}
+                {usernameStatus === 'checking' && <span className="text-[12px] font-bold text-[#8C5D3E] flex items-center gap-1 animate-pulse"><Loader2 className="w-3 h-3 animate-spin" /> Checking</span>}
+                {usernameStatus === 'available' && <span className="text-[12px] font-bold text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Available</span>}
+                {usernameStatus === 'unavailable' && <span className="text-[12px] font-bold text-red-500 flex items-center gap-1"><XCircle className="w-3 h-3" /> Unavailable</span>}
               </div>
               <input
                 name="username"
@@ -407,7 +452,7 @@ export default function SettingsForm() {
           <div className="rounded-[24px] border border-[#E8E2D8] bg-[#F8F3EA]/75 p-4 sm:p-5">
             <h3 className="text-[16px] font-bold text-[#2C2A28] mb-1">Change Password</h3>
             <p className="text-[13px] text-[#6B6357] mb-4 font-medium">Leave fields blank if you don&apos;t want to change your password.</p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col group">
                 <label className="text-[14px] font-bold text-[#2C2A28] ml-2 mb-2 transition-colors group-focus-within:text-[#8C5D3E] flex items-center gap-1.5">
