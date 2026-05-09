@@ -38,8 +38,8 @@ export default function AdminQuizUsernameSearch({ initialValue = "" }: { initial
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="Search creator username..."
-        aria-label="Search quizzes by creator username"
+        placeholder="Search title or creator username..."
+        aria-label="Search quizzes by title or creator username"
         className="h-12 w-full rounded-2xl border border-[#E4DDD3] bg-white/78 pl-11 pr-4 text-sm font-semibold text-[#2C2A28] shadow-[0_8px_26px_rgba(44,42,40,0.06)] outline-none transition-all placeholder:text-[#AFA69A] focus:border-violet-200 focus:bg-white focus:ring-4 focus:ring-violet-100/70"
       />
     </label>

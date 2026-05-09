@@ -24,15 +24,25 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
 
   const isMod = session.user.role === "MOD";
   const params = searchParams ? await searchParams : {};
-  const usernameQuery = typeof params.username === "string" ? params.username.trim() : "";
-  const where: Prisma.QuizWhereInput = usernameQuery
+  const searchQuery = typeof params.username === "string" ? params.username.trim() : "";
+  const where: Prisma.QuizWhereInput = searchQuery
     ? {
-        createdBy: {
-          username: {
-            contains: usernameQuery,
-            mode: "insensitive",
+        OR: [
+          {
+            title: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
           },
-        },
+          {
+            createdBy: {
+              username: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
       }
     : {};
 
@@ -73,21 +83,21 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
         <div>
           <h1 className="text-2xl font-bold gradient-text">All Quizzes</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            {usernameQuery
-              ? `${quizzes.length} quiz${quizzes.length !== 1 ? "zes" : ""} matching @${usernameQuery}`
+            {searchQuery
+              ? `${quizzes.length} quiz${quizzes.length !== 1 ? "zes" : ""} matching "${searchQuery}"`
               : `${quizzes.length} total quizzes on platform`}
           </p>
         </div>
 
-        <AdminQuizUsernameSearch initialValue={usernameQuery} />
+        <AdminQuizUsernameSearch initialValue={searchQuery} />
       </div>
 
       {quizzes.length === 0 ? (
         <div className="glass rounded-2xl border border-[#E8E2D8] px-6 py-12 text-center shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
           <p className="text-sm font-black text-[#2C2A28]">No quizzes found</p>
           <p className="mt-1 text-xs font-semibold text-[#918B80]">
-            {usernameQuery
-              ? `No creator username matches @${usernameQuery}`
+            {searchQuery
+              ? `No quiz title or creator username matches "${searchQuery}"`
               : "No quizzes are on the platform yet."}
           </p>
         </div>

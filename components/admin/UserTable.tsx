@@ -243,7 +243,7 @@ export default function UserTable({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
-  const [usernameQuery, setUsernameQuery] = useState("");
+  const [userQuery, setUserQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>("joined");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [onlineOnly, setOnlineOnly] = useState(false);
@@ -338,15 +338,18 @@ export default function UserTable({
     }
   }
 
-  const normalizedUsernameQuery = usernameQuery.trim().toLowerCase();
+  const normalizedUserQuery = userQuery.trim().toLowerCase();
   const filteredUsers = useMemo(() => {
     const direction = sortDirection === "asc" ? 1 : -1;
-    const usernameFiltered = normalizedUsernameQuery
-      ? users.filter((user) => user.username.toLowerCase().includes(normalizedUsernameQuery))
+    const userFiltered = normalizedUserQuery
+      ? users.filter((user) =>
+        user.username.toLowerCase().includes(normalizedUserQuery) ||
+        user.fullName.toLowerCase().includes(normalizedUserQuery)
+      )
       : users;
     const presenceFiltered = onlineOnly
-      ? usernameFiltered.filter((user) => activeUserIds.has(user.id))
-      : usernameFiltered;
+      ? userFiltered.filter((user) => activeUserIds.has(user.id))
+      : userFiltered;
 
     return [...presenceFiltered].sort((a, b) => {
       if (sortField === "quizzes") {
@@ -371,7 +374,7 @@ export default function UserTable({
 
       return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
     });
-  }, [activeUserIds, normalizedUsernameQuery, onlineOnly, sortDirection, sortField, users]);
+  }, [activeUserIds, normalizedUserQuery, onlineOnly, sortDirection, sortField, users]);
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
   const page = Math.min(currentPage, totalPages);
   const pageStartIndex = (page - 1) * PAGE_SIZE;
@@ -588,13 +591,13 @@ export default function UserTable({
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A09890]" />
             <input
               type="search"
-              value={usernameQuery}
+              value={userQuery}
               onChange={(e) => {
                 setCurrentPage(1);
-                setUsernameQuery(e.target.value);
+                setUserQuery(e.target.value);
               }}
-              placeholder="Search username..."
-              aria-label="Search users by username"
+              placeholder="Search name or username..."
+              aria-label="Search users by full name or username"
               className="h-12 w-full rounded-2xl border border-[#E4DDD3] bg-white/78 pl-11 pr-4 text-sm font-semibold text-[#2C2A28] shadow-[0_8px_26px_rgba(44,42,40,0.06)] outline-none transition-all placeholder:text-[#AFA69A] focus:border-violet-200 focus:bg-white focus:ring-4 focus:ring-violet-100/70"
             />
           </label>
@@ -605,8 +608,8 @@ export default function UserTable({
         <div className="glass rounded-2xl border border-[#E8E2D8] px-6 py-12 text-center shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
           <p className="text-sm font-black text-[#2C2A28]">No users found</p>
           <p className="mt-1 text-xs font-semibold text-[#918B80]">
-            {normalizedUsernameQuery
-              ? `No username matches @${normalizedUsernameQuery}`
+            {normalizedUserQuery
+              ? `No name or username matches "${normalizedUserQuery}"`
               : onlineOnly
                 ? "No users are online right now."
                 : "No users are on the platform yet."}
@@ -751,7 +754,7 @@ export default function UserTable({
                 {/* Footer legend */}
                 <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">
                   <p className="text-[11px] font-bold text-[#A09890] uppercase tracking-widest">
-                    {normalizedUsernameQuery
+                    {normalizedUserQuery
                       ? `${filteredUsers.length} of ${users.length} users shown`
                       : `${users.length} user${users.length !== 1 ? "s" : ""} total`}
                   </p>

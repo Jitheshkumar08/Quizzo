@@ -163,7 +163,7 @@ export default function QuizAvailabilityFilter({
   }
 
   return (
-    <div ref={ref} className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:w-auto sm:justify-start">
+    <div ref={ref} className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap sm:justify-start">
       <div className="relative">
         <RaisedFilterButton
           active={initialValue !== "all"}
