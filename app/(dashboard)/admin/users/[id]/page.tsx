@@ -22,12 +22,14 @@ function formatDate(iso: Date | string) {
 
 const roleStyles = {
   ADMIN: "from-rose-500 to-red-600 text-white shadow-rose-200",
+  MOD: "from-teal-500 to-cyan-600 text-white shadow-teal-200",
   INSTRUCTOR: "from-sky-500 to-blue-600 text-white shadow-sky-200",
   STUDENT: "from-violet-500 to-purple-600 text-white shadow-violet-200",
 } as const;
 
 const roleLabels = {
   ADMIN: "Admin",
+  MOD: "Mod",
   INSTRUCTOR: "Instructor",
   STUDENT: "Student",
 } as const;

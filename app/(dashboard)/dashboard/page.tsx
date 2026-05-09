@@ -20,6 +20,13 @@ export default async function DashboardPage() {
       { title: "Upload PDF", description: "Generate a new quiz from a PDF", href: "/instructor/upload", icon: Upload, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "Browse Quizzes", description: "Take any published quiz", href: "/student/quizzes", icon: ClipboardList, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
     ],
+    MOD: [
+      { title: "Manage Users", description: "Review users and assign student/instructor roles", href: "/admin/users", icon: Users, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+      { title: "All Quizzes", description: "Review quizzes and manage publish status", href: "/admin/quizzes", icon: BookOpen, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+      { title: "Set a Quiz", description: "Create a new quiz from a PDF or JSON", href: "/instructor/upload", icon: Upload, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+      { title: "My Quizzes", description: "View quizzes created by you", href: "/instructor/quizzes", icon: BookOpen, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+      { title: "Browse Quizzes", description: "Take any published quiz", href: "/student/quizzes", icon: ClipboardList, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+    ],
     INSTRUCTOR: [
       { title: "Upload PDF", description: "Upload a PDF and let AI generate MCQs", href: "/instructor/upload", icon: Upload, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "My Quizzes", description: "View and edit your created quizzes", href: "/instructor/quizzes", icon: BookOpen, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
@@ -42,6 +49,7 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-[#918B80] mt-2 text-[14px] md:text-[16px] font-medium">
           {role === "ADMIN" && "You have full platform access."}
+          {role === "MOD" && "You can moderate users and quiz publishing."}
           {role === "INSTRUCTOR" && "Create and manage your quizzes below."}
           {role === "STUDENT" && "Ready to test your knowledge?"}
         </p>

@@ -9,6 +9,7 @@ import AdminQuizUsernameSearch from "@/components/admin/AdminQuizUsernameSearch"
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 import AdminQuizDeleteButton from "@/components/admin/AdminQuizDeleteButton";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
+import { canAccessAdminControls } from "@/lib/roles";
 
 export const metadata = { title: "All Quizzes - Admin" };
 
@@ -29,7 +30,8 @@ function formatDate(iso: Date | string) {
 
 export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPageProps) {
   const session = await auth();
-  if (!session || session.user.role !== "ADMIN") redirect("/dashboard");
+  if (!session || !canAccessAdminControls(session.user.role)) redirect("/dashboard");
+  const isMod = session.user.role === "MOD";
   const params = searchParams ? await searchParams : {};
   const usernameQuery = typeof params.username === "string" ? params.username.trim() : "";
   const where: Prisma.QuizWhereInput = usernameQuery
@@ -150,7 +152,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
 
               <div className="flex items-center justify-between gap-3 pt-1">
                 <InstructorAnalyticsModalButton quizId={quiz.id} />
-                <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} />
+                <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} disabled={isMod} />
               </div>
 
               {/* Dates */}
@@ -288,7 +290,7 @@ export default async function AdminQuizzesPage({ searchParams }: AdminQuizzesPag
                     {/* Delete */}
                     <td className="px-2 py-4 text-center">
                       <div className="flex justify-center">
-                        <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} />
+                        <AdminQuizDeleteButton quizId={quiz.id} quizTitle={quiz.title} disabled={isMod} />
                       </div>
                     </td>
                   </tr>

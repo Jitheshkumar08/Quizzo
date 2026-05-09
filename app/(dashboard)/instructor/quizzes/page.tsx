@@ -8,6 +8,7 @@ import InstructorAnalyticsModalButton from "@/components/quiz/InstructorAnalytic
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
+import { canAccessInstructorArea } from "@/lib/roles";
 
 export const metadata = { title: "My Quizzes" };
 
@@ -26,9 +27,10 @@ function formatTimeLimit(minutes: number) {
 
 export default async function InstructorQuizzesPage() {
   const session = await auth();
-  if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+  if (!session || !canAccessInstructorArea(session.user.role)) {
     redirect("/dashboard");
   }
+  const isMod = session.user.role === "MOD";
 
   const where = session.user.role === "ADMIN" ? {} : { createdById: session.user.id };
 
@@ -211,12 +213,14 @@ export default async function InstructorQuizzesPage() {
 
                   <InstructorAnalyticsModalButton quizId={quiz.id} />
 
-                  <Link
-                    href={`/instructor/quizzes/${quiz.id}/edit`}
-                    className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100"
-                  >
-                    <Pencil className="w-4 h-4" /> Edit
-                  </Link>
+                  {!isMod && (
+                    <Link
+                      href={`/instructor/quizzes/${quiz.id}/edit`}
+                      className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100"
+                    >
+                      <Pencil className="w-4 h-4" /> Edit
+                    </Link>
+                  )}
                 </div>
               </div>
             );
