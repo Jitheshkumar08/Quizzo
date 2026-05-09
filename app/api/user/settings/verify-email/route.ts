@@ -38,9 +38,6 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (session.user.role === "MOD") {
-      return NextResponse.json({ error: "Moderators cannot change account settings." }, { status: 403 });
-    }
 
     const { email, code } = await req.json();
     const normalizedEmail = String(email ?? "").trim().toLowerCase();

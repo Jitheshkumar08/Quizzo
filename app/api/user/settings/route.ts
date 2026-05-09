@@ -29,9 +29,6 @@ export async function PUT(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (session.user.role === "MOD") {
-      return NextResponse.json({ error: "Moderators cannot change account settings." }, { status: 403 });
-    }
 
     const body = await req.json();
     const username = normalizeString(body.username);

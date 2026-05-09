@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { useMemo } from "react";
 import Link from "next/link";
 import { Activity, ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search, Clock3, LayoutGrid, Table2 } from "lucide-react";
@@ -22,6 +22,20 @@ interface User {
 type SortField = "quizzes" | "attempts" | "joined" | "lastOnline";
 type SortDirection = "asc" | "desc";
 type ViewMode = "table" | "grid";
+
+function subscribeToViewport(callback: () => void) {
+  const media = window.matchMedia("(min-width: 768px)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getDesktopSnapshot() {
+  return window.matchMedia("(min-width: 768px)").matches;
+}
+
+function getServerDesktopSnapshot() {
+  return true;
+}
 
 const roleConfig: Record<string, {
   gradient: string;
@@ -233,7 +247,13 @@ export default function UserTable({
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [activeUserIds, setActiveUserIds] = useState<Set<string>>(new Set());
   const [activeLoading, setActiveLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const isDesktop = useSyncExternalStore(
+    subscribeToViewport,
+    getDesktopSnapshot,
+    getServerDesktopSnapshot
+  );
+  const [selectedViewMode, setSelectedViewMode] = useState<ViewMode | null>(null);
+  const viewMode = selectedViewMode ?? (isDesktop ? "table" : "grid");
 
   const loadUsers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
@@ -418,19 +438,21 @@ export default function UserTable({
     return (
       <div key={user.id} className="glass rounded-[22px] border border-white/20 p-5 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
               <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-bold leading-tight text-[#1E1C1A]">{user.fullName}</p>
-                <p className="mt-0.5 text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
+                <p className="whitespace-normal break-words text-[15px] font-bold leading-tight text-[#1E1C1A]">{user.fullName}</p>
+                <p className="mt-0.5 break-words text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
               </div>
             </div>
-            {canShowRoleDropdown(user) ? (
-              <RoleDropdown role={user.role} userId={user.id} updating={updating} allowedRoles={allowedRoleOptions} onChange={changeRole} />
-            ) : (
-              <RolePill role={user.role} isYou={isYou} />
-            )}
+            <div className="flex max-w-[42%] flex-shrink-0 justify-end">
+              {canShowRoleDropdown(user) ? (
+                <RoleDropdown role={user.role} userId={user.id} updating={updating} allowedRoles={allowedRoleOptions} onChange={changeRole} />
+              ) : (
+                <RolePill role={user.role} isYou={isYou} />
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 rounded-xl border border-[#E0D9CF] bg-[#EDE8E0]/60 px-3 py-2.5">
@@ -498,26 +520,27 @@ export default function UserTable({
             {filteredUsers.length} of {users.length} shown
           </p>
         </div>
-        <div className="order-1 flex w-full flex-col gap-3 sm:order-2 sm:w-auto sm:flex-row sm:items-center">
+        <div className="order-1 flex w-full flex-wrap items-center justify-between gap-3 sm:order-2 sm:w-auto sm:flex-nowrap sm:justify-start">
           <button
             type="button"
             onClick={toggleOnlineOnly}
-            className={`inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border px-5 text-xs font-black shadow-[0_10px_28px_rgba(44,42,40,0.07)] transition-all active:scale-[0.98] ${onlineOnly
+            title="Online now"
+            className={`order-1 inline-flex h-12 w-12 cursor-pointer items-center justify-center gap-2 rounded-full border px-0 text-xs font-black shadow-[0_10px_28px_rgba(44,42,40,0.07)] transition-all active:scale-[0.98] sm:order-none sm:w-auto sm:rounded-2xl sm:px-5 ${onlineOnly
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-white/80 bg-white/82 text-[#6B6357] hover:bg-white"
               }`}
             aria-pressed={onlineOnly}
           >
             {activeLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Activity className="h-3.5 w-3.5" />}
-            Online now
+            <span className="hidden sm:inline">Online now</span>
           </button>
           <div
-            className="inline-flex h-12 items-center rounded-2xl border border-[#D8CFC3] bg-white/78 p-1 shadow-[0_10px_24px_rgba(44,42,40,0.12)]"
+            className="order-2 inline-flex h-12 items-center rounded-2xl border border-[#D8CFC3] bg-white/78 p-1 shadow-[0_10px_24px_rgba(44,42,40,0.12)] sm:order-none"
             aria-label="User list view"
           >
             <button
               type="button"
-              onClick={() => setViewMode("table")}
+              onClick={() => setSelectedViewMode("table")}
               className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors ${viewMode === "table"
                 ? "bg-[#65432c] text-white shadow-[0_6px_16px_rgba(140,93,62,0.24)]"
                 : "text-[#8C6D50] hover:bg-white/55 hover:text-[#2C2A28]"
@@ -530,7 +553,7 @@ export default function UserTable({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("grid")}
+              onClick={() => setSelectedViewMode("grid")}
               className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors ${viewMode === "grid"
                 ? "bg-[#8C5D3E] text-white shadow-[0_6px_16px_rgba(140,93,62,0.24)]"
                 : "text-[#8C6D50] hover:bg-white/55 hover:text-[#2C2A28]"

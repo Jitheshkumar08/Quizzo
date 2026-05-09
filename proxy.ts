@@ -25,11 +25,6 @@ export default auth((req) => {
 
   const role = session?.user?.role ?? "";
 
-  // Role-based access control
-  if (pathname === "/settings" && role === "MOD") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
   if (pathname.startsWith("/admin")) {
     const modAllowedAdminPath = pathname === "/admin/users" || pathname === "/admin/quizzes";
     if (role !== "ADMIN" && !(role === "MOD" && modAllowedAdminPath)) {
