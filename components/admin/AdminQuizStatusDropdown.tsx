@@ -147,7 +147,7 @@ export default function AdminQuizStatusDropdown({
           updateMenuPosition();
           setOpen((value) => !value);
         }}
-        className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 ${cfg.pill}`}
+        className={`inline-flex cursor-pointer items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 ${cfg.pill}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
         {published ? "Published" : "Draft"}
@@ -171,7 +171,7 @@ export default function AdminQuizStatusDropdown({
                 key={option.label}
                 type="button"
                 onClick={() => updateStatus(option.value)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-bold transition-colors duration-100 ${
+                className={`w-full flex cursor-pointer items-center justify-between px-3 py-2 text-[12px] font-bold transition-colors duration-100 ${
                   isActive
                     ? "bg-[#F5EDE2] text-[#2C2A28]"
                     : `text-[#4A4744] ${optionCfg.hover}`

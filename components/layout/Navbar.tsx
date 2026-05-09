@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Sun } from "lucide-react";
 // Currently no logic implementation, just the button for theme toggle as requested
 export default function Navbar() {
@@ -14,7 +15,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link href="/" className="flex items-center gap-2 group">
-                            <img
+                            <Image
                                 src="/brand-icon.svg"
                                 alt="Quizzo logo"
                                 width={40}

@@ -4,22 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, Lock, Mail, Save, Shield, User, XCircle } from "lucide-react";
 import PasswordInput from "@/components/ui/PasswordInput";
-
-type Role = "STUDENT" | "INSTRUCTOR" | "ADMIN";
+import { ADMIN_ASSIGNABLE_ROLES, type AppRole, roleLabel } from "@/lib/roles";
 
 interface EditableUser {
   id: string;
   fullName: string;
   username: string;
   email: string;
-  role: Role;
+  role: AppRole;
 }
 
-const roles: Array<{ value: Role; label: string }> = [
-  { value: "STUDENT", label: "Student" },
-  { value: "INSTRUCTOR", label: "Instructor" },
-  { value: "ADMIN", label: "Admin" },
-];
+const roles: Array<{ value: AppRole; label: string }> = ADMIN_ASSIGNABLE_ROLES.map((role) => ({
+  value: role,
+  label: roleLabel(role),
+}));
 
 type AvailabilityStatus = "idle" | "checking" | "available" | "unavailable";
 
@@ -234,7 +232,7 @@ export default function AdminUserAccountForm({
           <select
             value={form.role}
             disabled={isSelf}
-            onChange={(e) => updateField("role", e.target.value as Role)}
+            onChange={(e) => updateField("role", e.target.value as AppRole)}
             className="w-full rounded-2xl border border-[#E8E2D8] bg-[#FAF7F3]/70 px-4 py-2.5 text-sm font-bold text-[#2C2A28] outline-none transition focus:border-[#8C6D50] focus:bg-white focus:ring-4 focus:ring-[#8C6D50]/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {roles.map((role) => (

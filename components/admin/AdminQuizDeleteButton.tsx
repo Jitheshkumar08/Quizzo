@@ -8,9 +8,11 @@ import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
 export default function AdminQuizDeleteButton({
   quizId,
   quizTitle,
+  disabled = false,
 }: {
   quizId: string;
   quizTitle: string;
+  disabled?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -43,10 +45,13 @@ export default function AdminQuizDeleteButton({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          if (!disabled) setOpen(true);
+        }}
+        disabled={disabled}
         aria-label={`Delete ${quizTitle}`}
-        title="Delete quiz"
-        className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-100 hover:text-red-700 hover:shadow-md active:translate-y-0"
+        title={disabled ? "Moderators cannot delete quizzes" : "Delete quiz"}
+        className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-100 hover:text-red-700 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:border-red-100 disabled:hover:bg-red-50 disabled:hover:text-red-600 disabled:hover:shadow-sm"
       >
         <Trash2 className="h-4 w-4" />
       </button>

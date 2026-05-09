@@ -3,23 +3,25 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMemo } from "react";
 import Link from "next/link";
-import { Activity, ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search } from "lucide-react";
+import { Activity, ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search, Clock3, LayoutGrid, Table2 } from "lucide-react";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
+import { ADMIN_ASSIGNABLE_ROLES, MOD_ASSIGNABLE_ROLES, type AppRole } from "@/lib/roles";
 
 interface User {
   id: string;
   fullName: string;
   username: string;
   email: string;
-  role: "STUDENT" | "INSTRUCTOR" | "ADMIN";
+  role: AppRole;
   createdAt: string;
+  lastSeenAt?: string | null;
   profileImageUrl?: string | null;
   _count: { quizzes: number; results: number };
 }
 
-const ROLES = ["STUDENT", "INSTRUCTOR", "ADMIN"] as const;
-type SortField = "quizzes" | "attempts" | "joined";
+type SortField = "quizzes" | "attempts" | "joined" | "lastOnline";
 type SortDirection = "asc" | "desc";
+type ViewMode = "table" | "grid";
 
 const roleConfig: Record<string, {
   gradient: string;
@@ -38,6 +40,15 @@ const roleConfig: Record<string, {
     dropdownHover: "hover:bg-rose-50 hover:text-rose-700",
     checkColor: "text-rose-600",
     label: "Admin",
+  },
+  MOD: {
+    gradient: "from-teal-500 to-cyan-600",
+    pill: "bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-teal-200",
+    avatarBg: "bg-teal-100",
+    avatarText: "text-teal-600",
+    dropdownHover: "hover:bg-teal-50 hover:text-teal-700",
+    checkColor: "text-teal-600",
+    label: "Mod",
   },
   INSTRUCTOR: {
     gradient: "from-sky-500 to-blue-600",
@@ -63,6 +74,21 @@ function formatDate(iso: string) {
   const date = formatAppDate(iso);
   const time = formatAppTime(iso);
   return { date, time };
+}
+
+function formatLastOnline(iso?: string | null) {
+  if (!iso) {
+    return {
+      label: "Never",
+      detail: "No activity yet",
+    };
+  }
+
+  const { date, time } = formatDate(iso);
+  return {
+    label: date,
+    detail: time,
+  };
 }
 
 function Avatar({ name, role, imageUrl }: { name: string; role: string; imageUrl?: string | null }) {
@@ -99,12 +125,14 @@ function RoleDropdown({
   role,
   userId,
   updating,
+  allowedRoles,
   onChange,
 }: {
-  role: string;
+  role: AppRole;
   userId: string;
   updating: string | null;
-  onChange: (userId: string, role: string) => void;
+  allowedRoles: readonly AppRole[];
+  onChange: (userId: string, role: AppRole) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -135,7 +163,7 @@ function RoleDropdown({
       {/* Trigger button — looks exactly like the pill */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 ${cfg.pill}`}
+        className={`inline-flex cursor-pointer items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 ${cfg.pill}`}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
         {cfg.label}
@@ -146,7 +174,7 @@ function RoleDropdown({
       {open && (
         <div className="absolute left-0 top-full mt-2 z-50 w-40 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#E8E2D9] py-1.5 overflow-hidden">
           <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#B0A89E] px-3 pt-1.5 pb-2">Change Role</p>
-          {ROLES.map((r) => {
+          {allowedRoles.map((r) => {
             const rcfg = roleConfig[r];
             const isActive = r === role;
             return (
@@ -156,11 +184,10 @@ function RoleDropdown({
                   setOpen(false);
                   if (r !== role) onChange(userId, r);
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-bold transition-colors duration-100 ${
-                  isActive
-                    ? "bg-[#F5EDE2] text-[#2C2A28]"
-                    : `text-[#4A4744] ${rcfg.dropdownHover}`
-                }`}
+                className={`w-full flex cursor-pointer items-center justify-between px-3 py-2 text-[12px] font-bold transition-colors duration-100 ${isActive
+                  ? "bg-[#F5EDE2] text-[#2C2A28]"
+                  : `text-[#4A4744] ${rcfg.dropdownHover}`
+                  }`}
               >
                 <span className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full bg-gradient-to-br ${rcfg.gradient}`} />
@@ -176,7 +203,27 @@ function RoleDropdown({
   );
 }
 
-export default function UserTable({ currentUserId }: { currentUserId: string }) {
+function DisabledAccountButton({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      aria-disabled="true"
+      title="Moderators cannot open account settings"
+      className={`${compact ? "inline-flex" : "flex"} cursor-not-allowed items-center justify-center gap-2 rounded-2xl border border-[#D8CFC3] bg-white/45 px-4 py-3 text-[12px] font-black text-[#A09890] opacity-60 shadow-sm`}
+    >
+      <Settings className="w-4 h-4 text-[#A09890]" />
+      {compact ? "Open" : "Open Account"}
+      <ExternalLink className="w-3.5 h-3.5 text-[#B8AFA4]" />
+    </span>
+  );
+}
+
+export default function UserTable({
+  currentUserId,
+  viewerRole,
+}: {
+  currentUserId: string;
+  viewerRole: AppRole;
+}) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -186,6 +233,7 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [activeUserIds, setActiveUserIds] = useState<Set<string>>(new Set());
   const [activeLoading, setActiveLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const loadUsers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
@@ -238,7 +286,15 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
     return () => controller.abort();
   }, [onlineOnly]);
 
-  async function changeRole(userId: string, role: string) {
+  const allowedRoleOptions = viewerRole === "MOD" ? MOD_ASSIGNABLE_ROLES : ADMIN_ASSIGNABLE_ROLES;
+
+  function canShowRoleDropdown(user: User) {
+    if (user.id === currentUserId) return false;
+    if (viewerRole === "MOD") return user.role === "STUDENT" || user.role === "INSTRUCTOR";
+    return user.role !== "ADMIN";
+  }
+
+  async function changeRole(userId: string, role: AppRole) {
     setUpdating(userId);
     try {
       const res = await fetch("/api/admin/users", {
@@ -282,6 +338,14 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
 
+      if (sortField === "lastOnline") {
+        const aTime = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
+        const bTime = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
+        const seenDiff = aTime - bTime;
+        if (seenDiff !== 0) return seenDiff * direction;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+
       return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
     });
   }, [activeUserIds, normalizedUsernameQuery, onlineOnly, sortDirection, sortField, users]);
@@ -296,20 +360,26 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
     setSortDirection("desc");
   }
 
-  function renderSortIndicator(field: SortField, inverted = false) {
+  function renderSortIndicator(field: SortField) {
     const iconClassName = "h-3.5 w-3.5 stroke-[2.6] text-[#B0A89E]";
-    const activeIconClassName = inverted
-      ? "h-3.5 w-3.5 stroke-[2.8] text-white"
-      : "h-3.5 w-3.5 stroke-[2.8] text-[#6B6357]";
+    const activeIconClassName = "h-3.5 w-3.5 stroke-[2.8] text-[#6B6357]";
 
     if (sortField !== field) {
-      return <ArrowDownWideNarrow className={iconClassName} aria-hidden="true" />;
+      return (
+        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center">
+          <ArrowDownWideNarrow className={iconClassName} aria-hidden="true" />
+        </span>
+      );
     }
 
-    return sortDirection === "asc" ? (
-      <ArrowUpNarrowWide className={activeIconClassName} aria-hidden="true" />
-    ) : (
-      <ArrowDownWideNarrow className={activeIconClassName} aria-hidden="true" />
+    return (
+      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center">
+        {sortDirection === "asc" ? (
+          <ArrowUpNarrowWide className={activeIconClassName} aria-hidden="true" />
+        ) : (
+          <ArrowDownWideNarrow className={activeIconClassName} aria-hidden="true" />
+        )}
+      </span>
     );
   }
 
@@ -318,11 +388,11 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
       <button
         type="button"
         onClick={() => toggleSort(field)}
-        className="inline-flex cursor-pointer select-none items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50] transition-colors hover:text-[#2C2A28]"
+        className="inline-flex h-5 cursor-pointer select-none items-center gap-1.5 whitespace-nowrap text-[10px] font-black uppercase leading-none tracking-[0.12em] text-[#8C6D50] transition-colors hover:text-[#2C2A28]"
         aria-label={`Sort by ${label}`}
         aria-pressed={sortField === field}
       >
-        {label}
+        <span>{label}</span>
         {renderSortIndicator(field)}
       </button>
     );
@@ -338,6 +408,77 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
       }
       return nextValue;
     });
+  }
+
+  function renderUserCard(user: User) {
+    const { date } = formatDate(user.createdAt);
+    const isYou = user.id === currentUserId;
+    const lastOnline = formatLastOnline(user.lastSeenAt);
+
+    return (
+      <div key={user.id} className="glass rounded-[22px] border border-white/20 p-5 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-bold leading-tight text-[#1E1C1A]">{user.fullName}</p>
+                <p className="mt-0.5 text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
+              </div>
+            </div>
+            {canShowRoleDropdown(user) ? (
+              <RoleDropdown role={user.role} userId={user.id} updating={updating} allowedRoles={allowedRoleOptions} onChange={changeRole} />
+            ) : (
+              <RolePill role={user.role} isYou={isYou} />
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl border border-[#E0D9CF] bg-[#EDE8E0]/60 px-3 py-2.5">
+            <Mail className="h-3.5 w-3.5 flex-shrink-0 text-[#A09890]" />
+            <span className="truncate text-[12px] font-semibold text-[#4A4744]">{user.email}</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="rounded-2xl border border-[#E8E2D9] bg-white/60 px-2 py-3 text-center shadow-sm">
+              <BookOpen className="mx-auto mb-1 h-3.5 w-3.5 text-sky-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#B0A89E]">Quizzes</p>
+              <p className="mt-0.5 text-base font-black text-[#1E1C1A]">{user._count.quizzes}</p>
+            </div>
+            <div className="rounded-2xl border border-[#E8E2D9] bg-white/60 px-2 py-3 text-center shadow-sm">
+              <BarChart3 className="mx-auto mb-1 h-3.5 w-3.5 text-violet-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#B0A89E]">Attempts</p>
+              <p className="mt-0.5 text-base font-black text-[#1E1C1A]">{user._count.results}</p>
+            </div>
+            <div className="rounded-2xl border border-[#E8E2D9] bg-white/60 px-2 py-3 text-center shadow-sm">
+              <Calendar className="mx-auto mb-1 h-3.5 w-3.5 text-rose-400" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#B0A89E]">Joined</p>
+              <p className="mt-0.5 text-[11px] font-black leading-tight text-[#1E1C1A]">{date}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl border border-[#E0D9CF] bg-[#EDE8E0]/60 px-3 py-2.5">
+            <Clock3 className="h-3.5 w-3.5 flex-shrink-0 text-[#A09890]" />
+            <span className="text-[12px] font-black text-[#4A4744]">Last online</span>
+            <span className="min-w-0 truncate text-[12px] font-semibold text-[#918B80]">
+              {lastOnline.label === "Never" ? lastOnline.label : `${lastOnline.label} ${lastOnline.detail}`}
+            </span>
+          </div>
+
+          {viewerRole === "MOD" ? (
+            <DisabledAccountButton />
+          ) : (
+            <Link
+              href={`/admin/users/${user.id}`}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-[#D8CFC3] bg-white/70 px-4 py-3 text-[12px] font-black text-[#3D3A37] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+            >
+              <Settings className="h-4 w-4 text-[#8C6D50]" />
+              Open Account
+              <ExternalLink className="h-3.5 w-3.5 text-[#A09890]" />
+            </Link>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (loading) {
@@ -361,16 +502,46 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
           <button
             type="button"
             onClick={toggleOnlineOnly}
-            className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl border px-4 text-xs font-black shadow-[0_8px_26px_rgba(44,42,40,0.06)] transition-colors ${
-              onlineOnly
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-[#E4DDD3] bg-white/78 text-[#6B6357] hover:bg-white"
-            }`}
+            className={`inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border px-5 text-xs font-black shadow-[0_10px_28px_rgba(44,42,40,0.07)] transition-all active:scale-[0.98] ${onlineOnly
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-white/80 bg-white/82 text-[#6B6357] hover:bg-white"
+              }`}
             aria-pressed={onlineOnly}
           >
             {activeLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Activity className="h-3.5 w-3.5" />}
             Online now
           </button>
+          <div
+            className="hidden h-12 items-center rounded-2xl border border-[#D8CFC3] bg-white/78 p-1 shadow-[0_10px_24px_rgba(44,42,40,0.12)] md:inline-flex"
+            aria-label="User list view"
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors ${viewMode === "table"
+                ? "bg-[#65432c] text-white shadow-[0_6px_16px_rgba(140,93,62,0.24)]"
+                : "text-[#8C6D50] hover:bg-white/55 hover:text-[#2C2A28]"
+                }`}
+              aria-label="Table view"
+              aria-pressed={viewMode === "table"}
+              title="Table view"
+            >
+              <Table2 className="h-[18px] w-[18px]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors ${viewMode === "grid"
+                ? "bg-[#8C5D3E] text-white shadow-[0_6px_16px_rgba(140,93,62,0.24)]"
+                : "text-[#8C6D50] hover:bg-white/55 hover:text-[#2C2A28]"
+                }`}
+              aria-label="Grid view"
+              aria-pressed={viewMode === "grid"}
+              title="Grid view"
+            >
+              <LayoutGrid className="h-[18px] w-[18px]" />
+            </button>
+          </div>
           <label className="relative block w-full sm:w-[min(24rem,38vw)]">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A09890]" />
             <input
@@ -393,196 +564,171 @@ export default function UserTable({ currentUserId }: { currentUserId: string }) 
               ? `No username matches @${normalizedUsernameQuery}`
               : onlineOnly
                 ? "No users are online right now."
-              : "No users are on the platform yet."}
+                : "No users are on the platform yet."}
           </p>
         </div>
       ) : (
-      <>
-      {/* ── MOBILE: Card list ─────────────────────────── */}
-      <div className="md:hidden grid gap-5">
-        {filteredUsers.map((user) => {
-          const { date } = formatDate(user.createdAt);
-          const isYou = user.id === currentUserId;
-          return (
-            <div key={user.id} className="glass rounded-[22px] p-5 space-y-4 border border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
-                  <div className="min-w-0">
-                    <p className="font-bold text-[15px] text-[#1E1C1A] leading-tight truncate">{user.fullName}</p>
-                    <p className="text-[11px] font-semibold text-[#A09890] mt-0.5">@{user.username}</p>
-                  </div>
-                </div>
-                {isYou || user.role === "ADMIN" ? (
-                  <RolePill role={user.role} isYou={isYou} />
-                ) : (
-                  <RoleDropdown role={user.role} userId={user.id} updating={updating} onChange={changeRole} />
-                )}
-              </div>
+        <>
+          {/* ── MOBILE: Card list ─────────────────────────── */}
+          <div className="grid gap-5 md:hidden">
+            {filteredUsers.map(renderUserCard)}
+          </div>
 
-              <div className="flex items-center gap-2 bg-[#EDE8E0]/60 rounded-xl px-3 py-2.5 border border-[#E0D9CF]">
-                <Mail className="w-3.5 h-3.5 text-[#A09890] flex-shrink-0" />
-                <span className="text-[12px] font-semibold text-[#4A4744] truncate">{user.email}</span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="bg-white/60 rounded-2xl px-2 py-3 text-center border border-[#E8E2D9] shadow-sm">
-                  <BookOpen className="w-3.5 h-3.5 text-sky-500 mx-auto mb-1" />
-                  <p className="text-[10px] font-black uppercase text-[#B0A89E] tracking-widest">Quizzes</p>
-                  <p className="font-black text-[#1E1C1A] text-base mt-0.5">{user._count.quizzes}</p>
-                </div>
-                <div className="bg-white/60 rounded-2xl px-2 py-3 text-center border border-[#E8E2D9] shadow-sm">
-                  <BarChart3 className="w-3.5 h-3.5 text-violet-500 mx-auto mb-1" />
-                  <p className="text-[10px] font-black uppercase text-[#B0A89E] tracking-widest">Attempts</p>
-                  <p className="font-black text-[#1E1C1A] text-base mt-0.5">{user._count.results}</p>
-                </div>
-                <div className="bg-white/60 rounded-2xl px-2 py-3 text-center border border-[#E8E2D9] shadow-sm">
-                  <Calendar className="w-3.5 h-3.5 text-rose-400 mx-auto mb-1" />
-                  <p className="text-[10px] font-black uppercase text-[#B0A89E] tracking-widest">Joined</p>
-                  <p className="font-black text-[#1E1C1A] text-[11px] mt-0.5 leading-tight">{date}</p>
-                </div>
-              </div>
-
-              <Link
-                href={`/admin/users/${user.id}`}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-[#D8CFC3] bg-white/70 px-4 py-3 text-[12px] font-black text-[#3D3A37] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
-              >
-                <Settings className="w-4 h-4 text-[#8C6D50]" />
-                Open Account
-                <ExternalLink className="w-3.5 h-3.5 text-[#A09890]" />
-              </Link>
+          {/* ── DESKTOP: Grid cards ───────────────────────── */}
+          {viewMode === "grid" && (
+            <div className="hidden gap-5 md:grid md:grid-cols-2 xl:grid-cols-3">
+              {filteredUsers.map(renderUserCard)}
             </div>
-          );
-        })}
-      </div>
+          )}
 
-      {/* ── DESKTOP: Premium Table ─────────────────────── */}
-      <div className="hidden md:block">
-        <div className="glass rounded-2xl border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px]">
-            <thead>
-              <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
-                {["User", "Email", "Role"].map((h) => (
-                  <th key={h} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
-                    {h}
-                  </th>
-                ))}
-                <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "quizzes" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
-                  {renderSortHeader("quizzes", "Quizzes")}
-                </th>
-                <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "attempts" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
-                  {renderSortHeader("attempts", "Attempts")}
-                </th>
-                <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "joined" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
-                  {renderSortHeader("joined", "Joined")}
-                </th>
-                <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">Access</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user, i) => {
-                const { date, time } = formatDate(user.createdAt);
-                const isYou = user.id === currentUserId;
-                return (
-                  <tr
-                    key={user.id}
-                    className={`
+          {/* ── DESKTOP: Premium Table ─────────────────────── */}
+          {viewMode === "table" && (
+            <div className="hidden md:block">
+              <div className="glass rounded-2xl border border-[#E8E2D8] shadow-[0_4px_32px_rgba(0,0,0,0.06)]">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[980px]">
+                    <thead>
+                      <tr className="bg-[#F0EBE2]/80 border-b-2 border-[#E4DDD3]">
+                        {["User", "Email", "Role"].map((h) => (
+                          <th key={h} className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">
+                            {h}
+                          </th>
+                        ))}
+                        <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "quizzes" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                          {renderSortHeader("quizzes", "Quizzes")}
+                        </th>
+                        <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "attempts" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                          {renderSortHeader("attempts", "Attempts")}
+                        </th>
+                        <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "joined" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                          {renderSortHeader("joined", "Joined")}
+                        </th>
+                        <th className="cursor-pointer px-5 py-4 text-left" aria-sort={sortField === "lastOnline" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+                          {renderSortHeader("lastOnline", "Last Online")}
+                        </th>
+                        <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-[#8C6D50]">Access</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((user, i) => {
+                        const { date, time } = formatDate(user.createdAt);
+                        const lastOnline = formatLastOnline(user.lastSeenAt);
+                        const isYou = user.id === currentUserId;
+                        return (
+                          <tr
+                            key={user.id}
+                            className={`
                       group transition-colors duration-150 border-b border-[#EDE8E0] last:border-0
                       ${i % 2 === 0 ? "bg-white/20" : "bg-[#FAF7F3]/40"}
                       hover:bg-[#F5EDE2]/60
                     `}
-                  >
-                    {/* User */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
-                        <div>
-                          <p className="font-bold text-[14px] text-[#1E1C1A] leading-snug">{user.fullName}</p>
-                          <p className="text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
-                        </div>
-                      </div>
-                    </td>
+                          >
+                            {/* User */}
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
+                                <div>
+                                  <p className="font-bold text-[14px] text-[#1E1C1A] leading-snug">{user.fullName}</p>
+                                  <p className="text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
+                                </div>
+                              </div>
+                            </td>
 
-                    {/* Email */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-[#C4BAB0] flex-shrink-0" />
-                        <span className="text-[13px] font-semibold text-[#3D3A37]">{user.email}</span>
-                      </div>
-                    </td>
+                            {/* Email */}
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-1.5">
+                                <Mail className="w-3.5 h-3.5 text-[#C4BAB0] flex-shrink-0" />
+                                <span className="text-[13px] font-semibold text-[#3D3A37]">{user.email}</span>
+                              </div>
+                            </td>
 
-                    {/* Role */}
-                    <td className="px-5 py-4">
-                      {isYou || user.role === "ADMIN" ? (
-                        <RolePill role={user.role} isYou={isYou} />
-                      ) : (
-                        <RoleDropdown role={user.role} userId={user.id} updating={updating} onChange={changeRole} />
-                      )}
-                    </td>
+                            {/* Role */}
+                            <td className="px-5 py-4 cursor-pointer">
+                              {canShowRoleDropdown(user) ? (
+                                <RoleDropdown role={user.role} userId={user.id} updating={updating} allowedRoles={allowedRoleOptions} onChange={changeRole} />
+                              ) : (
+                                <RolePill role={user.role} isYou={isYou} />
+                              )}
+                            </td>
 
-                    {/* Quizzes */}
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center justify-center bg-sky-50 border border-sky-100 text-sky-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
-                        {user._count.quizzes}
-                      </span>
-                    </td>
+                            {/* Quizzes */}
+                            <td className="px-5 py-4">
+                              <span className="inline-flex items-center justify-center bg-sky-50 border border-sky-100 text-sky-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
+                                {user._count.quizzes}
+                              </span>
+                            </td>
 
-                    {/* Attempts */}
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center justify-center bg-violet-50 border border-violet-100 text-violet-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
-                        {user._count.results}
-                      </span>
-                    </td>
+                            {/* Attempts */}
+                            <td className="px-5 py-4">
+                              <span className="inline-flex items-center justify-center bg-violet-50 border border-violet-100 text-violet-700 font-black text-sm rounded-xl px-3 py-1 min-w-[36px]">
+                                {user._count.results}
+                              </span>
+                            </td>
 
-                    {/* Joined */}
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-[13px] font-bold text-[#3D3A37]">{date}</span>
-                        <span className="text-[11px] font-semibold text-[#A09890]">{time}</span>
-                      </div>
-                    </td>
+                            {/* Joined */}
+                            <td className="px-5 py-4">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[13px] font-bold text-[#3D3A37]">{date}</span>
+                                <span className="text-[11px] font-semibold text-[#A09890]">{time}</span>
+                              </div>
+                            </td>
 
-                    {/* Access */}
-                    <td className="px-5 py-4">
-                      <Link
-                        href={`/admin/users/${user.id}`}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#D8CFC3] bg-white/70 px-3 py-2 text-[12px] font-black text-[#3D3A37] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md whitespace-nowrap"
-                      >
-                        <Settings className="w-3.5 h-3.5 text-[#8C6D50]" />
-                        Open
-                        <ExternalLink className="w-3.5 h-3.5 text-[#A09890]" />
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          </div>
+                            {/* Last Online */}
+                            <td className="px-5 py-4">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[13px] font-bold text-[#3D3A37]">{lastOnline.label}</span>
+                                <span className="text-[11px] font-semibold text-[#A09890]">{lastOnline.detail}</span>
+                              </div>
+                            </td>
 
-          {/* Footer legend */}
-          <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">
-            <p className="text-[11px] font-bold text-[#A09890] uppercase tracking-widest">
-              {normalizedUsernameQuery
-                ? `${filteredUsers.length} of ${users.length} users shown`
-                : `${users.length} user${users.length !== 1 ? "s" : ""} total`}
-            </p>
-            <div className="flex items-center gap-4 text-[11px] font-bold text-[#6B6357]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-500 to-red-600" />Admin
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-sky-500 to-blue-600" />Instructor
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-violet-500 to-purple-600" />Student
-              </span>
+                            {/* Access */}
+                            <td className="px-5 py-4">
+                              {viewerRole === "MOD" ? (
+                                <DisabledAccountButton compact />
+                              ) : (
+                                <Link
+                                  href={`/admin/users/${user.id}`}
+                                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#D8CFC3] bg-white/70 px-3 py-2 text-[12px] font-black text-[#3D3A37] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md whitespace-nowrap"
+                                >
+                                  <Settings className="w-3.5 h-3.5 text-[#8C6D50]" />
+                                  Open
+                                  <ExternalLink className="w-3.5 h-3.5 text-[#A09890]" />
+                                </Link>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer legend */}
+                <div className="px-5 py-3 bg-[#F0EBE2]/60 border-t border-[#E4DDD3] flex items-center justify-between">
+                  <p className="text-[11px] font-bold text-[#A09890] uppercase tracking-widest">
+                    {normalizedUsernameQuery
+                      ? `${filteredUsers.length} of ${users.length} users shown`
+                      : `${users.length} user${users.length !== 1 ? "s" : ""} total`}
+                  </p>
+                  <div className="flex items-center gap-4 text-[11px] font-bold text-[#6B6357]">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-500 to-red-600" />Admin
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600" />Mod
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-sky-500 to-blue-600" />Instructor
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-violet-500 to-purple-600" />Student
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-      </>
+          )}
+        </>
       )}
     </div>
   );
