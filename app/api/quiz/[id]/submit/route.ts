@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStudentQuizBlock } from "@/lib/quiz-guard-student";
 import { sessionDeadline, finalizeExpiredOpenSession } from "@/lib/quiz-session";
 import { recordResultListEvent } from "@/lib/result-list-events";
+import { buildResultReviewSnapshot } from "@/lib/result-review";
 
 export const maxDuration = 60;
 
@@ -130,6 +132,7 @@ export async function POST(
     });
 
     const total = quiz.questions.length;
+    const reviewSnapshot = buildResultReviewSnapshot(quiz.questions as unknown as QuestionWithAnswer[]);
 
     const capSec = quiz.timeLimitMinutes ? quiz.timeLimitMinutes * 60 : undefined;
     const timeTakenCapped =
@@ -144,6 +147,7 @@ export async function POST(
           total,
           timeTaken: timeTakenCapped,
           userAnswers: finalAnswers,
+          questionIds: reviewSnapshot as unknown as Prisma.InputJsonValue,
         },
       });
       await tx.quizSession.updateMany({

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import ReviewSidebar from "@/components/quiz/ReviewSidebar";
 import ReviewQuestionsClient from "./ReviewQuestionsClient";
+import type { ResultReviewStats } from "@/lib/result-review";
 
 const QUESTIONS_PER_PAGE = 20;
 
@@ -21,6 +22,8 @@ interface Props {
   shuffleOptions?: boolean;
   sessionId?: string | null;
   answerLabel?: string;
+  statsOverride?: ResultReviewStats;
+  emptyMessage?: string;
   children: React.ReactNode; // static content: back link, score card, stats, actions
 }
 
@@ -30,6 +33,8 @@ export default function ReviewSidebarClientWrapper({
   shuffleOptions,
   sessionId,
   answerLabel,
+  statsOverride,
+  emptyMessage,
   children,
 }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -67,6 +72,7 @@ export default function ReviewSidebarClientWrapper({
         isOpen={sidebarOpen}
         onToggle={setSidebarOpen}
         onJump={jumpToQuestion}
+        statsOverride={statsOverride}
       />
 
       {/* Same pattern as QuizTaker: transition-all on padding-right, no cascade */}
@@ -87,6 +93,7 @@ export default function ReviewSidebarClientWrapper({
             shuffleOptions={shuffleOptions}
             sessionId={sessionId}
             answerLabel={answerLabel}
+            emptyMessage={emptyMessage}
           />
         </div>
       </div>

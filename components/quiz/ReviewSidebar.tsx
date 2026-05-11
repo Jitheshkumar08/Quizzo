@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { ResultReviewStats } from "@/lib/result-review";
 
 interface Question {
     id: string;
@@ -16,6 +17,7 @@ interface ReviewSidebarProps {
     isOpen: boolean;
     onToggle: (v: boolean) => void;
     onJump?: (index: number) => void;
+    statsOverride?: ResultReviewStats;
 }
 
 function subscribeMounted() {
@@ -36,6 +38,7 @@ export default function ReviewSidebar({
     isOpen,
     onToggle,
     onJump,
+    statsOverride,
 }: ReviewSidebarProps) {
     const mounted = useSyncExternalStore(subscribeMounted, getClientMountedSnapshot, getServerMountedSnapshot);
 
@@ -72,7 +75,7 @@ export default function ReviewSidebar({
         unattempted: "bg-gray-200 text-gray-500 border-black/5",
     };
 
-    const stats = {
+    const stats = statsOverride ?? {
         correct: questions.filter((q) => getStatus(q) === "correct").length,
         incorrect: questions.filter((q) => getStatus(q) === "incorrect").length,
         unattempted: questions.filter((q) => getStatus(q) === "unattempted").length,

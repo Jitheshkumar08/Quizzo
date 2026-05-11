@@ -25,6 +25,7 @@ interface Props {
   shuffleOptions?: boolean;
   sessionId?: string | null;
   answerLabel?: string;
+  emptyMessage?: string;
 }
 
 export default function ReviewQuestionsClient({
@@ -35,6 +36,7 @@ export default function ReviewQuestionsClient({
   shuffleOptions,
   sessionId,
   answerLabel = "Your answer",
+  emptyMessage,
 }: Props) {
   const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
   const pageQuestions = questions.slice(
@@ -59,8 +61,14 @@ export default function ReviewQuestionsClient({
         )}
       </div>
 
+      {emptyMessage && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+          {emptyMessage}
+        </div>
+      )}
+
       {/* Question cards */}
-      {pageQuestions.map((q, localIndex) => {
+      {!emptyMessage && pageQuestions.map((q, localIndex) => {
         const globalIndex = currentPage * QUESTIONS_PER_PAGE + localIndex;
         const selected = userAnswers[q.id];
         const isCorrect = selected === q.correctAnswer;

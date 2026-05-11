@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import QuizTaker from "@/components/quiz/QuizTaker";
 import { parseAnswerMap, parseStringArray, reattemptResultTitle } from "@/lib/reattempt-utils";
+import { parseResultReviewSnapshot } from "@/lib/result-review";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -60,12 +61,13 @@ export default async function ReattemptQuizPage({ params }: Props) {
     redirect(remedialSession.resultId ? `/student/results/${remedialSession.resultId}` : "/student/results");
   }
 
+  const reviewSnapshot = parseResultReviewSnapshot(remedialSession.questionIds);
   const questionIds = parseStringArray(remedialSession.questionIds) ?? [];
   if (questionIds.length === 0) {
     redirect("/student/results");
   }
 
-  const selectedQuestions = await prisma.question.findMany({
+  const selectedQuestions = reviewSnapshot?.questions ?? await prisma.question.findMany({
     where: {
       quizId: remedialSession.quizId,
       id: { in: questionIds },

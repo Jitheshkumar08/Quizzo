@@ -7,6 +7,11 @@ export function parseStringArray(value: unknown): string[] | null {
     return ids.length > 0 ? ids : null;
   }
 
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return parseStringArray(record.questionIds ?? record.ids);
+  }
+
   if (typeof value === "string" && value.trim()) {
     try {
       return parseStringArray(JSON.parse(value));

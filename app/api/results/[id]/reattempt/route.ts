@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { parseStringArray } from "@/lib/reattempt-utils";
+import { parseAnswerMap, parseStringArray } from "@/lib/reattempt-utils";
+import { buildResultReviewSnapshot, parseResultReviewSnapshot } from "@/lib/result-review";
 
 export const maxDuration = 30;
 
@@ -28,7 +29,14 @@ export async function POST(
           select: {
             questions: {
               orderBy: { order: "asc" },
-              select: { id: true, correctAnswer: true },
+              select: {
+                id: true,
+                questionText: true,
+                options: true,
+                correctAnswer: true,
+                explanation: true,
+                order: true,
+              },
             },
           },
         },
@@ -39,18 +47,19 @@ export async function POST(
       return NextResponse.json({ error: "Result not found" }, { status: 404 });
     }
 
+    const reviewSnapshot = parseResultReviewSnapshot(result.questionIds);
     const coveredQuestionIds = parseStringArray(result.questionIds);
     const coveredSet = coveredQuestionIds ? new Set(coveredQuestionIds) : null;
-    const coveredQuestions = result.quiz.questions.filter((question) =>
+    const coveredQuestions = reviewSnapshot?.questions ?? result.quiz.questions.filter((question) =>
       coveredSet ? coveredSet.has(question.id) : true
     );
 
-    const userAnswers = result.userAnswers as Record<string, string>;
-    const missedQuestionIds = coveredQuestions
+    const userAnswers = parseAnswerMap(result.userAnswers);
+    const missedQuestions = coveredQuestions
       .filter((question) => userAnswers[question.id] !== question.correctAnswer)
-      .map((question) => question.id);
+      .map((question, index) => ({ ...question, order: question.order ?? index }));
 
-    if (missedQuestionIds.length === 0) {
+    if (missedQuestions.length === 0) {
       return NextResponse.json(
         { error: "There are no incorrect or unattempted questions to re-attempt." },
         { status: 400 }
@@ -71,7 +80,7 @@ export async function POST(
       return NextResponse.json({ sessionId: existing[0].id });
     }
 
-    const missedQuestionIdsJson = JSON.stringify(missedQuestionIds);
+    const missedQuestionIdsJson = JSON.stringify(buildResultReviewSnapshot(missedQuestions));
     const created = await prisma.$queryRaw<{ id: string }[]>`
       INSERT INTO "RemedialQuizSession" (
         "id",

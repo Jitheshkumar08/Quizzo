@@ -8,6 +8,7 @@ import {
   parseStringArray,
   reattemptResultTitle,
 } from "@/lib/reattempt-utils";
+import { buildResultReviewSnapshot, parseResultReviewSnapshot } from "@/lib/result-review";
 
 export const maxDuration = 60;
 
@@ -65,6 +66,7 @@ export async function POST(
       return NextResponse.json({ error: "This re-attempt is already submitted" }, { status: 409 });
     }
 
+    const reviewSnapshot = parseResultReviewSnapshot(remedialSession.questionIds);
     const questionIds = parseStringArray(remedialSession.questionIds) ?? [];
     if (questionIds.length === 0) {
       return NextResponse.json({ error: "No questions found for this re-attempt" }, { status: 400 });
@@ -92,7 +94,7 @@ export async function POST(
     }
 
     const questionSet = new Set(questionIds);
-    const questions = (quiz.questions as unknown as QuestionWithAnswer[]).filter((question) =>
+    const questions = reviewSnapshot?.questions ?? (quiz.questions as unknown as QuestionWithAnswer[]).filter((question) =>
       questionSet.has(question.id)
     );
 
@@ -119,7 +121,7 @@ export async function POST(
 
     const total = questions.length;
     const answersJson = JSON.stringify(finalAnswers);
-    const questionIdsJson = JSON.stringify(questions.map((question) => question.id));
+    const questionIdsJson = JSON.stringify(buildResultReviewSnapshot(questions));
     const titleOverride = reattemptResultTitle(quiz.title);
 
     const result = await prisma.$transaction(async (tx) => {

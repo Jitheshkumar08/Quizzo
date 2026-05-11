@@ -5,7 +5,8 @@ import Link from "next/link";
 import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw, BookOpen } from "lucide-react";
 import ReviewSidebarClientWrapper from "./ReviewSidebarClientWrapper";
 import StartReattemptButton from "./StartReattemptButton";
-import { parseStringArray } from "@/lib/reattempt-utils";
+import { parseAnswerMap, parseStringArray } from "@/lib/reattempt-utils";
+import { calculateResultReviewStats, parseResultReviewSnapshot } from "@/lib/result-review";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -74,19 +75,28 @@ export default async function ResultDetailPage({ params }: Props) {
   }
 
   const isInstructorReview = !isStudentOwner && canReviewAsQuizOwner;
+  const reviewBackHref =
+    isInstructorReview
+      ? (session.user.role === "ADMIN" || session.user.role === "MOD" ? "/admin/quizzes" : "/instructor/quizzes")
+      : "/student/results";
 
-  const pct = Math.round((result.score / result.total) * 100);
-  const userAnswers = result.userAnswers as Record<string, string>;
+  const pct = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
+  const userAnswers = parseAnswerMap(result.userAnswers);
+  const reviewSnapshot = parseResultReviewSnapshot(result.questionIds);
   const coveredQuestionIds = parseStringArray(result.questionIds);
   const coveredQuestionSet = coveredQuestionIds ? new Set(coveredQuestionIds) : null;
-  const reviewQuestions = coveredQuestionSet
+  const reviewQuestions = reviewSnapshot?.questions ?? (coveredQuestionSet
     ? result.quiz.questions.filter((q) => coveredQuestionSet.has(q.id))
-    : result.quiz.questions;
+    : result.quiz.questions);
   const displayTitle = result.titleOverride ?? result.quiz.title;
 
-  const correct = reviewQuestions.filter((q) => userAnswers[q.id] === q.correctAnswer).length;
-  const incorrect = reviewQuestions.filter((q) => userAnswers[q.id] && userAnswers[q.id] !== q.correctAnswer).length;
-  const unattempted = reviewQuestions.filter((q) => !userAnswers[q.id]).length;
+  const stats = calculateResultReviewStats({
+    questions: reviewQuestions,
+    userAnswers,
+    savedScore: result.score,
+    savedTotal: result.total,
+  });
+  const { correct, incorrect, unattempted } = stats;
   const missedCount = incorrect + unattempted;
 
   const isReattemptResult = result.attemptType !== "NORMAL" || !!result.sourceResultId;
@@ -132,11 +142,13 @@ export default async function ResultDetailPage({ params }: Props) {
       shuffleOptions={result.quiz.shuffleOptions}
       sessionId={sessionId}
       answerLabel={isInstructorReview ? "Student answer" : "Your answer"}
+      statsOverride={stats}
+      emptyMessage={stats.isLegacyQuestionMismatch ? "Question-level review is unavailable for this attempt because the quiz questions were replaced after submission. The score summary uses the saved result." : undefined}
     >
 
       {/* Back */}
       <Link
-        href={isInstructorReview ? (session.user.role === "MOD" ? "/admin/quizzes" : "/instructor/quizzes") : "/student/results"}
+        href={reviewBackHref}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> {isInstructorReview ? "Back to Quizzes" : "Back to Results"}

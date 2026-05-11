@@ -1,5 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { recordResultListEvent } from "@/lib/result-list-events";
+import { buildResultReviewSnapshot } from "@/lib/result-review";
 
 export function sessionDeadline(startedAt: Date, timeLimitMinutes: number | null, scheduledEnd: Date | null): Date | null {
   let deadline: Date | null = null;
@@ -54,17 +56,16 @@ export async function finalizeExpiredOpenSession(args: {
     }
   }
 
-  if (open.currentAnswers) {
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: args.quizId },
-      include: { questions: true }
-    });
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: args.quizId },
+    include: { questions: true }
+  });
+  const reviewSnapshot = quiz ? buildResultReviewSnapshot(quiz.questions) : null;
 
-    if (quiz) {
-      for (const q of quiz.questions) {
-        if (userAnswers[q.id] === q.correctAnswer) {
-          score++;
-        }
+  if (quiz) {
+    for (const q of quiz.questions) {
+      if (userAnswers[q.id] === q.correctAnswer) {
+        score++;
       }
     }
   }
@@ -85,6 +86,7 @@ export async function finalizeExpiredOpenSession(args: {
         total: args.totalQuestions,
         timeTaken: elapsedSec,
         userAnswers,
+        questionIds: reviewSnapshot ? reviewSnapshot as unknown as Prisma.InputJsonValue : undefined,
       },
     });
 
