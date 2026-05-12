@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Activity, ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, Mail, BookOpen, BarChart3, Calendar, ChevronDown, Check, ExternalLink, Settings, Search, Clock3, LayoutGrid, Table2 } from "lucide-react";
 import PaginationControls from "@/components/ui/PaginationControls";
+import UserAttemptsModalButton from "@/components/admin/UserAttemptsModalButton";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 import { ADMIN_ASSIGNABLE_ROLES, MOD_ASSIGNABLE_ROLES, type AppRole } from "@/lib/roles";
 
@@ -491,7 +492,14 @@ export default function UserTable({
             <div className="rounded-2xl border border-[#E8E2D9] bg-white/60 px-2 py-3 text-center shadow-sm">
               <BarChart3 className="mx-auto mb-1 h-3.5 w-3.5 text-violet-500" />
               <p className="text-[10px] font-black uppercase tracking-widest text-[#B0A89E]">Attempts</p>
-              <p className="mt-0.5 text-base font-black text-[#1E1C1A]">{user._count.results}</p>
+              <div className="mt-0.5 flex justify-center">
+                <UserAttemptsModalButton
+                  userId={user.id}
+                  fullName={user.fullName}
+                  username={user.username}
+                  count={user._count.results}
+                />
+              </div>
             </div>
             <div className="rounded-2xl border border-[#E8E2D9] bg-white/60 px-2 py-3 text-center shadow-sm">
               <Calendar className="mx-auto mb-1 h-3.5 w-3.5 text-rose-400" />
@@ -708,9 +716,13 @@ export default function UserTable({
 
                             {/* Attempts */}
                             <td className="px-3 py-2">
-                              <span className="inline-flex items-center justify-center bg-violet-50 border border-violet-100 text-violet-700 font-black text-[11px] rounded-lg px-2 py-0.5 min-w-[28px]">
-                                {user._count.results}
-                              </span>
+                              <UserAttemptsModalButton
+                                userId={user.id}
+                                fullName={user.fullName}
+                                username={user.username}
+                                count={user._count.results}
+                                compact
+                              />
                             </td>
 
                             {/* Joined */}

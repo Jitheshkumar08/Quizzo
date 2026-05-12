@@ -83,6 +83,8 @@ model Quiz {
   description String?
   createdAt   DateTime   @default(now())
   isPublished Boolean    @default(false)
+  /// Manual instructor/admin close. A closed quiz stays published/listed but cannot be started.
+  isClosed    Boolean    @default(false)
   createdById String
   createdBy   User       @relation(fields: [createdById], references: [id])
   jsonBlobUrl String?

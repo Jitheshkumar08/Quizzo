@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ElementType } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarClock, Check, ChevronDown, Clock3, Filter, Infinity as InfinityIcon, Lock, RotateCcw, Tags } from "lucide-react";
+import { ArrowDownUp, CalendarClock, Check, ChevronDown, Clock3, Filter, Infinity as InfinityIcon, Lock, RotateCcw, Tags } from "lucide-react";
 
 export type QuizAvailabilityFilterValue = "all" | "open" | "upcoming";
 export type QuizTagFilterValue = "single-attempt" | "multi-attempt" | "password" | "time-limit";
+export type QuizSortFilterValue = "schedule" | "recent" | "oldest";
 
 const statusOptions: Array<{
   value: QuizAvailabilityFilterValue;
@@ -28,6 +29,16 @@ const tagOptions: Array<{
     { value: "multi-attempt", label: "Multi attempt", dot: "bg-cyan-500", icon: InfinityIcon },
     { value: "password", label: "Password", dot: "bg-amber-500", icon: Lock },
     { value: "time-limit", label: "Time limit", dot: "bg-purple-500", icon: Clock3 },
+  ];
+
+const sortOptions: Array<{
+  value: QuizSortFilterValue;
+  label: string;
+  dot: string;
+}> = [
+    { value: "schedule", label: "Schedule", dot: "bg-blue-500" },
+    { value: "recent", label: "Recent", dot: "bg-emerald-500" },
+    { value: "oldest", label: "Oldest", dot: "bg-slate-500" },
   ];
 
 function encodeTags(tags: readonly QuizTagFilterValue[]) {
@@ -90,14 +101,16 @@ function RaisedFilterButton({
 export default function QuizAvailabilityFilter({
   initialValue = "all",
   initialTags = [],
+  initialSort = "schedule",
 }: {
   initialValue?: QuizAvailabilityFilterValue;
   initialTags?: QuizTagFilterValue[];
+  initialSort?: QuizSortFilterValue;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [openMenu, setOpenMenu] = useState<"availability" | "tags" | null>(null);
+  const [openMenu, setOpenMenu] = useState<"availability" | "tags" | "sort" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,10 +126,12 @@ export default function QuizAvailabilityFilter({
 
   const selectedTags = useMemo(() => new Set(initialTags), [initialTags]);
   const selectedStatus = statusOptions.find((option) => option.value === initialValue) ?? statusOptions[0];
+  const selectedSort = sortOptions.find((option) => option.value === initialSort) ?? sortOptions[0];
   const availabilityLabel = initialValue === "all" ? "Availability" : selectedStatus.label;
   const tagsLabel = selectedTags.size === 0 ? "Tags" : `${selectedTags.size} tag${selectedTags.size === 1 ? "" : "s"}`;
+  const sortLabel = initialSort === "schedule" ? "Sort" : selectedSort.label;
 
-  function replaceParams(nextStatus: QuizAvailabilityFilterValue, nextTags: readonly QuizTagFilterValue[]) {
+  function replaceParams(nextStatus: QuizAvailabilityFilterValue, nextTags: readonly QuizTagFilterValue[], nextSort: QuizSortFilterValue) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (nextStatus === "all") {
@@ -131,6 +146,12 @@ export default function QuizAvailabilityFilter({
       params.set("tags", encodeTags(nextTags));
     }
 
+    if (nextSort === "schedule") {
+      params.delete("sort");
+    } else {
+      params.set("sort", nextSort);
+    }
+
     params.delete("availability");
 
     const query = params.toString();
@@ -138,7 +159,7 @@ export default function QuizAvailabilityFilter({
   }
 
   function updateStatus(value: QuizAvailabilityFilterValue) {
-    replaceParams(value, initialTags);
+    replaceParams(value, initialTags, initialSort);
     setOpenMenu(null);
   }
 
@@ -155,11 +176,16 @@ export default function QuizAvailabilityFilter({
       nextTags = [...initialTags, value];
     }
 
-    replaceParams(initialValue, nextTags);
+    replaceParams(initialValue, nextTags, initialSort);
   }
 
   function clearTags() {
-    replaceParams(initialValue, []);
+    replaceParams(initialValue, [], initialSort);
+  }
+
+  function updateSort(value: QuizSortFilterValue) {
+    replaceParams(initialValue, initialTags, value);
+    setOpenMenu(null);
   }
 
   return (
@@ -203,6 +229,51 @@ export default function QuizAvailabilityFilter({
               <div className="flex items-center gap-2 text-[10px] font-bold text-[#918B80]">
                 <CalendarClock className="h-3 w-3" />
                 Sorted by schedule time
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="relative">
+        <RaisedFilterButton
+          active={initialSort !== "schedule"}
+          accent="violet"
+          icon={ArrowDownUp}
+          label={sortLabel}
+          open={openMenu === "sort"}
+          onClick={() => setOpenMenu((value) => value === "sort" ? null : "sort")}
+        />
+
+        {openMenu === "sort" && (
+          <div className="absolute right-0 top-full z-50 mt-2 w-[min(14.5rem,calc(100vw-2rem))] overflow-hidden rounded-[20px] border border-[#E8E2D9] bg-white shadow-[0_14px_34px_rgba(44,42,40,0.14)] sm:left-0 sm:right-auto sm:w-[15.5rem]">
+            <div className="bg-[#F8F3EB] px-3.5 pb-2 pt-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B0A89E]">Sort By</p>
+            </div>
+            <div className="py-1">
+              {sortOptions.map((option) => {
+                const isActive = option.value === initialSort;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => updateSort(option.value)}
+                    className={`flex w-full cursor-pointer items-center justify-between px-3.5 py-2 text-[12px] font-black transition-colors ${isActive ? "bg-[#F5EDE2] text-[#2C2A28]" : "text-[#4A4744] hover:bg-[#FAF7F3]"
+                      }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <span className={`h-2 w-2 rounded-full ${option.dot}`} />
+                      {option.label}
+                    </span>
+                    {isActive && <Check className="h-3.5 w-3.5 text-violet-600" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="border-t border-[#E8E2D9] bg-[#F8F3EB] px-3.5 py-2.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-[#918B80]">
+                <CalendarClock className="h-3 w-3" />
+                Schedule keeps open quizzes first
               </div>
             </div>
           </div>

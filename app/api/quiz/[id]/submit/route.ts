@@ -48,8 +48,8 @@ export async function POST(
     });
 
     const block = await getStudentQuizBlock(req, quiz, session);
-    // Explicitly allow submitting if blocked ONLY by 'ENDED' but they have an active session within grace period
-    if (block && !(block.code === "ENDED" && open)) {
+    // Scheduled endings allow an active session to submit within grace; manual close blocks immediately.
+    if (block && !(block.code === "ENDED" && open && !block.closed)) {
       const messages: Record<string, string> = {
         NOT_STARTED: "This quiz is not available yet.",
         ENDED: "This quiz has ended.",

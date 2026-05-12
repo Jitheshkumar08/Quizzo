@@ -12,7 +12,7 @@ import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 import ScheduleBoundaryRefresh from "@/components/live/ScheduleBoundaryRefresh";
 import QuizSearch from "@/components/quiz/QuizSearch";
 import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
-import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizTagFilterValue } from "@/components/quiz/QuizAvailabilityFilter";
+import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizSortFilterValue, type QuizTagFilterValue } from "@/components/quiz/QuizAvailabilityFilter";
 
 export const metadata = { title: "Browse Quizzes" };
 
@@ -31,6 +31,10 @@ function formatTimeLimit(minutes: number) {
 
 function parseAvailabilityFilter(value?: string): QuizAvailabilityFilterValue {
   return value === "open" || value === "upcoming" ? value : "all";
+}
+
+function parseSortFilter(value?: string): QuizSortFilterValue {
+  return value === "recent" || value === "oldest" ? value : "schedule";
 }
 
 function parseTagFilters(value?: string): QuizTagFilterValue[] {
@@ -59,7 +63,7 @@ function quizMatchesTagFilter(
 export default async function StudentQuizzesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string; availability?: string; status?: string; tags?: string }>;
+  searchParams?: Promise<{ q?: string; availability?: string; status?: string; tags?: string; sort?: string }>;
 }) {
   const session = await auth();
   if (!session) redirect("/login");
@@ -68,6 +72,7 @@ export default async function StudentQuizzesPage({
   const searchQuery = resolvedSearchParams?.q?.trim() || "";
   const availabilityFilter = parseAvailabilityFilter(resolvedSearchParams?.status);
   const tagFilters = parseTagFilters(resolvedSearchParams?.tags);
+  const sortFilter = parseSortFilter(resolvedSearchParams?.sort);
 
   const whereClause: Prisma.QuizWhereInput = { isPublished: true };
   if (searchQuery) {
@@ -134,7 +139,9 @@ export default async function StudentQuizzesPage({
   const quizzes = quizRows
     .map(({ accessPasswordHash, ...quiz }) => {
       const hasSchedule = !!(quiz.scheduledStart && quiz.scheduledEnd);
-      const scheduleStatus = hasSchedule
+      const scheduleStatus = quiz.isClosed
+        ? "ended"
+        : hasSchedule
         ? getScheduleStatus(now, quiz.scheduledStart, quiz.scheduledEnd)
         : "none";
 
@@ -150,6 +157,14 @@ export default async function StudentQuizzesPage({
       return tagFilters.every((tag) => quizMatchesTagFilter(quiz, tag));
     })
     .sort((a, b) => {
+      if (sortFilter === "recent") {
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      }
+
+      if (sortFilter === "oldest") {
+        return a.createdAt.getTime() - b.createdAt.getTime();
+      }
+
       const rank = { open: 0, upcoming: 1, none: 2, ended: 3 } as const;
       const rankDiff = rank[a.scheduleStatus] - rank[b.scheduleStatus];
       if (rankDiff !== 0) return rankDiff;
@@ -189,7 +204,7 @@ export default async function StudentQuizzesPage({
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-          <QuizAvailabilityFilter initialValue={availabilityFilter} initialTags={tagFilters} />
+          <QuizAvailabilityFilter initialValue={availabilityFilter} initialTags={tagFilters} initialSort={sortFilter} />
           <QuizSearch initialValue={searchQuery} />
         </div>
       </div>
@@ -261,7 +276,7 @@ export default async function StudentQuizzesPage({
                         <CalendarRange className="w-3 h-3" /> Upcoming
                       </span>
                     )}
-                    {hasSchedule && sched === "ended" && (
+                    {sched === "ended" && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-600 border border-gray-200">
                         Closed
                       </span>

@@ -29,6 +29,7 @@ export async function GET(
       select: {
         id: true,
         isPublished: true,
+        isClosed: true,
         scheduledStart: true,
         scheduledEnd: true,
         accessPasswordHash: true,

@@ -132,13 +132,14 @@ export async function PATCH(
     }
 
     const nextPublished = body.isPublished ?? !quiz.isPublished;
+    const nextClosed = typeof body.isClosed === "boolean" ? body.isClosed : quiz.isClosed;
     const updated = await prisma.$transaction(async (tx) => {
       const next = await tx.quiz.update({
         where: { id: quizId },
-        data: { isPublished: nextPublished },
+        data: { isPublished: nextPublished, isClosed: nextClosed },
       });
 
-      if (nextPublished !== quiz.isPublished) {
+      if (nextPublished !== quiz.isPublished || nextClosed !== quiz.isClosed) {
         await tx.quizSession.updateMany({
           where: { quizId, submittedAt: null },
           data: { submittedAt: new Date() },
@@ -146,7 +147,9 @@ export async function PATCH(
 
         await recordQuizListEvent(tx, {
           quizId,
-          action: nextPublished ? "quiz.published" : "quiz.unpublished",
+          action: nextClosed !== quiz.isClosed
+            ? nextClosed ? "quiz.closed" : "quiz.opened"
+            : nextPublished ? "quiz.published" : "quiz.unpublished",
           actorId: session.user.id,
         });
       }
@@ -154,7 +157,7 @@ export async function PATCH(
       return next;
     });
 
-    return NextResponse.json({ isPublished: updated.isPublished });
+    return NextResponse.json({ isPublished: updated.isPublished, isClosed: updated.isClosed });
   } catch (error) {
     console.error("[PATCH QUIZ ERROR]", error);
     return NextResponse.json({ error: "Failed to update quiz" }, { status: 500 });

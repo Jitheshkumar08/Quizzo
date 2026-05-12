@@ -25,6 +25,7 @@ const SaveQuizSchema = z.object({
   description: z.string().optional(),
   jsonBlobUrl: z.string().url().optional(),
   publish: z.boolean().default(false),
+  closed: z.boolean().optional(),
   questions: z.array(QuestionSchema),
   scheduleEnabled: z.boolean().optional(),
   scheduledStart: z.string().optional().nullable(),
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { quizId, title, description, jsonBlobUrl, publish, questions } = parsed.data;
+    const closed = parsed.data.closed ?? false;
 
     let quiz;
     let accessFields;
@@ -145,6 +147,7 @@ export async function POST(req: NextRequest) {
             description,
             jsonBlobUrl,
             isPublished: publish,
+            isClosed: closed,
             ...accessFields,
             questions: {
               deleteMany: {},
@@ -166,7 +169,7 @@ export async function POST(req: NextRequest) {
 
         await recordQuizListEvent(tx, {
           quizId,
-          action: publish ? "quiz.updated_published" : "quiz.updated_draft",
+          action: closed ? "quiz.updated_closed" : publish ? "quiz.updated_published" : "quiz.updated_draft",
           actorId: session.user.id,
         });
 
@@ -180,6 +183,7 @@ export async function POST(req: NextRequest) {
             description,
             jsonBlobUrl,
             isPublished: publish,
+            isClosed: closed,
             createdById: session.user.id,
             ...accessFields,
             questions: {
@@ -196,7 +200,7 @@ export async function POST(req: NextRequest) {
 
         await recordQuizListEvent(tx, {
           quizId: created.id,
-          action: publish ? "quiz.created_published" : "quiz.created_draft",
+          action: closed ? "quiz.created_closed" : publish ? "quiz.created_published" : "quiz.created_draft",
           actorId: session.user.id,
         });
 
@@ -241,6 +245,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const { title, description, publish, questions } = parsed.data;
+    const closed = parsed.data.closed ?? false;
 
     let accessFields;
     try {
@@ -259,6 +264,7 @@ export async function PATCH(req: NextRequest) {
           title,
           description,
           isPublished: publish,
+          isClosed: closed,
           ...accessFields,
           questions: {
             create: questions.map((q: QuestionInput) => ({
@@ -279,7 +285,7 @@ export async function PATCH(req: NextRequest) {
 
       await recordQuizListEvent(tx, {
         quizId,
-        action: publish ? "quiz.updated_published" : "quiz.updated_draft",
+        action: closed ? "quiz.updated_closed" : publish ? "quiz.updated_published" : "quiz.updated_draft",
         actorId: session.user.id,
       });
 

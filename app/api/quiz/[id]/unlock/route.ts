@@ -23,6 +23,7 @@ export async function POST(
       where: { id: quizId, isPublished: true },
       select: {
         id: true,
+        isClosed: true,
         accessPasswordHash: true,
         scheduledStart: true,
         scheduledEnd: true,

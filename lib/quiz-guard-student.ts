@@ -5,12 +5,13 @@ import { quizAccessCookieName, verifyQuizAccessCookie } from "@/lib/quiz-access-
 
 export type StudentQuizBlock =
   | { code: "NOT_STARTED"; scheduledStart: string }
-  | { code: "ENDED"; scheduledEnd: string }
+  | { code: "ENDED"; scheduledEnd: string; closed?: boolean }
   | { code: "MAX_ATTEMPTS"; attemptsUsed: number }
   | { code: "PASSWORD_REQUIRED" };
 
 type QuizGuardFields = {
   id: string;
+  isClosed: boolean;
   scheduledStart: Date | null;
   scheduledEnd: Date | null;
   accessPasswordHash: string | null;
@@ -23,6 +24,10 @@ export async function getStudentQuizBlock(
   session: Session
 ): Promise<StudentQuizBlock | null> {
   const now = new Date();
+
+  if (quiz.isClosed) {
+    return { code: "ENDED", scheduledEnd: now.toISOString(), closed: true };
+  }
 
   if (quiz.scheduledStart && quiz.scheduledEnd) {
     if (now < quiz.scheduledStart) {

@@ -21,6 +21,7 @@ interface EditQuizClientProps {
     title: string;
     description: string | null;
     isPublished: boolean;
+    isClosed: boolean;
     questions: QuizQuestion[];
     scheduledStart: Date | null;
     scheduledEnd: Date | null;
@@ -73,6 +74,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isPublished, setIsPublished] = useState(quiz.isPublished);
+  const [isClosed, setIsClosed] = useState(quiz.isClosed);
   const [globalCollapsed, setGlobalCollapsed] = useState(true);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -120,6 +122,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           title,
           description,
           publish,
+          closed: isClosed,
           questions,
           scheduleEnabled,
           scheduledStart: scheduleEnabled && scheduledStart ? appDatetimeLocalToISOString(scheduledStart) : null,
@@ -143,6 +146,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       setIsPublished(publish);
+      setIsClosed(isClosed);
 
       if (publish) {
         router.push("/instructor/quizzes");
@@ -184,6 +188,11 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
 
   function handleTogglePublish() {
     setIsPublished((value) => !value);
+    setSaved(false);
+  }
+
+  function handleToggleClosed() {
+    setIsClosed((value) => !value);
     setSaved(false);
   }
 
@@ -431,6 +440,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
               ) : (
                 <span className="text-amber-500 font-semibold">● Draft</span>
               )}
+              {isClosed && <span className="text-gray-500 font-semibold">{" · "}Closed</span>}
               {" · "}{questions.length} questions
             </p>
           </div>
@@ -444,6 +454,22 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
           >
             <BarChart2 className="w-4 h-4" />
             Analytics
+          </button>
+          <button
+            onClick={handleToggleClosed}
+            disabled={saving}
+            className={`eq-action-btn flex items-center gap-2 transition-colors ${isClosed
+              ? "text-gray-700 bg-gray-100 hover:bg-gray-200"
+              : "text-green-700 bg-green-50 hover:bg-green-100"
+              }`}
+            style={isClosed
+              ? { color: "#4b5563", background: "rgb(243,244,246)" }
+              : { color: "#15803d", background: "rgb(240,253,244)" }
+            }
+            title={isClosed ? "Students see this quiz as closed" : "Students can open this quiz when published and available"}
+          >
+            {isClosed ? <X className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+            {isClosed ? "Closed" : "Open"}
           </button>
           <button
             onClick={handleTogglePublish}

@@ -128,7 +128,9 @@ export default async function InstructorQuizzesPage() {
         <div className="grid gap-6 pb-10">
           {quizzes.map((quiz) => {
             const hasSchedule = !!(quiz.scheduledStart && quiz.scheduledEnd);
-            const scheduleStatus = hasSchedule
+            const scheduleStatus = quiz.isClosed
+              ? "ended"
+              : hasSchedule
               ? getScheduleStatus(new Date(), quiz.scheduledStart, quiz.scheduledEnd)
               : quiz.isPublished
                 ? "open"
