@@ -72,6 +72,7 @@ export default function QuizTaker({
   const [showConfirm, setShowConfirm] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showStickyControls, setShowStickyControls] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [remainingSec, setRemainingSec] = useState<number | null>(null); const [isTimeUp, setIsTimeUp] = useState(false); const [targetQuestionIndex, setTargetQuestionIndex] = useState<number | null>(null);
   const [errorPopup, setErrorPopup] = useState<{ message: string, code?: string } | null>(null);
@@ -111,6 +112,7 @@ export default function QuizTaker({
   const answersRef = useRef(answers);
   const elapsedRef = useRef(0);
   const remainingSecRef = useRef(0);
+  const topBarRef = useRef<HTMLDivElement | null>(null);
   const serverSkewMs = useRef(0);
   const submitLock = useRef(false);
   const autoSubmitFired = useRef(false);
@@ -119,6 +121,31 @@ export default function QuizTaker({
   const hasTimer = !!(attemptDeadline && serverNow);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const topBar = topBarRef.current;
+    if (!topBar) return;
+
+    const scrollArea = document.getElementById("dashboard-scroll-area");
+    const scrollTarget: HTMLElement | Window = scrollArea ?? window;
+
+    const updateStickyControls = () => {
+      const topBarRect = topBar.getBoundingClientRect();
+      const viewportTop = scrollArea?.getBoundingClientRect().top ?? 0;
+      setShowStickyControls(topBarRect.bottom < viewportTop + 28);
+    };
+
+    updateStickyControls();
+    scrollTarget.addEventListener("scroll", updateStickyControls, { passive: true });
+    window.addEventListener("resize", updateStickyControls);
+
+    return () => {
+      scrollTarget.removeEventListener("scroll", updateStickyControls);
+      window.removeEventListener("resize", updateStickyControls);
+    };
+  }, [mounted]);
 
   useEffect(() => {
     answersRef.current = answers;
@@ -307,6 +334,50 @@ export default function QuizTaker({
 
   const answeredCount = questions.filter(q => answers[q.id] && answers[q.id].trim() !== "").length;
   const unansweredCount = questions.length - answeredCount;
+  const timerToneClass =
+    hasTimer && remainingSec !== null
+      ? remainingSec <= 60
+        ? "text-red-700 bg-red-50 border-red-200 shadow-red-900/5"
+        : remainingSec <= 300
+          ? "text-amber-800 bg-amber-50 border-amber-200 shadow-amber-900/5"
+          : "text-purple-700 bg-purple-50 border-purple-100 shadow-purple-900/5"
+      : "text-purple-600 bg-purple-50 border-purple-100 shadow-purple-900/5";
+  const timerText = hasTimer && remainingSec !== null ? `Left ${formatTime(remainingSec)}` : formatTime(elapsed);
+  const TimerIcon = hasTimer && remainingSec !== null ? Timer : Clock;
+
+  function renderTimerBadge(sticky = false) {
+    return (
+      <div
+        className={`inline-flex items-center gap-2 rounded-xl border font-mono font-bold ${timerToneClass} ${sticky
+          ? "px-4 py-2 text-sm shadow-sm"
+          : "px-3 py-1.5 text-sm"
+          }`}
+        aria-live={hasTimer ? "polite" : undefined}
+      >
+        <TimerIcon className="w-4 h-4 flex-shrink-0" />
+        <span>{timerText}</span>
+      </div>
+    );
+  }
+
+  function renderAnsweredProgress(compact = false) {
+    return (
+      <div className={`flex min-w-0 items-center ${compact ? "gap-2" : "gap-3"}`}>
+        <div className={`${compact ? "h-2 w-28" : "h-2.5 w-48 sm:w-64"} bg-gray-100 rounded-full overflow-hidden`}>
+          <div
+            className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
+            style={{
+              width: `${(answeredCount / questions.length) * 100}%`,
+              minWidth: answeredCount > 0 ? "10px" : "0px",
+            }}
+          />
+        </div>
+        <p className={`${compact ? "text-[11px]" : "text-xs"} whitespace-nowrap text-gray-500 font-bold tracking-wide`}>
+          {answeredCount} / {questions.length} ANSWERED
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -391,7 +462,7 @@ export default function QuizTaker({
         {/* Main Content */}
         <div className="flex-1 min-w-0 flex flex-col gap-4 transition-all duration-300">
           {/* Top bar */}
-          <div className="bg-white rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 border border-black/5 shadow-sm relative overflow-hidden">
+          <div ref={topBarRef} className="bg-white rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 border border-black/5 shadow-sm relative overflow-hidden">
             {/* Decorative background accent */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-100/50 via-transparent to-transparent rounded-bl-full pointer-events-none"></div>
 
@@ -405,41 +476,12 @@ export default function QuizTaker({
                 </p>
               )}
               <div className="flex items-center gap-3 mt-4">
-                <div className="h-2.5 w-48 sm:w-64 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
-                    style={{
-                      width: `${(answeredCount / questions.length) * 100}%`,
-                      // Ensure it's at least a perfect circle if answering has started
-                      minWidth: answeredCount > 0 ? '10px' : '0px'
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 font-bold tracking-wide">
-                  {answeredCount} / {questions.length} ANSWERED
-                </p>
+                {renderAnsweredProgress()}
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full md:w-auto gap-3 relative z-10 shrink-0">
-              {hasTimer && remainingSec !== null ? (
-                <div
-                  className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-1.5 rounded-lg border ${remainingSec <= 60
-                    ? "text-red-700 bg-red-50 border-red-200"
-                    : remainingSec <= 300
-                      ? "text-amber-800 bg-amber-50 border-amber-200"
-                      : "text-purple-700 bg-purple-50 border-purple-100"
-                    }`}
-                >
-                  <Timer className="w-4 h-4 flex-shrink-0" />
-                  <span>Left {formatTime(remainingSec)}</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-sm font-mono font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
-                  <Clock className="w-4 h-4" />
-                  {formatTime(elapsed)}
-                </div>
-              )}
+              {renderTimerBadge()}
               <button
                 onClick={() => setShowConfirm(true)}
                 className="group relative inline-flex items-center justify-center px-5 sm:px-6 py-2 rounded-full text-sm font-bold text-green-600 bg-transparent shadow-[0_0_0_2px_rgba(34,197,94,0.2)] hover:shadow-[0_0_0_5px_rgba(34,197,94,0.3)] hover:text-white active:scale-95 transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden"
@@ -496,6 +538,27 @@ export default function QuizTaker({
             </button>
           </div>
         </div>
+
+        {mounted && showStickyControls && !isTimeUp && createPortal(
+          <div
+            className="pointer-events-none fixed left-[calc(260px+2rem)] top-[14px] z-50 hidden max-w-[calc(100vw-260px-16rem)] transition-all duration-200 ease-out lg:block"
+          >
+            <div className="pointer-events-auto flex w-fit max-w-full items-center gap-3 rounded-2xl border border-black/10 bg-white/95 p-2 shadow-[0_3px_12px_rgba(15,23,42,0.06)] backdrop-blur-md">
+              <div className="hidden min-w-0 items-center rounded-xl border border-slate-100 bg-white/80 px-3 py-2 lg:flex">
+                {renderAnsweredProgress(true)}
+              </div>
+              {renderTimerBadge(true)}
+              <button
+                onClick={() => setShowConfirm(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-100 active:translate-y-0"
+              >
+                <Send className="w-4 h-4" />
+                Submit
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* Right Sidebar Portal */}
         {mounted && createPortal(
