@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
@@ -41,6 +42,15 @@ const SaveQuizSchema = z.object({
 
 type QuestionInput = z.infer<typeof QuestionSchema>;
 type SavePayload = z.infer<typeof SaveQuizSchema>;
+
+async function getNextDisplayOrder(tx: Prisma.TransactionClient) {
+  const maxOrder = await tx.quiz.aggregate({
+    where: { isPublished: true },
+    _max: { displayOrder: true },
+  });
+
+  return (maxOrder._max.displayOrder ?? -1) + 1;
+}
 
 async function buildAccessUpdateData(
   parsed: SavePayload,
@@ -120,6 +130,7 @@ export async function POST(req: NextRequest) {
 
     let quiz;
     let accessFields;
+    let existingQuiz: { accessPasswordHash: string | null; displayOrder: number | null } | null = null;
     try {
       if (quizId) {
         if (!canEditInstructorQuiz(session.user.role)) {
@@ -129,6 +140,7 @@ export async function POST(req: NextRequest) {
         if (!existing || (existing.createdById !== session.user.id && session.user.role !== "ADMIN")) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
+        existingQuiz = existing;
         accessFields = await buildAccessUpdateData(parsed.data, existing.accessPasswordHash, false);
       } else {
         accessFields = await buildAccessUpdateData(parsed.data, null, true);
@@ -140,6 +152,10 @@ export async function POST(req: NextRequest) {
 
     if (quizId) {
       quiz = await prisma.$transaction(async (tx) => {
+        const nextDisplayOrder =
+          publish && existingQuiz?.displayOrder == null
+            ? await getNextDisplayOrder(tx)
+            : undefined;
         const updated = await tx.quiz.update({
           where: { id: quizId },
           data: {
@@ -148,6 +164,7 @@ export async function POST(req: NextRequest) {
             jsonBlobUrl,
             isPublished: publish,
             isClosed: closed,
+            ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),
             ...accessFields,
             questions: {
               deleteMany: {},
@@ -177,6 +194,7 @@ export async function POST(req: NextRequest) {
       });
     } else {
       quiz = await prisma.$transaction(async (tx) => {
+        const nextDisplayOrder = publish ? await getNextDisplayOrder(tx) : null;
         const created = await tx.quiz.create({
           data: {
             title,
@@ -184,6 +202,7 @@ export async function POST(req: NextRequest) {
             jsonBlobUrl,
             isPublished: publish,
             isClosed: closed,
+            displayOrder: nextDisplayOrder,
             createdById: session.user.id,
             ...accessFields,
             questions: {
@@ -257,6 +276,10 @@ export async function PATCH(req: NextRequest) {
 
     const updated = await prisma.$transaction(async (tx) => {
       await tx.question.deleteMany({ where: { quizId } });
+      const nextDisplayOrder =
+        publish && quiz.displayOrder == null
+          ? await getNextDisplayOrder(tx)
+          : undefined;
 
       const next = await tx.quiz.update({
         where: { id: quizId },
@@ -265,6 +288,7 @@ export async function PATCH(req: NextRequest) {
           description,
           isPublished: publish,
           isClosed: closed,
+          ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),
           ...accessFields,
           questions: {
             create: questions.map((q: QuestionInput) => ({

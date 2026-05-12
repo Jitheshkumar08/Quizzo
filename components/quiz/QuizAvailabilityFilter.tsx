@@ -7,7 +7,7 @@ import { ArrowDownUp, CalendarClock, Check, ChevronDown, Clock3, Filter, Infinit
 
 export type QuizAvailabilityFilterValue = "all" | "open" | "upcoming";
 export type QuizTagFilterValue = "single-attempt" | "multi-attempt" | "password" | "time-limit";
-export type QuizSortFilterValue = "schedule" | "recent" | "oldest";
+export type QuizSortFilterValue = "default" | "schedule" | "recent" | "oldest";
 
 const statusOptions: Array<{
   value: QuizAvailabilityFilterValue;
@@ -36,6 +36,7 @@ const sortOptions: Array<{
   label: string;
   dot: string;
 }> = [
+    { value: "default", label: "Default", dot: "bg-violet-500" },
     { value: "schedule", label: "Schedule", dot: "bg-blue-500" },
     { value: "recent", label: "Recent", dot: "bg-emerald-500" },
     { value: "oldest", label: "Oldest", dot: "bg-slate-500" },
@@ -101,7 +102,7 @@ function RaisedFilterButton({
 export default function QuizAvailabilityFilter({
   initialValue = "all",
   initialTags = [],
-  initialSort = "schedule",
+  initialSort = "default",
 }: {
   initialValue?: QuizAvailabilityFilterValue;
   initialTags?: QuizTagFilterValue[];
@@ -129,7 +130,7 @@ export default function QuizAvailabilityFilter({
   const selectedSort = sortOptions.find((option) => option.value === initialSort) ?? sortOptions[0];
   const availabilityLabel = initialValue === "all" ? "Availability" : selectedStatus.label;
   const tagsLabel = selectedTags.size === 0 ? "Tags" : `${selectedTags.size} tag${selectedTags.size === 1 ? "" : "s"}`;
-  const sortLabel = initialSort === "schedule" ? "Sort" : selectedSort.label;
+  const sortLabel = initialSort === "default" ? "Sort" : selectedSort.label;
 
   function replaceParams(nextStatus: QuizAvailabilityFilterValue, nextTags: readonly QuizTagFilterValue[], nextSort: QuizSortFilterValue) {
     const params = new URLSearchParams(searchParams.toString());
@@ -146,7 +147,7 @@ export default function QuizAvailabilityFilter({
       params.set("tags", encodeTags(nextTags));
     }
 
-    if (nextSort === "schedule") {
+    if (nextSort === "default") {
       params.delete("sort");
     } else {
       params.set("sort", nextSort);
@@ -237,7 +238,7 @@ export default function QuizAvailabilityFilter({
 
       <div className="relative">
         <RaisedFilterButton
-          active={initialSort !== "schedule"}
+          active={initialSort !== "default"}
           accent="violet"
           icon={ArrowDownUp}
           label={sortLabel}
@@ -273,7 +274,7 @@ export default function QuizAvailabilityFilter({
             <div className="border-t border-[#E8E2D9] bg-[#F8F3EB] px-3.5 py-2.5">
               <div className="flex items-center gap-2 text-[10px] font-bold text-[#918B80]">
                 <CalendarClock className="h-3 w-3" />
-                Schedule keeps open quizzes first
+                Default uses admin card order
               </div>
             </div>
           </div>

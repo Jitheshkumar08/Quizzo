@@ -12,6 +12,7 @@ interface AnalyticsResult {
     studentName: string;
     username: string;
     profileImageUrl: string | null;
+    attemptType: string;
     score: number;
     totalQuestions: number;
     percentage: number;
@@ -351,6 +352,9 @@ export default function InstructorAnalyticsModalButton({
                                                                         <div className="min-w-0">
                                                                             <p className="font-bold text-slate-950 text-sm truncate">{r.studentName}</p>
                                                                             <p className="text-slate-400 text-xs font-semibold truncate">@{r.username}</p>
+                                                                            <p className="mt-0.5 text-slate-400 text-[11px] font-black uppercase tracking-wide">
+                                                                                {r.attemptType === "NORMAL" ? "Normal attempt" : "Reattempt"}
+                                                                            </p>
                                                                         </div>
                                                                     </div>
                                                                 </td>

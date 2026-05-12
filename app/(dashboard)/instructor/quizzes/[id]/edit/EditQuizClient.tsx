@@ -47,6 +47,7 @@ type AnalyticsResult = {
   studentName: string;
   username: string;
   profileImageUrl: string | null;
+  attemptType: string;
   score: number;
   totalQuestions: number;
   percentage: number;
@@ -936,6 +937,9 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                                     <div>
                                       <p className="font-semibold text-gray-900 text-xs">{r.studentName}</p>
                                       <p className="text-gray-400 text-xs">@{r.username}</p>
+                                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wide">
+                                        {r.attemptType === "NORMAL" ? "Normal attempt" : "Reattempt"}
+                                      </p>
                                     </div>
                                   </div>
                                 </td>

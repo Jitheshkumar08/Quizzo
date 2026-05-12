@@ -134,9 +134,20 @@ export async function PATCH(
     const nextPublished = body.isPublished ?? !quiz.isPublished;
     const nextClosed = typeof body.isClosed === "boolean" ? body.isClosed : quiz.isClosed;
     const updated = await prisma.$transaction(async (tx) => {
+      const nextDisplayOrder =
+        nextPublished && quiz.displayOrder == null
+          ? ((await tx.quiz.aggregate({
+            where: { isPublished: true },
+            _max: { displayOrder: true },
+          }))._max.displayOrder ?? -1) + 1
+          : undefined;
       const next = await tx.quiz.update({
         where: { id: quizId },
-        data: { isPublished: nextPublished, isClosed: nextClosed },
+        data: {
+          isPublished: nextPublished,
+          isClosed: nextClosed,
+          ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),
+        },
       });
 
       if (nextPublished !== quiz.isPublished || nextClosed !== quiz.isClosed) {

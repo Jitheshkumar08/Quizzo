@@ -15,6 +15,7 @@ interface AnalyticsResultRow {
   studentName: string | null;
   username: string | null;
   profileImageUrl: string | null;
+  attemptType: string | null;
   score: number;
   total: number;
   timeTaken: number | null;
@@ -47,12 +48,15 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const includeReattempts = canManageQuizGlobally(session.user.role);
+
     const results = await prisma.$queryRaw<AnalyticsResultRow[]>`
       SELECT
         r."id",
         u."fullName" AS "studentName",
         u."username",
         u."profileImageUrl",
+        r."attemptType",
         r."score",
         r."total",
         r."timeTaken",
@@ -60,7 +64,7 @@ export async function GET(
       FROM "Result" r
       LEFT JOIN "User" u ON u."id" = r."studentId"
       WHERE r."quizId" = ${quizId}
-        AND COALESCE(r."attemptType", 'NORMAL') = 'NORMAL'
+        AND (${includeReattempts} OR COALESCE(r."attemptType", 'NORMAL') = 'NORMAL')
       ORDER BY r."createdAt" DESC
     `;
 
@@ -69,6 +73,7 @@ export async function GET(
       studentName: r.studentName ?? "Unknown",
       username: r.username ?? "",
       profileImageUrl: r.profileImageUrl,
+      attemptType: r.attemptType ?? "NORMAL",
       score: r.score,
       totalQuestions: r.total,
       percentage: r.total > 0 ? Math.round((r.score / r.total) * 100) : 0,

@@ -13,6 +13,7 @@ import ScheduleBoundaryRefresh from "@/components/live/ScheduleBoundaryRefresh";
 import QuizSearch from "@/components/quiz/QuizSearch";
 import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
 import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizSortFilterValue, type QuizTagFilterValue } from "@/components/quiz/QuizAvailabilityFilter";
+import AdminQuizOrderGrid from "@/components/quiz/AdminQuizOrderGrid";
 
 export const metadata = { title: "Browse Quizzes" };
 
@@ -34,7 +35,7 @@ function parseAvailabilityFilter(value?: string): QuizAvailabilityFilterValue {
 }
 
 function parseSortFilter(value?: string): QuizSortFilterValue {
-  return value === "recent" || value === "oldest" ? value : "schedule";
+  return value === "schedule" || value === "recent" || value === "oldest" ? value : "default";
 }
 
 function parseTagFilters(value?: string): QuizTagFilterValue[] {
@@ -157,6 +158,17 @@ export default async function StudentQuizzesPage({
       return tagFilters.every((tag) => quizMatchesTagFilter(quiz, tag));
     })
     .sort((a, b) => {
+      if (sortFilter === "default") {
+        const aOrder = a.displayOrder;
+        const bOrder = b.displayOrder;
+        if (typeof aOrder === "number" && typeof bOrder === "number" && aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        if (typeof aOrder === "number" && typeof bOrder !== "number") return -1;
+        if (typeof aOrder !== "number" && typeof bOrder === "number") return 1;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      }
+
       if (sortFilter === "recent") {
         return b.createdAt.getTime() - a.createdAt.getTime();
       }
@@ -188,6 +200,9 @@ export default async function StudentQuizzesPage({
       )
     )
   );
+  const isAdmin = session.user.role === "ADMIN";
+  const canEditOrder = isAdmin && sortFilter === "default" && availabilityFilter === "all" && tagFilters.length === 0 && !searchQuery;
+  const orderEditDisabledReason = "Clear search, availability, tags, and sort to edit the global default order.";
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -217,13 +232,20 @@ export default async function StudentQuizzesPage({
           <p className="text-sm text-muted-foreground mt-1">Check back soon — instructors are creating quizzes for you</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AdminQuizOrderGrid
+          key={quizzes.map((quiz) => quiz.id).join("|")}
+          initialIds={quizzes.map((quiz) => quiz.id)}
+          isAdmin={isAdmin}
+          canEditOrder={canEditOrder}
+          disabledReason={orderEditDisabledReason}
+        >
           {quizzes.map((quiz) => {
             const hasSchedule = !!(quiz.scheduledStart && quiz.scheduledEnd);
             const sched = quiz.scheduleStatus;
             return (
               <div
                 key={quiz.id}
+                data-quiz-id={quiz.id}
                 className="relative overflow-hidden rounded-3xl p-5 sm:p-6 space-y-5 group flex flex-col transition-all duration-300 border border-black/5 hover:border-purple-500/30 bg-white shadow-sm hover:shadow-xl hover:shadow-purple-500/10 min-w-0"
               >
                 {/* Header */}
@@ -340,7 +362,7 @@ export default async function StudentQuizzesPage({
               </div>
             );
           })}
-        </div>
+        </AdminQuizOrderGrid>
       )}
     </div>
   );

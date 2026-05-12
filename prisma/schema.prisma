@@ -85,6 +85,8 @@ model Quiz {
   isPublished Boolean    @default(false)
   /// Manual instructor/admin close. A closed quiz stays published/listed but cannot be started.
   isClosed    Boolean    @default(false)
+  /// Admin-defined default browse order. Null values fall after ordered quizzes.
+  displayOrder Int?
   createdById String
   createdBy   User       @relation(fields: [createdById], references: [id])
   jsonBlobUrl String?
@@ -107,6 +109,7 @@ model Quiz {
   updatedAt             DateTime @updatedAt @default(now())
 
   @@index([isPublished, createdAt])
+  @@index([isPublished, displayOrder])
   @@index([createdById, createdAt])
 }
 
