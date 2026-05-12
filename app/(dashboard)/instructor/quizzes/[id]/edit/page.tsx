@@ -30,10 +30,13 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
   }
 
   const { accessPasswordHash, ...rest } = quiz;
+  const quizWithClosed = quiz as typeof quiz & { isClosed?: boolean };
+
   return (
     <EditQuizClient
       quiz={{
         ...rest,
+        isClosed: quizWithClosed.isClosed ?? false,
         hasAccessPassword: !!accessPasswordHash,
       }}
     />
