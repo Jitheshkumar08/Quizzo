@@ -26,6 +26,19 @@ type SortDirection = "asc" | "desc";
 type ViewMode = "table" | "grid";
 const PAGE_SIZE = 20;
 
+function renderTwoWordLines(value: string) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return value;
+
+  return (
+    <>
+      {words.slice(0, 2).join(" ")}
+      <br />
+      {words.slice(2).join(" ")}
+    </>
+  );
+}
+
 function subscribeToViewport(callback: () => void) {
   const media = window.matchMedia("(min-width: 768px)");
   media.addEventListener("change", callback);
@@ -465,7 +478,7 @@ export default function UserTable({
             <div className="flex min-w-0 items-start gap-3">
               <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
               <div className="min-w-0">
-                <p className="whitespace-normal break-words text-[15px] font-bold leading-tight text-[#1E1C1A]">{user.fullName}</p>
+                <p className="whitespace-normal break-words text-[15px] font-bold leading-tight text-[#1E1C1A]">{renderTwoWordLines(user.fullName)}</p>
                 <p className="mt-0.5 break-words text-[11px] font-semibold text-[#A09890]">@{user.username}</p>
               </div>
             </div>
@@ -684,7 +697,7 @@ export default function UserTable({
                               <div className="flex items-center gap-2">
                                 <Avatar name={user.fullName} role={user.role} imageUrl={user.profileImageUrl} />
                                 <div>
-                                  <p className="font-bold text-[12px] text-[#1E1C1A] leading-snug whitespace-nowrap">{user.fullName}</p>
+                                  <p className="font-bold text-[12px] text-[#1E1C1A] leading-snug [overflow-wrap:anywhere]">{renderTwoWordLines(user.fullName)}</p>
                                   <p className="text-[10px] font-semibold text-[#A09890]">@{user.username}</p>
                                 </div>
                               </div>

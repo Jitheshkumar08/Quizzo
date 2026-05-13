@@ -10,13 +10,15 @@ import {
   BookOpen,
   Users,
   ClipboardList,
+  ClipboardCheck,
   History,
   ShieldAlert,
   Menu,
   X,
-  LogOut
+  LogOut,
+  ChevronDown
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isLiveUserUpdatedEvent, LIVE_USER_UPDATED_EVENT } from "@/lib/live-user-event";
 
 interface NavItem {
@@ -35,6 +37,7 @@ const navItems: NavItem[] = [
   { href: "/student/results", label: "My Results", icon: History, roles: ["STUDENT", "INSTRUCTOR", "MOD", "ADMIN"], group: "Main" },
   { href: "/admin/users", label: "Manage Users", icon: Users, roles: ["MOD", "ADMIN"], group: "Admin" },
   { href: "/admin/quizzes", label: "All Quizzes", icon: ShieldAlert, roles: ["MOD", "ADMIN"], group: "Admin" },
+  { href: "/admin/attempts", label: "All Attempts", icon: ClipboardCheck, roles: ["MOD", "ADMIN"], group: "Admin" },
 ];
 
 interface SidebarProps {
@@ -49,6 +52,8 @@ export default function Sidebar({ role }: SidebarProps) {
   const mainNav = navItems.filter((item) => item.roles.includes(currentRole) && item.group === "Main");
   const adminNav = navItems.filter((item) => item.roles.includes(currentRole) && item.group === "Admin");
   const [isOpen, setIsOpen] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     function handleLiveUserUpdated(event: Event) {
@@ -60,6 +65,31 @@ export default function Sidebar({ role }: SidebarProps) {
     window.addEventListener(LIVE_USER_UPDATED_EVENT, handleLiveUserUpdated);
     return () => window.removeEventListener(LIVE_USER_UPDATED_EVENT, handleLiveUserUpdated);
   }, []);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const scrollContainer = nav;
+
+    function updateScrollHint() {
+      setShowScrollHint(scrollContainer.scrollTop + scrollContainer.clientHeight < scrollContainer.scrollHeight - 8);
+    }
+
+    updateScrollHint();
+    const frame = window.requestAnimationFrame(updateScrollHint);
+    scrollContainer.addEventListener("scroll", updateScrollHint, { passive: true });
+    window.addEventListener("resize", updateScrollHint);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      scrollContainer.removeEventListener("scroll", updateScrollHint);
+      window.removeEventListener("resize", updateScrollHint);
+    };
+  }, [currentRole, isOpen, pathname]);
+
+  function scrollNavDown() {
+    navRef.current?.scrollBy({ top: 96, behavior: "smooth" });
+  }
 
   return (
     <>
@@ -110,51 +140,69 @@ export default function Sidebar({ role }: SidebarProps) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto relative z-10 overflow-x-hidden">
-          <div className="mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest">Main Menu</div>
-          {mainNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
-                  ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
-                  : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
-                  }`}
-              >
-                <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#8C5D3E]" : "group-hover:text-[#2C2A28]"}`} />
-                <span className="flex-1">{item.label}</span>
-              </Link>
-            );
-          })}
+        <div className="relative z-10 min-h-0 flex-1">
+          <nav ref={navRef} className="h-full space-y-1.5 overflow-y-auto overflow-x-hidden px-4 py-6 pb-14">
+            <div className="mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest">Main Menu</div>
+            {mainNav.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
+                    ? "bg-white/80 text-[#8C5D3E] border border-white shadow-[0_4px_12px_rgba(163,149,126,0.15)]"
+                    : "text-[#918B80] hover:text-[#2C2A28] hover:bg-white/40"
+                    }`}
+                >
+                  <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#8C5D3E]" : "group-hover:text-[#2C2A28]"}`} />
+                  <span className="flex-1">{item.label}</span>
+                </Link>
+              );
+            })}
 
-          {adminNav.length > 0 && (
-            <>
-              <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">
-                {currentRole === "MOD" ? "Mod Controls" : "Admin Controls"}
-              </div>
-              {adminNav.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
-                      ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
-                      : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
-                      }`}
-                  >
-                    <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-white" : "group-hover:text-[#2C2A28]"}`} />
-                    <span className="flex-1">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </>
+            {adminNav.length > 0 && (
+              <>
+                <div className="mt-8 mb-4 px-2 text-[11px] font-bold text-[#918B80] uppercase tracking-widest pt-4 border-t border-[#E9E4DC]/60">
+                  {currentRole === "MOD" ? "Mod Controls" : "Admin Controls"}
+                </div>
+                {adminNav.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-bold transition-all duration-300 group ${isActive
+                        ? "bg-[#2C2A28] text-white shadow-[0_4px_12px_rgba(44,42,40,0.2)]"
+                        : "text-[#918B80] hover:text-[#2C2A28] hover:bg-black/5"
+                        }`}
+                    >
+                      <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-white" : "group-hover:text-[#2C2A28]"}`} />
+                      <span className="flex-1">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+          </nav>
+
+          {showScrollHint && (
+            <button
+              type="button"
+              onClick={scrollNavDown}
+              className="absolute bottom-3 left-1/2 z-20 flex h-8 w-10 -translate-x-1/2 cursor-pointer items-center justify-center text-[#6E482F] drop-shadow-[0_1px_0_rgba(255,255,255,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:text-[#2C2A28] active:translate-y-0"
+              aria-label="Scroll menu down"
+              title="More menu items"
+            >
+              <ChevronDown className="h-5 w-5 animate-[bounce_1.8s_infinite]" strokeWidth={3.2} />
+            </button>
           )}
-        </nav>
+
+          {showScrollHint && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-11 bg-gradient-to-t from-[#F4EFE6]/72 via-[#F4EFE6]/34 to-transparent" />
+          )}
+        </div>
 
         {/* Logout */}
         <div className="p-5 border-t border-[#E9E4DC]/60 relative z-10 flex justify-center md:justify-center">

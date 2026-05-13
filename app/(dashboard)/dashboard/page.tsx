@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Upload, ClipboardList, Users, BookOpen, ArrowRight } from "lucide-react";
+import { Upload, ClipboardList, ClipboardCheck, Users, BookOpen, ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "Dashboard",
@@ -17,12 +17,14 @@ export default async function DashboardPage() {
     ADMIN: [
       { title: "Manage Users", description: "View all users and change their roles", href: "/admin/users", icon: Users, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "All Quizzes", description: "Oversee every quiz on the platform", href: "/admin/quizzes", icon: BookOpen, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+      { title: "All Attempts", description: "Review every submitted quiz attempt", href: "/admin/attempts", icon: ClipboardCheck, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "Upload PDF", description: "Generate a new quiz from a PDF", href: "/instructor/upload", icon: Upload, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "Browse Quizzes", description: "Take any published quiz", href: "/student/quizzes", icon: ClipboardList, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
     ],
     MOD: [
       { title: "Manage Users", description: "Review users and assign student/instructor roles", href: "/admin/users", icon: Users, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "All Quizzes", description: "Review quizzes and manage publish status", href: "/admin/quizzes", icon: BookOpen, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
+      { title: "All Attempts", description: "Review every submitted quiz attempt", href: "/admin/attempts", icon: ClipboardCheck, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "Set a Quiz", description: "Create a new quiz from a PDF or JSON", href: "/instructor/upload", icon: Upload, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "My Quizzes", description: "View quizzes created by you", href: "/instructor/quizzes", icon: BookOpen, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },
       { title: "Browse Quizzes", description: "Take any published quiz", href: "/student/quizzes", icon: ClipboardList, gradient: "from-[#F2EFE8] to-[#E9E4DC]" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
@@ -55,6 +55,19 @@ type AnalyticsResult = {
   submittedAt: string;
 };
 
+function renderTwoWordLines(value: string) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return value;
+
+  return (
+    <>
+      {words.slice(0, 2).join(" ")}
+      <br />
+      {words.slice(2).join(" ")}
+    </>
+  );
+}
+
 export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const router = useRouter();
 
@@ -95,6 +108,15 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsResult[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [showReattempts, setShowReattempts] = useState(false);
+
+  const visibleAnalyticsData = useMemo(() => {
+    return showReattempts ? analyticsData : analyticsData.filter((result) => result.attemptType === "NORMAL");
+  }, [analyticsData, showReattempts]);
+
+  const reattemptCount = useMemo(() => {
+    return analyticsData.filter((result) => result.attemptType !== "NORMAL").length;
+  }, [analyticsData]);
 
   const initialSchedule =
     !!(quiz.scheduledStart && quiz.scheduledEnd);
@@ -834,7 +856,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                         Quiz Analytics
                       </h2>
                       <p className="text-sm text-gray-500">
-                        {analyticsData.length} attempt{analyticsData.length !== 1 ? "s" : ""}
+                        {visibleAnalyticsData.length} attempt{visibleAnalyticsData.length !== 1 ? "s" : ""}
                       </p>
                     </div>
                   </div>
@@ -871,16 +893,43 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                     </div>
                   ) : (
                     <div className="space-y-3">
+                      {reattemptCount > 0 && (
+                        <div className="flex justify-end mb-4">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={showReattempts}
+                            onClick={() => setShowReattempts((value) => !value)}
+                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black transition-all ${showReattempts
+                              ? "border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                              : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                              }`}
+                            title={showReattempts ? "Hide reattempt data" : "Show reattempt data"}
+                          >
+                            <span>Reattempts</span>
+                            <span
+                              className={`relative h-5 w-9 rounded-full transition-colors ${showReattempts ? "bg-blue-600" : "bg-slate-200"
+                                }`}
+                              aria-hidden="true"
+                            >
+                              <span
+                                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${showReattempts ? "translate-x-4" : "translate-x-0.5"
+                                  }`}
+                              />
+                            </span>
+                          </button>
+                        </div>
+                      )}
                       <div className="grid grid-cols-3 gap-3 mb-6">
                         <div className="bg-blue-50 rounded-2xl p-4 text-center border border-blue-100">
-                          <p className="text-2xl font-bold text-blue-600">{analyticsData.length}</p>
+                          <p className="text-2xl font-bold text-blue-600">{visibleAnalyticsData.length}</p>
                           <p className="text-xs text-blue-500 font-semibold mt-1">Total Attempts</p>
                         </div>
                         <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-100">
                           <p className="text-2xl font-bold text-green-600">
-                            {analyticsData.length > 0
+                            {visibleAnalyticsData.length > 0
                               ? Math.round(
-                                analyticsData.reduce((s, r) => s + r.percentage, 0) / analyticsData.length
+                                visibleAnalyticsData.reduce((s, r) => s + r.percentage, 0) / visibleAnalyticsData.length
                               )
                               : 0}
                             %
@@ -889,13 +938,19 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                         </div>
                         <div className="bg-purple-50 rounded-2xl p-4 text-center border border-purple-100">
                           <p className="text-2xl font-bold text-purple-600">
-                            {analyticsData.length > 0 ? Math.max(...analyticsData.map((r) => r.percentage)) : 0}%
+                            {visibleAnalyticsData.length > 0 ? Math.max(...visibleAnalyticsData.map((r) => r.percentage)) : 0}%
                           </p>
                           <p className="text-xs text-purple-500 font-semibold mt-1">Top Score</p>
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-black/5 overflow-hidden">
+                      {visibleAnalyticsData.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-10 text-center">
+                          <p className="text-sm font-bold text-slate-500">No normal attempts to show</p>
+                          <p className="mt-1 text-xs font-medium text-slate-400">Enable reattempts to include reattempt data.</p>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-black/5 overflow-hidden">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
@@ -914,7 +969,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-50">
-                            {analyticsData.map((r) => (
+                            {visibleAnalyticsData.map((r) => (
                               <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
@@ -935,7 +990,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                                       )}
                                     </div>
                                     <div>
-                                      <p className="font-semibold text-gray-900 text-xs">{r.studentName}</p>
+                                      <p className="font-semibold text-gray-900 text-xs leading-tight [overflow-wrap:anywhere]">{renderTwoWordLines(r.studentName)}</p>
                                       <p className="text-gray-400 text-xs">@{r.username}</p>
                                       <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wide">
                                         {r.attemptType === "NORMAL" ? "Normal attempt" : "Reattempt"}
@@ -982,6 +1037,7 @@ export default function EditQuizClient({ quiz }: EditQuizClientProps) {
                           </tbody>
                         </table>
                       </div>
+                      )}
                     </div>
                   )}
                 </div>

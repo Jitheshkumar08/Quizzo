@@ -23,6 +23,19 @@ interface AnalyticsResult {
 type SortField = "score" | "submitted";
 type SortDirection = "asc" | "desc";
 
+function renderTwoWordLines(value: string) {
+    const words = value.trim().split(/\s+/).filter(Boolean);
+    if (words.length <= 2) return value;
+
+    return (
+        <>
+            {words.slice(0, 2).join(" ")}
+            <br />
+            {words.slice(2).join(" ")}
+        </>
+    );
+}
+
 export default function InstructorAnalyticsModalButton({
     quizId,
     compact = false,
@@ -37,10 +50,19 @@ export default function InstructorAnalyticsModalButton({
     const [mounted, setMounted] = useState(false);
     const [sortField, setSortField] = useState<SortField>("submitted");
     const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+    const [showReattempts, setShowReattempts] = useState(false);
+
+    const visibleAnalyticsData = useMemo(() => {
+        return showReattempts ? analyticsData : analyticsData.filter((result) => result.attemptType === "NORMAL");
+    }, [analyticsData, showReattempts]);
+
+    const reattemptCount = useMemo(() => {
+        return analyticsData.filter((result) => result.attemptType !== "NORMAL").length;
+    }, [analyticsData]);
 
     const sortedAnalyticsData = useMemo(() => {
         const direction = sortDirection === "asc" ? 1 : -1;
-        return [...analyticsData].sort((a, b) => {
+        return [...visibleAnalyticsData].sort((a, b) => {
             if (sortField === "score") {
                 const scoreDiff = a.percentage - b.percentage || a.score - b.score;
                 if (scoreDiff !== 0) return scoreDiff * direction;
@@ -49,7 +71,7 @@ export default function InstructorAnalyticsModalButton({
 
             return (new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()) * direction;
         });
-    }, [analyticsData, sortDirection, sortField]);
+    }, [sortDirection, sortField, visibleAnalyticsData]);
 
     function toggleSort(field: SortField) {
         if (sortField === field) {
@@ -221,7 +243,7 @@ export default function InstructorAnalyticsModalButton({
                                                 Quiz Analytics
                                             </h2>
                                             <p className="text-sm text-gray-500">
-                                                {analyticsData.length} attempt{analyticsData.length !== 1 ? "s" : ""}
+                                                {visibleAnalyticsData.length} attempt{visibleAnalyticsData.length !== 1 ? "s" : ""}
                                             </p>
                                         </div>
                                     </div>
@@ -256,16 +278,43 @@ export default function InstructorAnalyticsModalButton({
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
+                                            {reattemptCount > 0 && (
+                                                <div className="flex justify-end mb-4">
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={showReattempts}
+                                                        onClick={() => setShowReattempts((value) => !value)}
+                                                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black transition-all ${showReattempts
+                                                            ? "border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                                                            : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                                                            }`}
+                                                        title={showReattempts ? "Hide reattempt data" : "Show reattempt data"}
+                                                    >
+                                                        <span>Reattempts</span>
+                                                        <span
+                                                            className={`relative h-5 w-9 rounded-full transition-colors ${showReattempts ? "bg-blue-600" : "bg-slate-200"
+                                                                }`}
+                                                            aria-hidden="true"
+                                                        >
+                                                            <span
+                                                                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${showReattempts ? "translate-x-4" : "translate-x-0.5"
+                                                                    }`}
+                                                            />
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            )}
                                             <div className="grid grid-cols-3 gap-3 mb-6">
                                                 <div className="bg-blue-50 rounded-2xl p-4 text-center border border-blue-100">
-                                                    <p className="text-2xl font-bold text-blue-600">{analyticsData.length}</p>
+                                                    <p className="text-2xl font-bold text-blue-600">{visibleAnalyticsData.length}</p>
                                                     <p className="text-xs text-blue-500 font-semibold mt-1">Total Attempts</p>
                                                 </div>
                                                 <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-100">
                                                     <p className="text-2xl font-bold text-green-600">
-                                                        {analyticsData.length > 0
+                                                        {visibleAnalyticsData.length > 0
                                                             ? Math.round(
-                                                                analyticsData.reduce((s, r) => s + r.percentage, 0) / analyticsData.length
+                                                                visibleAnalyticsData.reduce((s, r) => s + r.percentage, 0) / visibleAnalyticsData.length
                                                             )
                                                             : 0}
                                                         %
@@ -274,13 +323,19 @@ export default function InstructorAnalyticsModalButton({
                                                 </div>
                                                 <div className="bg-purple-50 rounded-2xl p-4 text-center border border-purple-100">
                                                     <p className="text-2xl font-bold text-purple-600">
-                                                        {analyticsData.length > 0 ? Math.max(...analyticsData.map((r) => r.percentage)) : 0}%
+                                                        {visibleAnalyticsData.length > 0 ? Math.max(...visibleAnalyticsData.map((r) => r.percentage)) : 0}%
                                                     </p>
                                                     <p className="text-xs text-purple-500 font-semibold mt-1">Top Score</p>
                                                 </div>
                                             </div>
 
-                                            <div className="rounded-2xl border border-black/5 overflow-x-auto">
+                                            {visibleAnalyticsData.length === 0 ? (
+                                                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-10 text-center">
+                                                    <p className="text-sm font-bold text-slate-500">No normal attempts to show</p>
+                                                    <p className="mt-1 text-xs font-medium text-slate-400">Enable reattempts to include reattempt data.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="rounded-2xl border border-black/5 overflow-x-auto">
                                                 <table className="w-full min-w-[780px] text-sm">
                                                     <thead>
                                                         <tr className="bg-slate-50/90 border-b border-slate-200/80">
@@ -350,7 +405,7 @@ export default function InstructorAnalyticsModalButton({
                                                                             )}
                                                                         </div>
                                                                         <div className="min-w-0">
-                                                                            <p className="font-bold text-slate-950 text-sm truncate">{r.studentName}</p>
+                                                                            <p className="font-bold text-slate-950 text-sm leading-tight [overflow-wrap:anywhere]">{renderTwoWordLines(r.studentName)}</p>
                                                                             <p className="text-slate-400 text-xs font-semibold truncate">@{r.username}</p>
                                                                             <p className="mt-0.5 text-slate-400 text-[11px] font-black uppercase tracking-wide">
                                                                                 {r.attemptType === "NORMAL" ? "Normal attempt" : "Reattempt"}
@@ -408,6 +463,7 @@ export default function InstructorAnalyticsModalButton({
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

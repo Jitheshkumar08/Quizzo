@@ -19,6 +19,13 @@ function reorder(ids: string[], draggedId: string, target: DropTarget) {
 
 function getDropSide(event: DragEvent<HTMLElement>) {
   const rect = event.currentTarget.getBoundingClientRect();
+  const grid = event.currentTarget.parentElement;
+  const columns = grid ? window.getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0;
+
+  if (columns <= 1) {
+    return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+  }
+
   return event.clientX < rect.left + rect.width / 2 ? "before" : "after";
 }
 
@@ -233,13 +240,13 @@ export default function AdminQuizOrderGrid({
 }
 
 function InsertionLine({ side }: { side: "before" | "after" }) {
-  const sideClass = side === "before" ? "-left-3" : "-right-3";
+  const sideClass = side === "before" ? "-top-3 md:-left-3" : "-bottom-3 md:-right-3 md:bottom-auto";
 
   return (
-    <div className={`pointer-events-none absolute ${sideClass} top-1/2 z-30 h-[calc(100%+1.25rem)] -translate-y-1/2`}>
-      <div className="relative h-full w-1 rounded-full bg-violet-600 shadow-[0_0_0_3px_rgba(139,92,246,0.18),0_10px_24px_rgba(109,40,217,0.35)]">
-        <span className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-violet-600 shadow-md" />
-        <span className="absolute bottom-0 left-1/2 h-3.5 w-3.5 -translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white bg-violet-600 shadow-md" />
+    <div className={`pointer-events-none absolute ${sideClass} left-1/2 z-30 w-[calc(100%+1.25rem)] -translate-x-1/2 md:left-auto md:top-1/2 md:h-[calc(100%+1.25rem)] md:w-auto md:translate-x-0 md:-translate-y-1/2`}>
+      <div className="relative h-1 w-full rounded-full bg-violet-600 shadow-[0_0_0_3px_rgba(139,92,246,0.18),0_10px_24px_rgba(109,40,217,0.35)] md:h-full md:w-1">
+        <span className="absolute left-0 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-violet-600 shadow-md md:left-1/2 md:top-0" />
+        <span className="absolute right-0 top-1/2 h-3.5 w-3.5 translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-violet-600 shadow-md md:bottom-0 md:left-1/2 md:right-auto md:top-auto md:-translate-x-1/2 md:translate-y-1/2" />
       </div>
     </div>
   );

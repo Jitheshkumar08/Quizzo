@@ -39,6 +39,19 @@ function displayQuizTitle(title: string) {
   return title.replace(new RegExp(`\\s+-\\s+${MISSED_REATTEMPT_LABEL}$`, "i"), "");
 }
 
+function renderTwoWordLines(value: string) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return value;
+
+  return (
+    <>
+      {words.slice(0, 2).join(" ")}
+      <br />
+      {words.slice(2).join(" ")}
+    </>
+  );
+}
+
 export default function UserAttemptsModalButton({
   userId,
   fullName,
@@ -322,7 +335,7 @@ export default function UserAttemptsModalButton({
                               <tr key={result.id} className="bg-white hover:bg-slate-50/80 transition-colors">
                                 <td className="px-5 py-4">
                                   <div className="min-w-0">
-                                    <p className="font-bold text-slate-950 text-sm truncate">{displayQuizTitle(result.quizTitle)}</p>
+                                    <p className="font-bold text-slate-950 text-sm leading-tight [overflow-wrap:anywhere]">{renderTwoWordLines(displayQuizTitle(result.quizTitle))}</p>
                                     <p className="mt-1 text-slate-400 text-xs font-semibold uppercase tracking-wide">
                                       {result.attemptType === "NORMAL" ? "Normal attempt" : "Reattempt"}
                                     </p>
