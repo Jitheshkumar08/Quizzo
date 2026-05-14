@@ -20,6 +20,7 @@ export default function Navbar() {
                                 alt="Quizzo logo"
                                 width={40}
                                 height={40}
+                                loading="eager"
                                 className="w-9 h-9 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105 duration-300"
                             />
                             <span className="text-[21px] sm:text-[24px] font-black leading-none tracking-normal bg-gradient-to-br from-[#1F1B19] via-[#3A2B25] to-[#A56A43] bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] max-[380px]:hidden">

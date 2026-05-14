@@ -26,7 +26,7 @@ export default auth((req) => {
   const role = session?.user?.role ?? "";
 
   if (pathname.startsWith("/admin")) {
-    const modAllowedAdminPath = pathname === "/admin/users" || pathname === "/admin/quizzes";
+    const modAllowedAdminPath = pathname === "/admin/users" || pathname === "/admin/quizzes" || pathname === "/admin/attempts";
     if (role !== "ADMIN" && !(role === "MOD" && modAllowedAdminPath)) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
