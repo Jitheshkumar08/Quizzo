@@ -37,7 +37,7 @@ export default auth((req) => {
     role !== "INSTRUCTOR" &&
     role !== "ADMIN"
   ) {
-    const modAllowedInstructorPath = pathname === "/instructor/upload" || pathname === "/instructor/quizzes";
+    const modAllowedInstructorPath = pathname === "/instructor/upload" || pathname.startsWith("/instructor/quizzes");
     if (role === "MOD" && modAllowedInstructorPath) {
       return NextResponse.next();
     }
