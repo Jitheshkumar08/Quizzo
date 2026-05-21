@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import UploadZone from "@/components/quiz/UploadZone";
 import QuestionEditor, { QuestionData, createBlankQuestion } from "@/components/quiz/QuestionEditor";
-import { Brain, Plus, Loader2, Save, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Info, X, AlertTriangle, Copy, Check, UploadCloud, MessageSquareText, FileDown, FileUp } from "lucide-react";
+import { Brain, Plus, Loader2, Save, FileText, CheckCircle2, Download, Shuffle, FoldVertical, UnfoldVertical, Info, X, AlertTriangle, Copy, Check, UploadCloud, MessageSquareText, FileDown, FileUp, PencilLine } from "lucide-react";
 import QuizAccessSettings from "@/components/quiz/QuizAccessSettings";
 import { AiButtons } from "@/components/ui/AiButtons";
 import { appDatetimeLocalToISOString } from "@/lib/timezone";
@@ -161,6 +161,7 @@ export default function InstructorUploadPage() {
   const [description, setDescription] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [publishError, setPublishError] = useState("");
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [, setBackupQuestions] = useState<QuestionData[]>([]);
   const [, setFullText] = useState("");
@@ -346,7 +347,55 @@ export default function InstructorUploadPage() {
     setShuffleOptions(!shuffleOptions);
   }
 
+  function handleStartManualQuiz() {
+    if (!title.trim()) {
+      setGenerateError("Enter a quiz title before creating questions manually.");
+      return;
+    }
+
+    const firstQuestion = createBlankQuestion(0);
+    setFile(null);
+    setGenerateError("");
+    setPublishError("");
+    setShowReport(false);
+    setJsonBlobUrl("");
+    setFullText("");
+    setTotalQuestions(1);
+    setQuestions([firstQuestion]);
+    setBackupQuestions([firstQuestion]);
+    setStep("edit");
+  }
+
+  function getQuizValidationError() {
+    if (!title.trim()) return "Quiz title is required.";
+    if (questions.length === 0) return "Add at least one question before saving.";
+
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      const questionNumber = i + 1;
+
+      if (!question.questionText.trim()) {
+        return `Question ${questionNumber} is missing the question text.`;
+      }
+
+      for (const optionKey of ["A", "B", "C", "D"] as const) {
+        if (!question.options[optionKey].trim()) {
+          return `Question ${questionNumber} is missing option ${optionKey}.`;
+        }
+      }
+    }
+
+    return "";
+  }
+
   async function handlePublish(publish: boolean) {
+    const validationError = getQuizValidationError();
+    if (validationError) {
+      setPublishError(validationError);
+      return;
+    }
+
+    setPublishError("");
     setPublishing(true);
     try {
       const res = await fetch("/api/quiz/save", {
@@ -357,7 +406,18 @@ export default function InstructorUploadPage() {
           description,
           jsonBlobUrl: jsonBlobUrl || undefined,
           publish,
-          questions,
+          questions: questions.map((question, order) => ({
+            ...question,
+            questionText: question.questionText.trim(),
+            options: {
+              A: question.options.A.trim(),
+              B: question.options.B.trim(),
+              C: question.options.C.trim(),
+              D: question.options.D.trim(),
+            },
+            explanation: question.explanation.trim(),
+            order,
+          })),
           scheduleEnabled,
           scheduledStart: scheduleEnabled && scheduledStart ? appDatetimeLocalToISOString(scheduledStart) : null,
           scheduledEnd: scheduleEnabled && scheduledEnd ? appDatetimeLocalToISOString(scheduledEnd) : null,
@@ -373,7 +433,7 @@ export default function InstructorUploadPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || "Failed to save");
+        setPublishError(data.error || "Failed to save");
         return;
       }
 
@@ -388,8 +448,8 @@ export default function InstructorUploadPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Generate Quiz from PDF </h1>
-          <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a PDF and AI will extract comprehensive MCQs</p>
+          <h1 className="text-[28px] font-bold text-[#2C2A28] tracking-tight">Set a Quiz</h1>
+          <p className="text-[#918B80] font-medium text-[15px] mt-1">Upload a file for extraction or create MCQs manually</p>
           <p className="text-[red] font-medium text-[15px] mt-1">(Please use a JSON file by copying the format from the Upload Guide.)</p>
         </div>
         <button onClick={() => setShowDisclaimer(true)} className="relative inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 self-start md:self-auto group mt-2 md:mt-0 rounded-xl">
@@ -442,13 +502,44 @@ export default function InstructorUploadPage() {
             </div>
 
             <div className="space-y-2 relative z-10">
-              <label className="text-sm font-bold text-[#2C2A28] ml-1">PDF File *</label>
+              <label className="text-sm font-bold text-[#2C2A28] ml-1">PDF or JSON File</label>
               <UploadZone
                 onFileSelect={setFile}
                 selectedFile={file}
                 onClear={() => setFile(null)}
                 disabled={generating}
               />
+            </div>
+
+            <div className="relative z-10 overflow-hidden rounded-2xl border border-[#E8E2D8] bg-white/75 p-5 shadow-[0_12px_28px_rgba(44,42,40,0.055)]">
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-[#8b5cf6]/8 pointer-events-none" />
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-start gap-4">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#2C2A28] text-white shadow-[0_8px_18px_rgba(44,42,40,0.16)]">
+                    <PencilLine className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-base font-black text-[#2C2A28]">Create quiz manually</h2>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-[#918B80]">
+                      Start with a blank question, add options, choose the correct answer, then save or publish.
+                    </p>
+                  </div>
+                </div>
+                <span
+                  className="w-full sm:w-auto"
+                  title={!title.trim() ? "Fill the quiz title first" : undefined}
+                >
+                  <button
+                    type="button"
+                    onClick={handleStartManualQuiz}
+                    disabled={!title.trim() || generating}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2C2A28] px-5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(44,42,40,0.16)] transition-all hover:-translate-y-0.5 hover:bg-[#1A1816] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:w-auto"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Start manually
+                  </button>
+                </span>
+              </div>
             </div>
 
             {generateError && (
@@ -538,13 +629,40 @@ export default function InstructorUploadPage() {
 
           {/* Header & Stats bar */}
           <div className="glass rounded-xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 border border-white/20">
+            <div className="space-y-4">
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#6B7280]">Quiz Title *</span>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter quiz title"
+                  className="w-full rounded-xl border-2 border-transparent bg-white/80 px-4 py-3 text-sm font-bold text-[#2C2A28] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] outline-none transition-all placeholder:text-[#918B80] focus:border-[#8C5D3E]/30 focus:bg-white"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#6B7280]">Description</span>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief description of the quiz"
+                  rows={4}
+                  className="w-full resize-y whitespace-pre-wrap rounded-xl border-2 border-transparent bg-white/80 px-4 py-3 text-sm font-semibold leading-relaxed text-[#2C2A28] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] outline-none transition-all placeholder:text-[#918B80] focus:border-[#8C5D3E]/30 focus:bg-white"
+                />
+              </label>
+            </div>
+
             <div className="flex flex-col gap-1">
-              <h2 className="font-bold text-xl sm:text-2xl text-[#2C2A28] truncate">{title}</h2>
-              {description && <p className="text-[#918B80] font-medium text-sm sm:text-base line-clamp-2">{description}</p>}
               <p className="text-xs sm:text-sm font-semibold text-[#8b5cf6] mt-2 bg-[#8b5cf6]/10 w-fit px-3 py-1.5 rounded-full">
-                {questions.length} {totalQuestions > 0 ? `out of ~${totalQuestions}` : ""} questions extracted
+                {questions.length} {totalQuestions > questions.length ? `out of ~${totalQuestions}` : ""} question{questions.length !== 1 ? "s" : ""}
               </p>
             </div>
+
+            {publishError && (
+              <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                {publishError}
+              </div>
+            )}
 
             <div className="flex flex-col xl:flex-row xl:items-center gap-4 pt-5 border-t border-black/5 w-full">
               {/* Tool Group */}

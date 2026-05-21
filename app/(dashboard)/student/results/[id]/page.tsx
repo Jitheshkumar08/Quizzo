@@ -8,9 +8,11 @@ import StartReattemptButton from "./StartReattemptButton";
 import { parseAnswerMap, parseStringArray } from "@/lib/reattempt-utils";
 import { calculateResultReviewStats, parseResultReviewSnapshot } from "@/lib/result-review";
 import QuizStartLink from "@/components/quiz/QuizStartLink";
+import ConfettiCelebration from "@/components/ui/ConfettiCelebration";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ celebrate?: string }>;
 }
 
 function formatTime(secs: number) {
@@ -19,11 +21,12 @@ function formatTime(secs: number) {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export default async function ResultDetailPage({ params }: Props) {
+export default async function ResultDetailPage({ params, searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
 
   const { id } = await params;
+  const { celebrate } = await searchParams;
 
   const result = await prisma.result.findUnique({
     where: { id },
@@ -134,6 +137,8 @@ export default async function ResultDetailPage({ params }: Props) {
         ? "from-amber-50 via-white to-orange-50 border-amber-100"
         : "from-rose-50 via-white to-red-50 border-rose-100";
 
+  const showConfetti = celebrate === "1" && pct >= 75;
+
   return (
     // Pass questions + userAnswers as props so the wrapper can render
     // ReviewQuestionsClient (20/page) separately from the static children.
@@ -146,6 +151,33 @@ export default async function ResultDetailPage({ params }: Props) {
       statsOverride={stats}
       emptyMessage={stats.isLegacyQuestionMismatch ? "Question-level review is unavailable for this attempt because the quiz questions were replaced after submission. The score summary uses the saved result." : undefined}
     >
+
+      <style>{`
+        .result-action-btn-outline {
+          font-family: inherit;
+          padding: 0.5em 1.1em;
+          font-weight: 900;
+          font-size: 14px;
+          border: 3px solid currentColor;
+          border-radius: 0.4em;
+          box-shadow: 0.1em 0.1em currentColor;
+          cursor: pointer;
+          transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+        }
+
+        .result-action-btn-outline:hover {
+          transform: translate(-0.05em, -0.05em);
+          box-shadow: 0.15em 0.15em currentColor;
+        }
+
+        .result-action-btn-outline:active {
+          transform: translate(0.05em, 0.05em);
+          box-shadow: 0.05em 0.05em currentColor;
+        }
+      `}</style>
+
+      {/* Confetti celebration for 75%+ scores, only on fresh submit */}
+      {showConfetti && <ConfettiCelebration />}
 
       {/* Back */}
       <Link

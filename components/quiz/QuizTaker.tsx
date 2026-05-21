@@ -318,7 +318,8 @@ export default function QuizTaker({
       if (res.ok) {
         markQuizSubmittedForHistory(quizId);
         if (data.resultId) {
-          navigateToResultAfterSubmit(`/student/results/${data.resultId}`);
+          const celebrate = data.percentage != null && data.percentage >= 75 ? "?celebrate=1" : "";
+          navigateToResultAfterSubmit(`/student/results/${data.resultId}${celebrate}`);
         } else {
           router.replace(`/student/quizzes`);
         }
@@ -478,7 +479,7 @@ export default function QuizTaker({
                 {quizTitle}
               </h1>
               {quizDescription && (
-                <p className="text-sm md:text-base text-gray-600 mt-2 leading-relaxed max-w-4xl line-clamp-2">
+                <p className="text-sm md:text-base text-gray-600 mt-2 leading-relaxed max-w-4xl whitespace-pre-wrap break-words">
                   {quizDescription}
                 </p>
               )}
