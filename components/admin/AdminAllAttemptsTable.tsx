@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 import { MISSED_REATTEMPT_LABEL } from "@/lib/reattempt-utils";
+import PaginationControls from "@/components/ui/PaginationControls";
 
 export interface AdminAttemptItem {
   id: string;
@@ -35,6 +36,8 @@ export interface AdminAttemptItem {
 
 type SortField = "score" | "submitted";
 type SortDirection = "asc" | "desc";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 function displayQuizTitle(title: string) {
   return title.replace(new RegExp(`\\s+-\\s+${MISSED_REATTEMPT_LABEL}$`, "i"), "");
@@ -56,6 +59,8 @@ function renderTwoWordLines(value: string) {
 export default function AdminAllAttemptsTable({ attempts }: { attempts: AdminAttemptItem[] }) {
   const [sortField, setSortField] = useState<SortField>("submitted");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const sortedAttempts = useMemo(() => {
     const direction = sortDirection === "asc" ? 1 : -1;
@@ -71,6 +76,14 @@ export default function AdminAllAttemptsTable({ attempts }: { attempts: AdminAtt
     });
   }, [attempts, sortDirection, sortField]);
 
+  const effectivePageSize = pageSize === Infinity ? sortedAttempts.length || 1 : pageSize;
+  const totalPages = Math.max(1, Math.ceil(sortedAttempts.length / effectivePageSize));
+  const page = Math.min(currentPage, totalPages);
+  const pageStartIndex = (page - 1) * effectivePageSize;
+  const paginatedAttempts = sortedAttempts.slice(pageStartIndex, pageStartIndex + effectivePageSize);
+  const startItem = sortedAttempts.length === 0 ? 0 : pageStartIndex + 1;
+  const endItem = Math.min(pageStartIndex + paginatedAttempts.length, sortedAttempts.length);
+
   const avgScore =
     attempts.length > 0
       ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.percentage, 0) / attempts.length)
@@ -78,6 +91,7 @@ export default function AdminAllAttemptsTable({ attempts }: { attempts: AdminAtt
   const topScore = attempts.length > 0 ? Math.max(...attempts.map((attempt) => attempt.percentage)) : 0;
 
   function toggleSort(field: SortField) {
+    setCurrentPage(1);
     if (sortField === field) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
       return;
@@ -85,6 +99,14 @@ export default function AdminAllAttemptsTable({ attempts }: { attempts: AdminAtt
 
     setSortField(field);
     setSortDirection(field === "score" ? "asc" : "desc");
+  }
+
+  function goToPreviousPage() {
+    setCurrentPage((value) => Math.max(1, Math.min(value, totalPages) - 1));
+  }
+
+  function goToNextPage() {
+    setCurrentPage((value) => Math.min(totalPages, Math.min(value, totalPages) + 1));
   }
 
   function renderSortIndicator(field: SortField) {
@@ -212,7 +234,7 @@ export default function AdminAllAttemptsTable({ attempts }: { attempts: AdminAtt
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {sortedAttempts.map((attempt) => (
+              {paginatedAttempts.map((attempt) => (
                 <tr key={attempt.id} className="bg-white hover:bg-slate-50/80 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
@@ -292,7 +314,23 @@ export default function AdminAllAttemptsTable({ attempts }: { attempts: AdminAtt
             </tbody>
           </table>
         </div>
+
+        <PaginationControls
+          currentPage={page}
+          endItem={endItem}
+          onNext={goToNextPage}
+          onPrevious={goToPreviousPage}
+          startItem={startItem}
+          totalItems={sortedAttempts.length}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+        />
       </div>
     </>
   );
 }
+

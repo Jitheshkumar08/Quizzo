@@ -37,6 +37,17 @@ interface QuizTakerProps {
 }
 
 const QUESTIONS_PER_PAGE = 5;
+const QUIZ_STATUS_POLL_MS = 8000;
+const BROWSE_REDIRECT_CODES = new Set([
+  "ENDED",
+  "TIME_EXPIRED",
+  "QUIZ_UNAVAILABLE",
+  "QUIZ_UPDATED",
+  "NOT_STARTED",
+  "MAX_ATTEMPTS",
+  "PASSWORD_REQUIRED",
+  "NO_SESSION",
+]);
 
 export default function QuizTaker({
   quizId,
@@ -118,6 +129,7 @@ export default function QuizTaker({
   const submitLock = useRef(false);
   const autoSubmitFired = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
+  const statusCheckLocked = useRef(false);
 
   const hasTimer = !!(attemptDeadline && serverNow);
 
@@ -126,6 +138,20 @@ export default function QuizTaker({
   const navigateToResultAfterSubmit = useCallback((href: string) => {
     window.history.replaceState(null, "", "/student/quizzes");
     router.push(href);
+  }, [router]);
+
+  const showBlockingQuizPopup = useCallback((message: string, code?: string) => {
+    statusCheckLocked.current = true;
+    setShowConfirm(false);
+    setAnimating(false);
+    setSubmitting(false);
+    setErrorPopup({ message, code });
+  }, []);
+
+  const redirectAfterBlockingPopup = useCallback((code?: string) => {
+    if (code && BROWSE_REDIRECT_CODES.has(code)) {
+      router.replace("/student/quizzes");
+    }
   }, [router]);
 
   useEffect(() => {
@@ -180,6 +206,71 @@ export default function QuizTaker({
       }
     };
   }, [answers, quizId, autosaveUrl]);
+
+  useEffect(() => {
+    if (!mounted || submitUrl) return;
+
+    const checkQuizStatus = async () => {
+      if (statusCheckLocked.current || submitLock.current || autoSubmitFired.current) return;
+
+      const query = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : "";
+      try {
+        const res = await fetch(`/api/quiz/${encodeURIComponent(quizId)}/status${query}`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (res.ok) return;
+        if (res.status < 400 || res.status >= 500) return;
+
+        const data = await res.json().catch(() => null) as { code?: string; message?: string; error?: string } | null;
+        const code = typeof data?.code === "string" ? data.code : undefined;
+        const message =
+          typeof data?.message === "string"
+            ? data.message
+            : typeof data?.error === "string"
+              ? data.error
+              : "This quiz is no longer available. You will be taken back to Browse Quizzes.";
+
+        if (code === "QUIZ_UPDATED") {
+          statusCheckLocked.current = true;
+          router.replace("/student/quizzes?quizNotice=updated");
+          return;
+        }
+
+        showBlockingQuizPopup(message, code);
+      } catch {
+        // Temporary network errors should not interrupt an active attempt.
+      }
+    };
+
+    const interval = window.setInterval(() => {
+      void checkQuizStatus();
+    }, QUIZ_STATUS_POLL_MS);
+    const initialCheck = window.setTimeout(() => {
+      void checkQuizStatus();
+    }, 1200);
+
+    const checkOnVisible = () => {
+      if (document.visibilityState === "visible") {
+        void checkQuizStatus();
+      }
+    };
+
+    const checkOnFocus = () => {
+      void checkQuizStatus();
+    };
+
+    window.addEventListener("focus", checkOnFocus);
+    document.addEventListener("visibilitychange", checkOnVisible);
+
+    return () => {
+      window.clearTimeout(initialCheck);
+      window.clearInterval(interval);
+      window.removeEventListener("focus", checkOnFocus);
+      document.removeEventListener("visibilitychange", checkOnVisible);
+    };
+  }, [mounted, quizId, router, sessionId, showBlockingQuizPopup, submitUrl]);
 
   useEffect(() => {
     elapsedRef.current = elapsed;
@@ -573,42 +664,46 @@ export default function QuizTaker({
           const headerRight = document.getElementById("dashboard-header-right");
           if (!headerRight) return null;
           return createPortal(
-            <div className="quiz-mobile-sticky lg:hidden flex items-center gap-1.5 max-w-full">
+            <div className="quiz-mobile-sticky lg:hidden flex items-center gap-2 w-full">
               {/* Hide the profile dropdown when this is active */}
               <style>{`
                 @media (max-width: 1023px) {
                   #dashboard-header-right > :not(.quiz-mobile-sticky) {
                     display: none !important;
                   }
+                  #dashboard-header-right {
+                    flex: 1;
+                    min-width: 0;
+                  }
                 }
               `}</style>
 
-              {/* Compact progress */}
-              <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
-                <div className="h-1.5 w-14 bg-gray-200/80 rounded-full overflow-hidden flex-shrink-0">
+              {/* Progress — fills remaining space dynamically */}
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <div className="h-2 flex-1 min-w-[32px] bg-gray-200/80 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
                     style={{
                       width: `${(answeredCount / questions.length) * 100}%`,
-                      minWidth: answeredCount > 0 ? "6px" : "0px",
+                      minWidth: answeredCount > 0 ? "8px" : "0px",
                     }}
                   />
                 </div>
-                <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap">{answeredCount}/{questions.length}</span>
+                <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap flex-shrink-0">{answeredCount}/{questions.length}</span>
               </div>
 
-              {/* Compact timer */}
-              <div className={`inline-flex items-center gap-1 rounded-lg border font-mono font-bold px-2 py-1 text-[11px] flex-shrink-0 ${timerToneClass}`}>
-                <TimerIcon className="w-3 h-3 flex-shrink-0" />
+              {/* Timer */}
+              <div className={`inline-flex items-center gap-1.5 rounded-xl border font-mono font-bold px-2.5 py-1.5 text-xs flex-shrink-0 ${timerToneClass}`}>
+                <TimerIcon className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>{timerText}</span>
               </div>
 
               {/* Submit */}
               <button
                 onClick={() => setShowConfirm(true)}
-                className="inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-black text-emerald-700 shadow-sm active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 shadow-sm active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
               >
-                <Send className="w-3 h-3" />
+                <Send className="w-3.5 h-3.5" />
                 Submit
               </button>
             </div>,
@@ -720,40 +815,41 @@ export default function QuizTaker({
 
         {/* Error / Info popup centered */}
         {errorPopup && mounted && createPortal(
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl p-8 max-w-sm w-full border border-black/5 shadow-2xl space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-xl text-gray-900">Notice</h3>
-                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                    {errorPopup.message}
+          <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#1F1B19]/78 p-4 backdrop-blur-lg animate-in fade-in duration-200">
+            <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-white/95 bg-[#FFFDF9] p-7 text-center shadow-[0_34px_110px_rgba(0,0,0,0.46),0_0_0_1px_rgba(31,27,25,0.08)]">
+              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-amber-100/80 to-transparent" />
+              <div className="absolute -right-14 -top-16 h-36 w-36 rounded-full bg-amber-100 blur-3xl" />
+              <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[24px] bg-amber-100 text-amber-700 shadow-[0_12px_28px_rgba(180,83,9,0.16)] ring-1 ring-amber-200">
+                <AlertTriangle className="h-8 w-8" />
+              </div>
+              <div className="relative space-y-2">
+                <h3 className="text-2xl font-black tracking-tight text-[#1F1B19]">
+                  {errorPopup.code === "QUIZ_UPDATED"
+                    ? "Quiz updated"
+                    : errorPopup.code && BROWSE_REDIRECT_CODES.has(errorPopup.code)
+                      ? "Quiz unavailable"
+                      : "Notice"}
+                </h3>
+                <p className="mx-auto max-w-sm text-sm font-semibold leading-relaxed text-[#6B6357]">
+                  {errorPopup.message}
+                </p>
+                {errorPopup.code === "QUIZ_UPDATED" && (
+                  <p className="mx-auto max-w-sm text-xs font-bold leading-relaxed text-[#918B80]">
+                    Your current attempt has been stopped so you do not answer an outdated quiz version.
                   </p>
-                </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-end pt-2">
+              <div className="relative mt-6">
                 <button
                   onClick={() => {
+                    const code = errorPopup.code;
                     setErrorPopup(null);
-                    if (
-                      errorPopup.code === "ENDED" ||
-                      errorPopup.code === "TIME_EXPIRED" ||
-                      errorPopup.code === "QUIZ_UNAVAILABLE" ||
-                      errorPopup.code === "QUIZ_UPDATED" ||
-                      errorPopup.code === "NOT_STARTED" ||
-                      errorPopup.code === "MAX_ATTEMPTS" ||
-                      errorPopup.code === "PASSWORD_REQUIRED" ||
-                      errorPopup.code === "NO_SESSION"
-                    ) {
-                      router.replace("/student/quizzes");
-                    }
+                    redirectAfterBlockingPopup(code);
                   }}
-                  className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[18px] bg-[#1F1B19] px-5 py-3.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(31,27,25,0.24)] transition-colors hover:bg-[#14110F]"
                 >
-                  OK
+                  {errorPopup.code && BROWSE_REDIRECT_CODES.has(errorPopup.code) ? "Browse Quizzes" : "OK"}
                 </button>
               </div>
             </div>

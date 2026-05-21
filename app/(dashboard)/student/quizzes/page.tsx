@@ -14,6 +14,7 @@ import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
 import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizSortFilterValue, type QuizTagFilterValue } from "@/components/quiz/QuizAvailabilityFilter";
 import AdminQuizOrderGrid from "@/components/quiz/AdminQuizOrderGrid";
 import QuizStartLink from "@/components/quiz/QuizStartLink";
+import StudentQuizNoticeModal from "@/components/quiz/StudentQuizNoticeModal";
 
 export const metadata = { title: "Browse Quizzes" };
 
@@ -64,13 +65,14 @@ function quizMatchesTagFilter(
 export default async function StudentQuizzesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string; availability?: string; status?: string; tags?: string; sort?: string }>;
+  searchParams?: Promise<{ q?: string; availability?: string; status?: string; tags?: string; sort?: string; quizNotice?: string }>;
 }) {
   const session = await auth();
   if (!session) redirect("/login");
 
   const resolvedSearchParams = await searchParams;
   const searchQuery = resolvedSearchParams?.q?.trim() || "";
+  const quizNotice = resolvedSearchParams?.quizNotice;
   const availabilityFilter = parseAvailabilityFilter(resolvedSearchParams?.status);
   const tagFilters = parseTagFilters(resolvedSearchParams?.tags);
   const sortFilter = parseSortFilter(resolvedSearchParams?.sort);
@@ -206,6 +208,7 @@ export default async function StudentQuizzesPage({
 
   return (
     <div className="space-y-6 animate-fade-in-up">
+      <StudentQuizNoticeModal notice={quizNotice} />
       <QuizListRealtimeRefresh />
       <ScheduleBoundaryRefresh boundaries={scheduleBoundaries} serverNow={now.toISOString()} />
       {/* Header */}

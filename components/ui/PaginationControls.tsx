@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -10,7 +11,16 @@ interface PaginationControlsProps {
   startItem: number;
   totalItems: number;
   totalPages: number;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
 }
+
+const PAGE_SIZE_OPTIONS = [
+  { value: 20, label: "20" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+  { value: Infinity, label: "All" },
+];
 
 function PageButton({
   direction,
@@ -40,6 +50,71 @@ function PageButton({
   );
 }
 
+function PageSizeDropdown({
+  pageSize,
+  onChange,
+}: {
+  pageSize: number;
+  onChange: (size: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const currentLabel = pageSize === Infinity ? "All" : String(pageSize);
+
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 bg-gradient-to-r from-[#8C6D50] to-[#6B5240] text-white shadow-[#8C6D50]/20"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+        Show {currentLabel}
+        <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 bottom-full mb-2 z-50 w-36 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#E8E2D9] py-1.5 overflow-hidden">
+          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#B0A89E] px-3 pt-1.5 pb-2">Rows Per Page</p>
+          {PAGE_SIZE_OPTIONS.map((opt) => {
+            const isActive = pageSize === opt.value;
+            return (
+              <button
+                key={opt.label}
+                onClick={() => {
+                  setOpen(false);
+                  onChange(opt.value);
+                }}
+                className={`w-full flex cursor-pointer items-center justify-between px-3 py-2 text-[12px] font-bold transition-colors duration-100 ${isActive
+                  ? "bg-[#F5EDE2] text-[#2C2A28]"
+                  : "text-[#4A4744] hover:bg-[#F5EDE2]/60 hover:text-[#2C2A28]"
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-gradient-to-br from-[#8C6D50] to-[#6B5240]" />
+                  {opt.label}
+                </span>
+                {isActive && <Check className="w-3.5 h-3.5 text-[#8C6D50]" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PaginationControls({
   currentPage,
   endItem,
@@ -48,12 +123,17 @@ export default function PaginationControls({
   startItem,
   totalItems,
   totalPages,
+  pageSize,
+  onPageSizeChange,
 }: PaginationControlsProps) {
   return (
     <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E8E2D8] bg-white/62 px-4 py-3 shadow-[0_10px_26px_rgba(44,42,40,0.07)] sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-center text-[11px] font-black uppercase tracking-[0.12em] text-[#A09890] sm:text-left">
-        {totalItems === 0 ? "0 shown" : `${startItem}-${endItem} of ${totalItems} shown`}
-      </p>
+      <div className="flex items-center justify-center gap-3 sm:justify-start">
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#A09890]">
+          {totalItems === 0 ? "0 shown" : `${startItem}-${endItem} of ${totalItems} shown`}
+        </p>
+        <PageSizeDropdown pageSize={pageSize} onChange={onPageSizeChange} />
+      </div>
       <div className="flex items-center justify-center gap-1">
         <PageButton direction="previous" disabled={currentPage <= 1} onClick={onPrevious} />
         <div className="flex h-12 min-w-[124px] items-center justify-center rounded-[20px] border border-[#E0D9CF] bg-[#F7F1E8]/90 px-4 text-[13px] font-black text-[#3D3A37] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">

@@ -24,6 +24,7 @@ export async function GET(
     }
 
     const { id: quizId } = await params;
+    const sessionId = req.nextUrl.searchParams.get("sessionId")?.trim();
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
       select: {
@@ -45,12 +46,31 @@ export async function GET(
       );
     }
 
-    const openSession = await prisma.quizSession.findFirst({
-      where: { quizId, studentId: session.user.id, submittedAt: null },
-      select: { startedAt: true },
-    });
+    const attemptSession = sessionId
+      ? await prisma.quizSession.findFirst({
+          where: { id: sessionId, quizId, studentId: session.user.id },
+          select: { startedAt: true, submittedAt: true },
+        })
+      : await prisma.quizSession.findFirst({
+          where: { quizId, studentId: session.user.id, submittedAt: null },
+          select: { startedAt: true, submittedAt: true },
+        });
 
-    if (!openSession) {
+    if (!attemptSession) {
+      return NextResponse.json(
+        { ok: false, code: "NO_SESSION", message: messages.NO_SESSION },
+        { status: 409 }
+      );
+    }
+
+    if (quiz.updatedAt.getTime() > attemptSession.startedAt.getTime() + 3000) {
+      return NextResponse.json(
+        { ok: false, code: "QUIZ_UPDATED", message: messages.QUIZ_UPDATED },
+        { status: 409 }
+      );
+    }
+
+    if (attemptSession.submittedAt) {
       return NextResponse.json(
         { ok: false, code: "NO_SESSION", message: messages.NO_SESSION },
         { status: 409 }
@@ -61,13 +81,6 @@ export async function GET(
     if (block) {
       return NextResponse.json(
         { ok: false, code: block.code, message: messages[block.code] },
-        { status: 409 }
-      );
-    }
-
-    if (quiz.updatedAt.getTime() > openSession.startedAt.getTime() + 3000) {
-      return NextResponse.json(
-        { ok: false, code: "QUIZ_UPDATED", message: messages.QUIZ_UPDATED },
         { status: 409 }
       );
     }

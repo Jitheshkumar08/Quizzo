@@ -24,7 +24,7 @@ interface User {
 type SortField = "quizzes" | "attempts" | "joined" | "lastOnline";
 type SortDirection = "asc" | "desc";
 type ViewMode = "table" | "grid";
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 function renderTwoWordLines(value: string) {
   const words = value.trim().split(/\s+/).filter(Boolean);
@@ -264,6 +264,7 @@ export default function UserTable({
   const [activeUserIds, setActiveUserIds] = useState<Set<string>>(new Set());
   const [activeLoading, setActiveLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const isDesktop = useSyncExternalStore(
     subscribeToViewport,
     getDesktopSnapshot,
@@ -389,10 +390,11 @@ export default function UserTable({
       return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
     });
   }, [activeUserIds, normalizedUserQuery, onlineOnly, sortDirection, sortField, users]);
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const effectivePageSize = pageSize === Infinity ? filteredUsers.length || 1 : pageSize;
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / effectivePageSize));
   const page = Math.min(currentPage, totalPages);
-  const pageStartIndex = (page - 1) * PAGE_SIZE;
-  const paginatedUsers = filteredUsers.slice(pageStartIndex, pageStartIndex + PAGE_SIZE);
+  const pageStartIndex = (page - 1) * effectivePageSize;
+  const paginatedUsers = filteredUsers.slice(pageStartIndex, pageStartIndex + effectivePageSize);
   const startItem = filteredUsers.length === 0 ? 0 : pageStartIndex + 1;
   const endItem = Math.min(pageStartIndex + paginatedUsers.length, filteredUsers.length);
 
@@ -809,6 +811,11 @@ export default function UserTable({
             startItem={startItem}
             totalItems={filteredUsers.length}
             totalPages={totalPages}
+            pageSize={pageSize}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
           />
         </>
       )}

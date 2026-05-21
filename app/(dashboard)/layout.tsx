@@ -36,9 +36,9 @@ export default async function DashboardLayout({
 
       <Sidebar role={session.user.role} />
 
-      <main className="flex-1 flex flex-col min-w-0 relative z-10 w-full overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10 w-full overflow-hidden">
         {/* Top bar */}
-        <header className="h-[88px] bg-[#F4EFE6]/40 backdrop-blur-2xl border-b border-white/80 flex items-center pl-[72px] pr-4 md:px-10 flex-shrink-0 sticky top-0 z-20 shadow-[0_4px_20px_rgba(163,149,126,0.05)]">
+        <header className="h-[88px] min-h-[88px] bg-[#F4EFE6]/40 backdrop-blur-2xl border-b border-white/80 flex items-center pl-[72px] pr-4 md:px-10 flex-shrink-0 z-20 shadow-[0_4px_20px_rgba(163,149,126,0.05)]">
           <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none"></div>
 
           <div id="dashboard-header-right" className="ml-auto relative z-10 flex items-center">

@@ -9,7 +9,7 @@ import PaginationControls from "@/components/ui/PaginationControls";
 import { formatAppDate, formatAppTime } from "@/lib/timezone";
 
 type ViewMode = "table" | "grid";
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 function subscribeToViewport(callback: () => void) {
   const media = window.matchMedia("(min-width: 768px)");
@@ -145,11 +145,13 @@ export default function AdminQuizList({
   );
   const [selectedViewMode, setSelectedViewMode] = useState<ViewMode | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const viewMode = selectedViewMode ?? (isDesktop ? "table" : "grid");
-  const totalPages = Math.max(1, Math.ceil(quizzes.length / PAGE_SIZE));
+  const effectivePageSize = pageSize === Infinity ? quizzes.length || 1 : pageSize;
+  const totalPages = Math.max(1, Math.ceil(quizzes.length / effectivePageSize));
   const page = Math.min(currentPage, totalPages);
-  const pageStartIndex = (page - 1) * PAGE_SIZE;
-  const paginatedQuizzes = quizzes.slice(pageStartIndex, pageStartIndex + PAGE_SIZE);
+  const pageStartIndex = (page - 1) * effectivePageSize;
+  const paginatedQuizzes = quizzes.slice(pageStartIndex, pageStartIndex + effectivePageSize);
   const startItem = quizzes.length === 0 ? 0 : pageStartIndex + 1;
   const endItem = Math.min(pageStartIndex + paginatedQuizzes.length, quizzes.length);
 
@@ -332,6 +334,11 @@ export default function AdminQuizList({
         startItem={startItem}
         totalItems={quizzes.length}
         totalPages={totalPages}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       />
     </div>
   );
