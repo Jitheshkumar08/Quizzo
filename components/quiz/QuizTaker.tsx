@@ -568,6 +568,54 @@ export default function QuizTaker({
           document.body
         )}
 
+        {/* Mobile sticky timer + submit — portaled into the dashboard header */}
+        {mounted && showStickyControls && !isTimeUp && (() => {
+          const headerRight = document.getElementById("dashboard-header-right");
+          if (!headerRight) return null;
+          return createPortal(
+            <div className="quiz-mobile-sticky lg:hidden flex items-center gap-1.5 max-w-full">
+              {/* Hide the profile dropdown when this is active */}
+              <style>{`
+                @media (max-width: 1023px) {
+                  #dashboard-header-right > :not(.quiz-mobile-sticky) {
+                    display: none !important;
+                  }
+                }
+              `}</style>
+
+              {/* Compact progress */}
+              <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
+                <div className="h-1.5 w-14 bg-gray-200/80 rounded-full overflow-hidden flex-shrink-0">
+                  <div
+                    className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${(answeredCount / questions.length) * 100}%`,
+                      minWidth: answeredCount > 0 ? "6px" : "0px",
+                    }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap">{answeredCount}/{questions.length}</span>
+              </div>
+
+              {/* Compact timer */}
+              <div className={`inline-flex items-center gap-1 rounded-lg border font-mono font-bold px-2 py-1 text-[11px] flex-shrink-0 ${timerToneClass}`}>
+                <TimerIcon className="w-3 h-3 flex-shrink-0" />
+                <span>{timerText}</span>
+              </div>
+
+              {/* Submit */}
+              <button
+                onClick={() => setShowConfirm(true)}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-black text-emerald-700 shadow-sm active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
+              >
+                <Send className="w-3 h-3" />
+                Submit
+              </button>
+            </div>,
+            headerRight
+          );
+        })()}
+
         {/* Right Sidebar Portal */}
         {mounted && createPortal(
           <div
