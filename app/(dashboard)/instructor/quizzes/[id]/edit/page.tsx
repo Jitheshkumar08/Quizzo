@@ -2,10 +2,11 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import EditQuizClient from "./EditQuizClient";
+import { canEditInstructorQuiz } from "@/lib/roles";
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  if (!session || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+  if (!session || !canEditInstructorQuiz(session.user.role)) {
     redirect("/dashboard");
   }
 

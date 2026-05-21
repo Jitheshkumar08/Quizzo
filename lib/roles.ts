@@ -29,7 +29,7 @@ export function canAccessInstructorArea(role: unknown) {
 }
 
 export function canEditInstructorQuiz(role: unknown) {
-  return role === "INSTRUCTOR" || role === "ADMIN";
+  return role === "INSTRUCTOR" || role === "ADMIN" || role === "MOD";
 }
 
 export function canAccessQuizAnalytics(role: unknown) {

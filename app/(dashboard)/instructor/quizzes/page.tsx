@@ -35,7 +35,6 @@ export default async function InstructorQuizzesPage({
   if (!session || !canAccessInstructorArea(session.user.role)) {
     redirect("/dashboard");
   }
-  const isMod = session.user.role === "MOD";
   const resolvedSearchParams = await searchParams;
   const searchQuery = resolvedSearchParams?.q?.trim() || "";
 
@@ -236,7 +235,7 @@ export default async function InstructorQuizzesPage({
 
                   <InstructorAnalyticsModalButton quizId={quiz.id} />
 
-                  {!isMod && (
+                  {(session.user.role === "ADMIN" || quiz.createdById === session.user.id) && (
                     <Link
                       href={`/instructor/quizzes/${quiz.id}/edit`}
                       className="eq-action-btn-outline flex items-center justify-center h-[42px] gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100"
