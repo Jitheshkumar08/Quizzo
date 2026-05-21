@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 
@@ -12,9 +13,9 @@ export default function StudentQuizNoticeModal({ notice }: StudentQuizNoticeModa
   const router = useRouter();
   const [open, setOpen] = useState(notice === "updated");
 
-  if (!open) return null;
+  if (typeof document === "undefined" || !open) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#1F1B19]/78 p-4 backdrop-blur-lg animate-in fade-in duration-200">
       <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-white/95 bg-[#FFFDF9] p-7 text-center shadow-[0_34px_110px_rgba(0,0,0,0.46),0_0_0_1px_rgba(31,27,25,0.08)]">
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-amber-100/80 to-transparent" />
@@ -42,6 +43,7 @@ export default function StudentQuizNoticeModal({ notice }: StudentQuizNoticeModa
           OK
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

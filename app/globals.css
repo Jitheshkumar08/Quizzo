@@ -372,3 +372,27 @@ body {
   display: none !important;
   pointer-events: none;
 }
+
+/* ── Mobile-responsive content scaling ─────────────────────────
+   Uses CSS zoom to proportionally shrink all dashboard content
+   (fonts, padding, tables, icons, cards) on smaller screens.
+   Only targets the scrollable content area — header & sidebar
+   remain full-size for easy navigation.                       */
+
+@media (max-width: 767px) {
+  #dashboard-scroll-area {
+    zoom: 0.93;
+  }
+}
+
+@media (max-width: 639px) {
+  #dashboard-scroll-area {
+    zoom: 0.88;
+  }
+}
+
+@media (max-width: 479px) {
+  #dashboard-scroll-area {
+    zoom: 0.82;
+  }
+}
