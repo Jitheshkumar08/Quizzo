@@ -8,6 +8,7 @@ import ProgressSidebar from "./ProgressSidebar";
 import QuestionCard from "./QuestionCard";
 import { Clock, Send, AlertTriangle, ChevronLeft, ChevronRight, Timer } from "lucide-react";
 import { SearchLoader } from "@/components/ui/SearchLoader";
+import { primeCelebrationSound } from "@/components/ui/celebrationAudio";
 import { hashCode, mulberry32 } from "@/lib/utils";
 import { markQuizSubmittedForHistory } from "./quizBrowserHistory";
 
@@ -793,6 +794,7 @@ export default function QuizTaker({
                 <button
                   onClick={() => {
                     if (animating || submitting) return;
+                    primeCelebrationSound();
                     setAnimating(true);
                     setTimeout(() => {
                       void runSubmit();
