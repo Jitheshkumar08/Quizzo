@@ -177,7 +177,7 @@ export default async function ResultDetailPage({ params, searchParams }: Props) 
       `}</style>
 
       {/* Confetti celebration for 75%+ scores, only on fresh submit */}
-      {showConfetti && <ConfettiCelebration />}
+      {showConfetti && <ConfettiCelebration playSound={pct >= 90} />}
 
       {/* Back */}
       <Link
