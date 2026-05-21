@@ -37,7 +37,7 @@ interface QuizTakerProps {
 }
 
 const QUESTIONS_PER_PAGE = 5;
-const QUIZ_STATUS_POLL_MS = 8000;
+const QUIZ_STATUS_POLL_MS = 4000;
 const BROWSE_REDIRECT_CODES = new Set([
   "ENDED",
   "TIME_EXPIRED",
