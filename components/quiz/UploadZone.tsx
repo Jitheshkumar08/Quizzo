@@ -2,6 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { Upload, FileText, X, AlertCircle } from "lucide-react";
+import {
+  DIRECT_PDF_UPLOAD_LIMIT_BYTES,
+  DIRECT_PDF_UPLOAD_LIMIT_LABEL,
+  JSON_UPLOAD_LIMIT_BYTES,
+  JSON_UPLOAD_LIMIT_LABEL,
+} from "@/lib/uploadLimits";
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
@@ -15,15 +21,20 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
   const [error, setError] = useState("");
 
   function validateFile(file: File): boolean {
-    const isPDF = file.type === "application/pdf" || file.name.endsWith(".pdf");
-    const isJSON = file.type === "application/json" || file.name.endsWith(".json");
+    const fileName = file.name.toLowerCase();
+    const isPDF = file.type === "application/pdf" || fileName.endsWith(".pdf");
+    const isJSON = file.type === "application/json" || fileName.endsWith(".json");
 
     if (!isPDF && !isJSON) {
       setError("Only PDF or JSON files are allowed");
       return false;
     }
-    if (file.size > 20 * 1024 * 1024) {
-      setError("File size must be under 20MB");
+    if (isPDF && file.size > DIRECT_PDF_UPLOAD_LIMIT_BYTES) {
+      setError(`PDF direct upload must be under ${DIRECT_PDF_UPLOAD_LIMIT_LABEL}. For larger PDFs, use the Upload Guide prompt and upload JSON.`);
+      return false;
+    }
+    if (isJSON && file.size > JSON_UPLOAD_LIMIT_BYTES) {
+      setError(`JSON file size must be under ${JSON_UPLOAD_LIMIT_LABEL}`);
       return false;
     }
     setError("");
@@ -94,7 +105,7 @@ export default function UploadZone({ onFileSelect, selectedFile, onClear, disabl
           <Upload className="w-8 h-8" />
         </div>
         <p className="font-bold text-[#2C2A28] text-lg mb-1">Drop your PDF or JSON here</p>
-        <p className="text-sm font-medium text-[#918B80]">or click to browse — Max 20MB</p>
+        <p className="text-sm font-medium text-[#918B80]">or click to browse - PDF max {DIRECT_PDF_UPLOAD_LIMIT_LABEL}, JSON max {JSON_UPLOAD_LIMIT_LABEL}</p>
       </div>
       {error && (
         <div className="flex items-center gap-2 text-red-600 font-medium text-sm p-4 rounded-xl bg-red-50 border border-red-100 shadow-sm">

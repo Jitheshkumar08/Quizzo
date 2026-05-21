@@ -4,7 +4,9 @@ import { parsePdfBuffer } from "@/lib/pdfParser";
 import { generateQuestionsFromText, getTotalQuestionsCount } from "@/lib/gemini";
 import { uploadJsonToBlob } from "@/lib/blobStorage";
 import { canAccessInstructorArea } from "@/lib/roles";
+import { DIRECT_PDF_UPLOAD_LIMIT_BYTES, DIRECT_PDF_UPLOAD_LIMIT_LABEL } from "@/lib/uploadLimits";
 
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -22,8 +24,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "PDF file and title are required" }, { status: 400 });
     }
 
-    if (file.type !== "application/pdf") {
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
       return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
+    }
+
+    if (file.size > DIRECT_PDF_UPLOAD_LIMIT_BYTES) {
+      return NextResponse.json(
+        {
+          error: `PDF direct upload must be under ${DIRECT_PDF_UPLOAD_LIMIT_LABEL}. For larger PDFs, use the Upload Guide prompt and upload the generated JSON file.`,
+        },
+        { status: 413 }
+      );
     }
 
     // Step 1: Read file as Buffer (never write to disk)

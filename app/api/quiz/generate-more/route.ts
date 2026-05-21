@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { generateMoreQuestionsFromText } from "@/lib/gemini";
 import { canAccessInstructorArea } from "@/lib/roles";
 
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {

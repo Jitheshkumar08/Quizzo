@@ -4,13 +4,10 @@ export async function uploadJsonToBlob(
   quizTitle: string,
   data: object
 ): Promise<string | null> {
-  // Make Blob storage optional for local development
+  // Blob storage is optional; quiz generation should still work without JSON archival.
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("BLOB_READ_WRITE_TOKEN is missing. Skipping JSON upload for local dev.");
-      return null;
-    }
-    throw new Error("BLOB_READ_WRITE_TOKEN is required in production.");
+    console.warn("BLOB_READ_WRITE_TOKEN is missing. Skipping JSON upload.");
+    return null;
   }
 
   const filename = `quizzes/${Date.now()}-${quizTitle
@@ -29,4 +26,3 @@ export async function uploadJsonToBlob(
     return null;
   }
 }
-

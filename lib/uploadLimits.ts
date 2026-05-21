@@ -1,0 +1,5 @@
+export const DIRECT_PDF_UPLOAD_LIMIT_BYTES = 4 * 1024 * 1024;
+export const JSON_UPLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
+
+export const DIRECT_PDF_UPLOAD_LIMIT_LABEL = "4MB";
+export const JSON_UPLOAD_LIMIT_LABEL = "20MB";

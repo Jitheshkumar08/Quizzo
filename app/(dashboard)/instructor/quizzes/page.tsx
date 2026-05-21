@@ -9,6 +9,7 @@ import { getScheduleStatus } from "@/lib/quiz-student-access";
 import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 import { canAccessInstructorArea } from "@/lib/roles";
+import InstructorQuizTitleSearch from "@/components/quiz/InstructorQuizTitleSearch";
 
 export const metadata = { title: "My Quizzes" };
 
@@ -25,14 +26,23 @@ function formatTimeLimit(minutes: number) {
   return `${minutes} min${minutes === 1 ? "" : "s"}`;
 }
 
-export default async function InstructorQuizzesPage() {
+export default async function InstructorQuizzesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ q?: string }>;
+}) {
   const session = await auth();
   if (!session || !canAccessInstructorArea(session.user.role)) {
     redirect("/dashboard");
   }
   const isMod = session.user.role === "MOD";
+  const resolvedSearchParams = await searchParams;
+  const searchQuery = resolvedSearchParams?.q?.trim() || "";
 
-  const where = session.user.role === "ADMIN" ? {} : { createdById: session.user.id };
+  const where: Prisma.QuizWhereInput = {
+    ...(session.user.role === "ADMIN" ? {} : { createdById: session.user.id }),
+    ...(searchQuery ? { title: { contains: searchQuery, mode: "insensitive" } } : {}),
+  };
 
   type QuizRow = Awaited<ReturnType<typeof prisma.quiz.findMany<{
     include: { createdBy: { select: { fullName: true } }; _count: { select: { questions: true; results: true } } };
@@ -86,43 +96,54 @@ export default async function InstructorQuizzesPage() {
       `}</style>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold gradient-text">
+        <div className="min-w-fit shrink-0">
+          <h1 className="whitespace-nowrap text-2xl font-bold gradient-text">
             {session.user.role === "ADMIN" ? "All Quizzes" : "My Quizzes"}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">{quizzes.length} quiz{quizzes.length !== 1 ? "zes" : ""}</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {searchQuery
+              ? `${quizzes.length} quiz${quizzes.length !== 1 ? "zes" : ""} matching "${searchQuery}"`
+              : `${quizzes.length} quiz${quizzes.length !== 1 ? "zes" : ""}`}
+          </p>
         </div>
-        <Link
-          href="/instructor/upload"
-          className="animated-button shadow-sm"
-        >
-          <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
-          </svg>
-          <span className="text">NEW QUIZ</span>
-          <span className="circle"></span>
-          <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
-          </svg>
-        </Link>
+        <div className="flex w-full flex-col gap-3 sm:flex-1 sm:flex-row sm:items-center sm:justify-end">
+          <InstructorQuizTitleSearch initialValue={searchQuery} />
+          <Link
+            href="/instructor/upload"
+            className="animated-button h-12 min-w-[148px] shrink-0 justify-center whitespace-nowrap bg-white shadow-sm"
+          >
+            <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+            </svg>
+            <span className="text">NEW QUIZ</span>
+            <span className="circle"></span>
+            <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+            </svg>
+          </Link>
+        </div>
       </div>
 
       {/* Quiz list */}
       {quizzes.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
           <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="font-semibold text-lg">No quizzes yet</p>
-          <p className="text-muted-foreground text-sm mt-1">Upload a PDF to generate your first quiz</p>
-          <Link href="/instructor/upload" className="animated-button shadow-sm mt-6 inline-flex">
-            <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
-            </svg>
-            <span className="text">CREATE QUIZ</span>
-            <span className="circle"></span>
-            <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
-            </svg>
-          </Link>
+          <p className="font-semibold text-lg">{searchQuery ? "No quizzes found" : "No quizzes yet"}</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {searchQuery ? `No quiz title matches "${searchQuery}"` : "Upload a PDF to generate your first quiz"}
+          </p>
+          {!searchQuery && (
+            <Link href="/instructor/upload" className="animated-button mt-6 inline-flex h-12 min-w-[160px] justify-center whitespace-nowrap bg-white shadow-sm">
+              <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+              </svg>
+              <span className="text">CREATE QUIZ</span>
+              <span className="circle"></span>
+              <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+              </svg>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid gap-6 pb-10">

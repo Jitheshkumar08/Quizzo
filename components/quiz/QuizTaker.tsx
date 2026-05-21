@@ -9,6 +9,7 @@ import QuestionCard from "./QuestionCard";
 import { Clock, Send, AlertTriangle, ChevronLeft, ChevronRight, Timer } from "lucide-react";
 import { SearchLoader } from "@/components/ui/SearchLoader";
 import { hashCode, mulberry32 } from "@/lib/utils";
+import { markQuizSubmittedForHistory } from "./quizBrowserHistory";
 
 interface Question {
   id: string;
@@ -121,6 +122,11 @@ export default function QuizTaker({
   const hasTimer = !!(attemptDeadline && serverNow);
 
   useEffect(() => setMounted(true), []);
+
+  const navigateToResultAfterSubmit = useCallback((href: string) => {
+    window.history.replaceState(null, "", "/student/quizzes");
+    router.push(href);
+  }, [router]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -310,10 +316,11 @@ export default function QuizTaker({
       });
       const data = await res.json();
       if (res.ok) {
+        markQuizSubmittedForHistory(quizId);
         if (data.resultId) {
-          router.push(`/student/results/${data.resultId}`);
+          navigateToResultAfterSubmit(`/student/results/${data.resultId}`);
         } else {
-          router.push(`/student/quizzes`);
+          router.replace(`/student/quizzes`);
         }
       } else {
         setErrorPopup({ message: data.error || "Submission failed", code: data.code });
@@ -322,7 +329,7 @@ export default function QuizTaker({
       submitLock.current = false;
       setSubmitting(false);
     }
-  }, [quizId, hasTimer, timeLimitMinutes, router, submitUrl]);
+  }, [quizId, hasTimer, timeLimitMinutes, navigateToResultAfterSubmit, router, submitUrl]);
 
   useEffect(() => {
     if (!hasTimer || remainingSec === null || remainingSec > 0) return;
@@ -692,7 +699,7 @@ export default function QuizTaker({
                       errorPopup.code === "PASSWORD_REQUIRED" ||
                       errorPopup.code === "NO_SESSION"
                     ) {
-                      router.push("/student/quizzes");
+                      router.replace("/student/quizzes");
                     }
                   }}
                   className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors"

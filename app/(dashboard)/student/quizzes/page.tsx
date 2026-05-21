@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import Link from "next/link";
 import { BookOpen, Users, Lock, CalendarRange, Timer, Infinity as InfinityIcon } from "lucide-react";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
@@ -14,6 +13,7 @@ import QuizSearch from "@/components/quiz/QuizSearch";
 import ScheduleStartBadge from "@/components/quiz/ScheduleStartBadge";
 import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizSortFilterValue, type QuizTagFilterValue } from "@/components/quiz/QuizAvailabilityFilter";
 import AdminQuizOrderGrid from "@/components/quiz/AdminQuizOrderGrid";
+import QuizStartLink from "@/components/quiz/QuizStartLink";
 
 export const metadata = { title: "Browse Quizzes" };
 
@@ -346,7 +346,7 @@ export default async function StudentQuizzesPage({
                         </span>
                       </div>
                     ) : (
-                      <Link href={`/student/quizzes/${quiz.id}`} className="relative inline-flex items-center justify-center py-2 px-4 transition-all duration-200 cursor-pointer group/btn active:scale-95">
+                      <QuizStartLink quizId={quiz.id} className="relative inline-flex items-center justify-center py-2 px-4 transition-all duration-200 cursor-pointer group/btn active:scale-95">
                         <div className="absolute top-1/2 -translate-y-1/2 left-0 w-10 h-10 bg-[#dfceff] rounded-full transition-all duration-300 ease-out group-hover/btn:w-full z-0"></div>
                         <span className="relative z-10 font-bold text-sm tracking-[0.05em] text-[#6a32db] uppercase">
                           {openQuizMap.has(quiz.id) ? "CONTINUE" : "START"}
@@ -355,7 +355,7 @@ export default async function StudentQuizzesPage({
                           <path d="M1,5 L11,5" />
                           <polyline points="8 1 12 5 8 9" />
                         </svg>
-                      </Link>
+                      </QuizStartLink>
                     )}
                   </div>
                 </div>

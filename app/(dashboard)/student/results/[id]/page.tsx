@@ -7,6 +7,7 @@ import ReviewSidebarClientWrapper from "./ReviewSidebarClientWrapper";
 import StartReattemptButton from "./StartReattemptButton";
 import { parseAnswerMap, parseStringArray } from "@/lib/reattempt-utils";
 import { calculateResultReviewStats, parseResultReviewSnapshot } from "@/lib/result-review";
+import QuizStartLink from "@/components/quiz/QuizStartLink";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -203,12 +204,12 @@ export default async function ResultDetailPage({ params }: Props) {
       {!isInstructorReview && (
         <div className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-center">
-            <Link
-              href={`/student/quizzes/${result.quizId}`}
+            <QuizStartLink
+              quizId={result.quizId}
               className="result-action-btn-outline flex h-[46px] w-full items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-50 sm:w-auto"
             >
               <RotateCcw className="w-4 h-4" /> Retake Quiz
-            </Link>
+            </QuizStartLink>
             <Link
               href="/student/quizzes"
               className="result-action-btn-outline flex h-[46px] w-full items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 sm:w-auto"

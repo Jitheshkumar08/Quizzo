@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Loader2, Lock, CalendarClock, Ban, ArrowLeft, KeyRound } from "lucide-react";
 import { TypewriterLoader } from "@/components/ui/TypewriterLoader";
 import PasswordInput from "@/components/ui/PasswordInput";
 import QuizTaker from "./QuizTaker";
 import { formatAppDateTime } from "@/lib/timezone";
+import { shouldRedirectSubmittedQuizHistoryOpen } from "./quizBrowserHistory";
 
 interface Question {
   id: string;
@@ -41,6 +43,7 @@ interface BlockPayload {
 }
 
 export default function QuizGate({ quizId }: { quizId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState<QuizPayload | null>(null);
   const [block, setBlock] = useState<BlockPayload | null>(null);
@@ -87,11 +90,16 @@ export default function QuizGate({ quizId }: { quizId: string }) {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (shouldRedirectSubmittedQuizHistoryOpen(quizId)) {
+        router.replace("/student/quizzes");
+        return;
+      }
+
       load();
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [load]);
+  }, [load, quizId, router]);
 
   async function tryUnlock(e: React.FormEvent) {
     e.preventDefault();
