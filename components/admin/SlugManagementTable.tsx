@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, Copy, ExternalLink, Link2, Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -53,6 +53,8 @@ function SlugTooltip({
   className?: string;
   text: string;
 }) {
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const openedByPointerRef = useRef(false);
   const [position, setPosition] = useState<{
     left: number;
     placement: "top" | "bottom";
@@ -61,7 +63,8 @@ function SlugTooltip({
 
   function showTooltip(element: HTMLElement) {
     const rect = element.getBoundingClientRect();
-    const left = Math.min(Math.max(rect.left + rect.width / 2, 180), window.innerWidth - 180);
+    const horizontalMargin = Math.min(180, Math.max(16, window.innerWidth / 2 - 16));
+    const left = Math.min(Math.max(rect.left + rect.width / 2, horizontalMargin), window.innerWidth - horizontalMargin);
     const hasSpaceAbove = rect.top > 92;
 
     setPosition({
@@ -71,13 +74,55 @@ function SlugTooltip({
     });
   }
 
+  useEffect(() => {
+    if (!position) return;
+
+    function closeOnOutsidePointer(event: PointerEvent) {
+      if (triggerRef.current?.contains(event.target as Node)) return;
+      setPosition(null);
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setPosition(null);
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [position]);
+
   return (
     <>
       <span
+        ref={triggerRef}
         tabIndex={0}
-        className={`cursor-help outline-none ${className}`}
-        onFocus={(event) => showTooltip(event.currentTarget)}
-        onBlur={() => setPosition(null)}
+        className={`cursor-help touch-manipulation outline-none ${className}`}
+        onPointerDown={(event) => {
+          if (event.pointerType !== "mouse") {
+            event.preventDefault();
+            openedByPointerRef.current = true;
+            if (position) {
+              setPosition(null);
+            } else {
+              showTooltip(event.currentTarget);
+            }
+          }
+        }}
+        onFocus={(event) => {
+          if (!openedByPointerRef.current) {
+            showTooltip(event.currentTarget);
+          }
+          openedByPointerRef.current = false;
+        }}
+        onBlur={() => {
+          if (!openedByPointerRef.current) {
+            setPosition(null);
+          }
+        }}
         onMouseEnter={(event) => showTooltip(event.currentTarget)}
         onMouseLeave={() => setPosition(null)}
         aria-label={text}
