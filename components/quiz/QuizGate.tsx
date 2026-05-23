@@ -385,47 +385,41 @@ export default function QuizGate({
                 <button
                   type="button"
                   onClick={copyShareLink}
-                  className={`group/share inline-flex h-8 w-full cursor-pointer items-center justify-center gap-0.5 overflow-hidden rounded-2xl px-1 text-[8.5px] font-black tracking-[0.01em] shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition-[background-color,box-shadow,transform] duration-300 ease-out hover:shadow-[0_16px_32px_rgba(79,70,229,0.24)] active:scale-[0.97] sm:h-10 sm:w-[166px] sm:gap-2 sm:px-3.5 sm:text-[13px] ${
-                    copied
+                  className={`group/share inline-flex h-8 w-full cursor-pointer items-center justify-center gap-0.5 overflow-hidden rounded-2xl px-1 text-[8.5px] font-black tracking-[0.01em] shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition-[background-color,box-shadow,transform] duration-300 ease-out hover:shadow-[0_16px_32px_rgba(79,70,229,0.24)] active:scale-[0.97] sm:h-10 sm:w-[166px] sm:gap-2 sm:px-3.5 sm:text-[13px] ${copied
                       ? "bg-emerald-600 text-white hover:shadow-[0_16px_32px_rgba(5,150,105,0.22)]"
                       : "bg-violet-600 text-white hover:bg-violet-700"
-                  }`}
+                    }`}
                   aria-live="polite"
                 >
                   <span className="relative flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-lg bg-white/18 ring-1 ring-white/18 sm:h-6 sm:w-6 sm:rounded-xl">
                     <Share2
-                      className={`absolute h-3 w-3 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${
-                        copied ? "-translate-y-2 rotate-45 scale-75 opacity-0" : "translate-y-0 rotate-0 scale-100 opacity-100"
-                      }`}
+                      className={`absolute h-3 w-3 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${copied ? "-translate-y-2 rotate-45 scale-75 opacity-0" : "translate-y-0 rotate-0 scale-100 opacity-100"
+                        }`}
                     />
                     <Check
-                      className={`absolute h-3 w-3 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${
-                        copied ? "translate-y-0 rotate-0 scale-100 opacity-100" : "translate-y-2 -rotate-45 scale-75 opacity-0"
-                      }`}
+                      className={`absolute h-3 w-3 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${copied ? "translate-y-0 rotate-0 scale-100 opacity-100" : "translate-y-2 -rotate-45 scale-75 opacity-0"
+                        }`}
                     />
                   </span>
                   <span className="relative h-3.5 w-[40px] overflow-hidden sm:h-5 sm:w-[74px]">
                     <span
-                      className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${
-                        copied ? "-translate-y-full opacity-0 blur-[2px]" : "translate-y-0 opacity-100 blur-0"
-                      }`}
+                      className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${copied ? "-translate-y-full opacity-0 blur-[2px]" : "translate-y-0 opacity-100 blur-0"
+                        }`}
                     >
                       <span className="sm:hidden">Share</span>
                       <span className="hidden sm:inline">Share Link</span>
                     </span>
                     <span
-                      className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${
-                        copied ? "translate-y-0 opacity-100 blur-0" : "translate-y-full opacity-0 blur-[2px]"
-                      }`}
+                      className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${copied ? "translate-y-0 opacity-100 blur-0" : "translate-y-full opacity-0 blur-[2px]"
+                        }`}
                     >
                       <span className="sm:hidden">Copied</span>
                       <span className="hidden sm:inline">Copied!</span>
                     </span>
                   </span>
                   <Copy
-                    className={`hidden h-3.5 w-3.5 flex-shrink-0 transition-all duration-300 ease-out sm:block ${
-                      copied ? "translate-x-2 scale-75 opacity-0" : "translate-x-0 scale-100 opacity-70 group-hover/share:opacity-100"
-                    }`}
+                    className={`hidden h-3.5 w-3.5 flex-shrink-0 transition-all duration-300 ease-out sm:block ${copied ? "translate-x-2 scale-75 opacity-0" : "translate-x-0 scale-100 opacity-70 group-hover/share:opacity-100"
+                      }`}
                   />
                 </button>
               </div>
@@ -488,7 +482,7 @@ export default function QuizGate({
           )}
 
           {passwordRequired && (
-          <div className="rounded-[24px] border border-amber-100 bg-amber-50/45 p-5 sm:p-5">
+            <div className="rounded-[24px] border border-amber-100 bg-amber-50/45 p-5 sm:p-5">
               <div className="mb-4 flex items-start gap-3 text-sm font-semibold leading-relaxed text-slate-600">
                 <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
                 <p className="break-words [overflow-wrap:anywhere]">This quiz is protected. Enter the password, then start when you are ready.</p>
