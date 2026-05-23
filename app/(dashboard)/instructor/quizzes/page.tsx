@@ -10,6 +10,7 @@ import { formatAppDate, formatAppScheduleDateTime } from "@/lib/timezone";
 import QuizListRealtimeRefresh from "@/components/live/QuizListRealtimeRefresh";
 import { canAccessInstructorArea } from "@/lib/roles";
 import InstructorQuizTitleSearch from "@/components/quiz/InstructorQuizTitleSearch";
+import QuizShareButton from "@/components/quiz/QuizShareButton";
 
 export const metadata = { title: "My Quizzes" };
 
@@ -91,6 +92,10 @@ export default async function InstructorQuizzesPage({
       .eq-action-btn-outline:active {
         transform: translate(0.05em, 0.05em);
         box-shadow: 0.05em 0.05em currentColor;
+      }
+      .eq-action-btn-outline:disabled:hover {
+        transform: none;
+        box-shadow: 0.1em 0.1em currentColor;
       }
       `}</style>
       {/* Header */}
@@ -243,6 +248,12 @@ export default async function InstructorQuizzesPage({
                       <Pencil className="w-4 h-4" /> Edit
                     </Link>
                   )}
+
+                  <QuizShareButton
+                    quizId={quiz.id}
+                    initialSharePath={quiz.shareSlug ? `/quiz/${quiz.shareSlug}` : `/student/quizzes/${quiz.id}`}
+                    disabled={!quiz.isPublished}
+                  />
                 </div>
               </div>
             );

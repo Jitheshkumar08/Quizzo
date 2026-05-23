@@ -106,6 +106,7 @@ export default function QuizGate({
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const refreshTimer = useRef<number | null>(null);
+  const copyResetTimer = useRef<number | null>(null);
 
   const load = useCallback(async (): Promise<{ ok: boolean; code?: string }> => {
     setLoading(true);
@@ -153,6 +154,14 @@ export default function QuizGate({
   useEffect(() => {
     router.prefetch("/student/quizzes");
   }, [router]);
+
+  useEffect(() => {
+    return () => {
+      if (copyResetTimer.current !== null) {
+        window.clearTimeout(copyResetTimer.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (quiz) return;
@@ -231,7 +240,36 @@ export default function QuizGate({
   }
 
   async function copyShareLink() {
-    const href = `${window.location.origin}${startSummary.sharePath}`;
+    setCopied(true);
+    if (copyResetTimer.current !== null) {
+      window.clearTimeout(copyResetTimer.current);
+      copyResetTimer.current = null;
+    }
+
+    let sharePath = startSummary.sharePath;
+
+    try {
+      const res = await fetch(`/api/quiz/${encodeURIComponent(quizId)}/share`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data: unknown = await res.json();
+      if (
+        res.ok &&
+        typeof data === "object" &&
+        data !== null &&
+        "sharePath" in data &&
+        typeof data.sharePath === "string" &&
+        data.sharePath.startsWith("/") &&
+        !data.sharePath.startsWith("//")
+      ) {
+        sharePath = data.sharePath;
+      }
+    } catch {
+      // Fall back to the currently rendered path if the fresh lookup fails.
+    }
+
+    const href = `${window.location.origin}${sharePath}`;
 
     try {
       await navigator.clipboard.writeText(href);
@@ -246,8 +284,10 @@ export default function QuizGate({
       document.body.removeChild(input);
     }
 
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+    copyResetTimer.current = window.setTimeout(() => {
+      setCopied(false);
+      copyResetTimer.current = null;
+    }, 1600);
   }
 
   if (loading) {
