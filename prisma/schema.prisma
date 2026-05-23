@@ -80,6 +80,7 @@ model AccountOtpVerification {
 model Quiz {
   id          String     @id @default(uuid())
   title       String
+  shareSlug   String?    @unique
   description String?
   createdAt   DateTime   @default(now())
   isPublished Boolean    @default(false)

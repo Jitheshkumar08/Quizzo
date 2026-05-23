@@ -7,8 +7,15 @@ import Link from "next/link";
 import { Loader2, LogIn } from "lucide-react";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { authLinkWithCallback } from "@/lib/auth-callback";
 
-export default function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
+export default function LoginForm({
+  googleEnabled,
+  callbackUrl = "/dashboard",
+}: {
+  googleEnabled: boolean;
+  callbackUrl?: string;
+}) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -53,7 +60,7 @@ export default function LoginForm({ googleEnabled }: { googleEnabled: boolean })
             : "Could not verify your login. Please try again."
         );
       } else {
-        router.push("/dashboard");
+        router.push(callbackUrl);
         router.refresh();
       }
     } catch {
@@ -80,6 +87,7 @@ export default function LoginForm({ googleEnabled }: { googleEnabled: boolean })
           <GoogleAuthButton
             label="Continue with Google"
             enabled={googleEnabled}
+            callbackUrl={callbackUrl}
           />
           <div className="mt-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#DED7CB]" />
@@ -152,7 +160,7 @@ export default function LoginForm({ googleEnabled }: { googleEnabled: boolean })
         {/* Footer */}
         <p className="text-center text-[14px] text-[#918B80] mt-6 font-medium relative z-10">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-[#8C5D3E] hover:text-[#6E482F] font-bold transition-colors hover:underline underline-offset-4 decoration-2">
+          <Link href={authLinkWithCallback("/signup", callbackUrl)} className="text-[#8C5D3E] hover:text-[#6E482F] font-bold transition-colors hover:underline underline-offset-4 decoration-2">
             Create one
           </Link>
         </p>

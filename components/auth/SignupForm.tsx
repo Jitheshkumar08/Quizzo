@@ -7,10 +7,17 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, MailCheck, RefreshCw, UserPlus } from "lucide-react";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { authLinkWithCallback } from "@/lib/auth-callback";
 
 const CODE_LENGTH = 6;
 
-export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
+export default function SignupForm({
+  googleEnabled,
+  callbackUrl = "/dashboard",
+}: {
+  googleEnabled: boolean;
+  callbackUrl?: string;
+}) {
   const router = useRouter();
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const resendTimerRef = useRef<number | null>(null);
@@ -267,11 +274,11 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
       });
 
       if (signInResult?.error) {
-        router.push("/login?registered=true");
+        router.push(authLinkWithCallback("/login", callbackUrl));
         return;
       }
 
-      router.push("/dashboard");
+      router.push(callbackUrl);
       router.refresh();
     } catch {
       setError("Network error. Please check your connection and try again.");
@@ -307,6 +314,7 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
           <GoogleAuthButton
             label="Sign up with Google"
             enabled={googleEnabled}
+            callbackUrl={callbackUrl}
           />
           <div className={`${verificationEmail ? "mt-4" : "mt-6"} flex items-center gap-3`}>
             <div className="h-px flex-1 bg-[#DED7CB]" />
@@ -510,7 +518,7 @@ export default function SignupForm({ googleEnabled }: { googleEnabled: boolean }
         {/* Footer */}
         <p className="text-center text-[14px] text-[#918B80] mt-6 font-medium relative z-10">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#8C5D3E] hover:text-[#6E482F] font-bold transition-colors hover:underline underline-offset-4 decoration-2">
+          <Link href={authLinkWithCallback("/login", callbackUrl)} className="text-[#8C5D3E] hover:text-[#6E482F] font-bold transition-colors hover:underline underline-offset-4 decoration-2">
             Log in
           </Link>
         </p>

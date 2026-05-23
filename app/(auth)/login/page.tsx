@@ -1,11 +1,18 @@
 import LoginForm from "@/components/auth/LoginForm";
+import { safeAuthCallbackUrl } from "@/lib/auth-callback";
 
 export const metadata = {
   title: "Sign In",
   description: "Sign in to your Quizzo account",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ callbackUrl?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const callbackUrl = safeAuthCallbackUrl(resolvedSearchParams?.callbackUrl);
   const googleEnabled = Boolean(
     (process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID) &&
       (process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET)
@@ -24,7 +31,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full animate-fade-in-up">
-        <LoginForm googleEnabled={googleEnabled} />
+        <LoginForm googleEnabled={googleEnabled} callbackUrl={callbackUrl} />
       </div>
     </div>
   );

@@ -1,26 +1,35 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+function safeCallbackPath(value: string | null) {
+  if (!value) return "/dashboard";
+  if (!value.startsWith("/") || value.startsWith("//")) return "/dashboard";
+  if (value.startsWith("/login") || value.startsWith("/signup")) return "/dashboard";
+  return value;
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
   // Public — always allow
-  if (pathname === "/" || pathname.startsWith("/api/auth")) {
+  if (pathname === "/" || pathname.startsWith("/api/auth") || pathname.startsWith("/quiz/")) {
     return NextResponse.next();
   }
 
-  // Auth pages — redirect to dashboard if already logged in
+  // Auth pages — redirect to callback if already logged in
   if (pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password") {
     if (session) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL(safeCallbackPath(req.nextUrl.searchParams.get("callbackUrl")), req.url));
     }
     return NextResponse.next();
   }
 
   // All other routes — require auth
   if (!session) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
   }
 
   const role = session?.user?.role ?? "";

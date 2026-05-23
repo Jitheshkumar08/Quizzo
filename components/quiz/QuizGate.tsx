@@ -46,6 +46,7 @@ interface BlockPayload {
 interface QuizStartSummary {
   id: string;
   title: string;
+  sharePath: string;
   description: string | null;
   totalAttempts: number;
   questionCount: number;
@@ -230,7 +231,7 @@ export default function QuizGate({
   }
 
   async function copyShareLink() {
-    const href = window.location.href;
+    const href = `${window.location.origin}${startSummary.sharePath}`;
 
     try {
       await navigator.clipboard.writeText(href);

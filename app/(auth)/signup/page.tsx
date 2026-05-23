@@ -1,11 +1,18 @@
 import SignupForm from "@/components/auth/SignupForm";
+import { safeAuthCallbackUrl } from "@/lib/auth-callback";
 
 export const metadata = {
   title: "Create Account",
   description: "Join Quizzo and start learning",
 };
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ callbackUrl?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const callbackUrl = safeAuthCallbackUrl(resolvedSearchParams?.callbackUrl);
   const googleEnabled = Boolean(
     (process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID) &&
       (process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET)
@@ -24,7 +31,7 @@ export default function SignupPage() {
       </div>
 
       <div className="relative z-10 w-full animate-fade-in-up">
-        <SignupForm googleEnabled={googleEnabled} />
+        <SignupForm googleEnabled={googleEnabled} callbackUrl={callbackUrl} />
       </div>
     </div>
   );

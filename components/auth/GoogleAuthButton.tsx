@@ -18,9 +18,11 @@ function GoogleMark() {
 export default function GoogleAuthButton({
   label,
   enabled,
+  callbackUrl = "/dashboard",
 }: {
   label: string;
   enabled: boolean;
+  callbackUrl?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const disabled = loading || !enabled;
@@ -32,7 +34,7 @@ export default function GoogleAuthButton({
       onClick={() => {
         if (!enabled) return;
         setLoading(true);
-        void signIn("google", { callbackUrl: "/dashboard" });
+        void signIn("google", { callbackUrl });
       }}
       className="group cursor-pointer relative flex w-full items-center justify-center gap-3 rounded-full border border-[#E5DED3] bg-white px-5 py-4 text-[15px] font-black text-[#2C2A28] shadow-[0_10px_24px_rgba(44,42,40,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#D8CEC0] hover:shadow-[0_14px_30px_rgba(44,42,40,0.13)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
     >

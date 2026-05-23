@@ -18,6 +18,7 @@ export default async function TakeQuizPage({ params }: Props) {
     select: {
       id: true,
       title: true,
+      shareSlug: true,
       description: true,
       accessPasswordHash: true,
       allowMultipleAttempts: true,
@@ -47,6 +48,7 @@ export default async function TakeQuizPage({ params }: Props) {
         startSummary={{
           id: quiz.id,
           title: quiz.title,
+          sharePath: quiz.shareSlug ? `/quiz/${quiz.shareSlug}` : `/student/quizzes/${quiz.id}`,
           description: quiz.description,
           totalAttempts,
           questionCount: quiz._count.questions,

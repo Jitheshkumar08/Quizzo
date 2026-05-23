@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { recordQuizListEvent } from "@/lib/quiz-list-events";
+import { generateUniqueQuizShareSlug } from "@/lib/quiz-share-slug";
 import { canAccessInstructorArea, canEditInstructorQuiz } from "@/lib/roles";
 
 const QuestionSchema = z.object({
@@ -130,7 +131,7 @@ export async function POST(req: NextRequest) {
 
     let quiz;
     let accessFields;
-    let existingQuiz: { accessPasswordHash: string | null; displayOrder: number | null } | null = null;
+    let existingQuiz: { accessPasswordHash: string | null; displayOrder: number | null; shareSlug: string | null } | null = null;
     try {
       if (quizId) {
         if (!canEditInstructorQuiz(session.user.role)) {
@@ -162,6 +163,9 @@ export async function POST(req: NextRequest) {
             title,
             description,
             jsonBlobUrl,
+            ...(existingQuiz?.shareSlug
+              ? {}
+              : { shareSlug: await generateUniqueQuizShareSlug(tx, title, quizId) }),
             isPublished: publish,
             isClosed: closed,
             ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),
@@ -198,6 +202,7 @@ export async function POST(req: NextRequest) {
         const created = await tx.quiz.create({
           data: {
             title,
+            shareSlug: await generateUniqueQuizShareSlug(tx, title),
             description,
             jsonBlobUrl,
             isPublished: publish,
@@ -286,6 +291,9 @@ export async function PATCH(req: NextRequest) {
         data: {
           title,
           description,
+          ...(quiz.shareSlug
+            ? {}
+            : { shareSlug: await generateUniqueQuizShareSlug(tx, title, quizId) }),
           isPublished: publish,
           isClosed: closed,
           ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),
