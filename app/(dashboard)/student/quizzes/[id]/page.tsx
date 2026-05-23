@@ -41,7 +41,7 @@ export default async function TakeQuizPage({ params }: Props) {
   });
 
   return (
-    <div>
+    <div className="lg:-mt-8 xl:-mt-10">
       <QuizGate
         key={quiz.updatedAt.toISOString()}
         quizId={id}

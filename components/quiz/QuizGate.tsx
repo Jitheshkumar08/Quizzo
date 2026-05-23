@@ -332,7 +332,7 @@ export default function QuizGate({
   const description = startSummary.description?.trim() || "The creator has not added a description yet.";
 
   return (
-    <div className="mx-auto max-w-3xl space-y-7 animate-fade-in-up py-8 sm:py-12">
+    <div className="mx-auto max-w-3xl space-y-4 animate-fade-in-up py-3 sm:py-4 lg:py-5">
       <style>{`
         .quiz-start-action-btn {
           font-family: inherit;
@@ -367,41 +367,41 @@ export default function QuizGate({
         <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
 
         <div className="relative z-10 space-y-8 sm:space-y-6">
-          <div className="space-y-4">
-            <div className="grid w-full grid-cols-[36px_minmax(72px,1fr)_minmax(78px,1fr)_78px] items-center gap-1 sm:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_166px] sm:gap-2 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-4">
-              <div className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 sm:h-12 sm:w-12">
-                <BookOpen className="h-[18px] w-[18px] sm:h-6 sm:w-6" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex w-full flex-col items-center gap-2 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_166px] sm:items-center sm:gap-2 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-4">
+              <div className="order-2 inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 sm:order-none sm:h-12 sm:w-12">
+                <BookOpen className="h-6 w-6 sm:h-6 sm:w-6" />
               </div>
 
-              <div className="contents lg:flex lg:min-w-0 lg:flex-wrap lg:items-center lg:justify-end lg:gap-2">
-                <span className="inline-flex h-8 min-w-0 items-center justify-center gap-0.5 rounded-2xl border border-blue-100 bg-blue-50 px-1 text-[8.5px] font-black text-blue-600 shadow-sm sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-sm">
-                  <Users className="h-3 w-3 flex-shrink-0 sm:h-4 sm:w-4" />
+              <div className="order-1 grid w-full grid-cols-3 gap-2 sm:contents lg:flex lg:min-w-0 lg:flex-wrap lg:items-center lg:justify-end lg:gap-2">
+                <span className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-2xl border border-blue-100 bg-blue-50 px-1.5 text-[10px] font-black text-blue-600 shadow-sm sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-sm">
+                  <Users className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
                   <span className="truncate">{startSummary.totalAttempts} Attempts</span>
                 </span>
-                <span className="inline-flex h-8 min-w-0 items-center justify-center gap-0.5 rounded-2xl border border-purple-100 bg-purple-50 px-1 text-[8.5px] font-black text-purple-600 shadow-sm sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-sm">
-                  <BookOpen className="h-3 w-3 flex-shrink-0 sm:h-4 sm:w-4" />
+                <span className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-2xl border border-purple-100 bg-purple-50 px-1.5 text-[10px] font-black text-purple-600 shadow-sm sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-sm">
+                  <BookOpen className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
                   <span className="truncate">{startSummary.questionCount} Questions</span>
                 </span>
                 <button
                   type="button"
                   onClick={copyShareLink}
-                  className={`group/share inline-flex h-8 w-full cursor-pointer items-center justify-center gap-0.5 overflow-hidden rounded-2xl px-1 text-[8.5px] font-black tracking-[0.01em] shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition-[background-color,box-shadow,transform] duration-300 ease-out hover:shadow-[0_16px_32px_rgba(79,70,229,0.24)] active:scale-[0.97] sm:h-10 sm:w-[166px] sm:gap-2 sm:px-3.5 sm:text-[13px] ${copied
+                  className={`group/share inline-flex h-9 w-full cursor-pointer items-center justify-center gap-1 overflow-hidden rounded-2xl px-1.5 text-[10px] font-black tracking-[0.01em] shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition-[background-color,box-shadow,transform] duration-300 ease-out hover:shadow-[0_16px_32px_rgba(79,70,229,0.24)] active:scale-[0.97] sm:h-10 sm:w-[166px] sm:gap-2 sm:px-3.5 sm:text-[13px] ${copied
                       ? "bg-emerald-600 text-white hover:shadow-[0_16px_32px_rgba(5,150,105,0.22)]"
                       : "bg-violet-600 text-white hover:bg-violet-700"
                     }`}
                   aria-live="polite"
                 >
-                  <span className="relative flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-lg bg-white/18 ring-1 ring-white/18 sm:h-6 sm:w-6 sm:rounded-xl">
+                  <span className="relative flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-lg bg-white/18 ring-1 ring-white/18 sm:h-6 sm:w-6 sm:rounded-xl">
                     <Share2
-                      className={`absolute h-3 w-3 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${copied ? "-translate-y-2 rotate-45 scale-75 opacity-0" : "translate-y-0 rotate-0 scale-100 opacity-100"
+                      className={`absolute h-3.5 w-3.5 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${copied ? "-translate-y-2 rotate-45 scale-75 opacity-0" : "translate-y-0 rotate-0 scale-100 opacity-100"
                         }`}
                     />
                     <Check
-                      className={`absolute h-3 w-3 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${copied ? "translate-y-0 rotate-0 scale-100 opacity-100" : "translate-y-2 -rotate-45 scale-75 opacity-0"
+                      className={`absolute h-3.5 w-3.5 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${copied ? "translate-y-0 rotate-0 scale-100 opacity-100" : "translate-y-2 -rotate-45 scale-75 opacity-0"
                         }`}
                     />
                   </span>
-                  <span className="relative h-3.5 w-[40px] overflow-hidden sm:h-5 sm:w-[74px]">
+                  <span className="relative h-4 w-[42px] overflow-hidden sm:h-5 sm:w-[74px]">
                     <span
                       className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${copied ? "-translate-y-full opacity-0 blur-[2px]" : "translate-y-0 opacity-100 blur-0"
                         }`}
