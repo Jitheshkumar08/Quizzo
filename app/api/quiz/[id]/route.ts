@@ -24,6 +24,18 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       return NextResponse.json({ error: "Missing quiz id" }, { status: 400 });
     }
 
+    const sessionUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true },
+    });
+
+    if (!sessionUser) {
+      return NextResponse.json(
+        { error: "Your session is no longer active. Please sign in again.", code: "SESSION_USER_NOT_FOUND" },
+        { status: 401 }
+      );
+    }
+
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId, isPublished: true },
       include: {
@@ -88,6 +100,11 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
           timeLimitMinutes: quiz.timeLimitMinutes,
           scheduledEnd: quiz.scheduledEnd,
         });
+      } else if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+        return NextResponse.json(
+          { error: "Your session is no longer active. Please sign in again.", code: "SESSION_USER_NOT_FOUND" },
+          { status: 401 }
+        );
       } else {
         throw e;
       }
