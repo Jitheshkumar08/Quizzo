@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Sidebar from "@/components/layout/Sidebar";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
@@ -16,6 +17,8 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/login");
   }
+
+  const sidebarCollapsed = (await cookies()).get("sidebarCollapsed")?.value === "true";
 
   // Capitalize format
   const roleName = session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1).toLowerCase();
@@ -34,11 +37,11 @@ export default async function DashboardLayout({
       {/* Texture Layer */}
       <div className="absolute inset-0 bg-[radial-gradient(#D6C9B3_1px,transparent_1px)] [background-size:24px_24px] opacity-40 z-0 pointer-events-none"></div>
 
-      <Sidebar role={session.user.role} />
+      <Sidebar role={session.user.role} initialCollapsed={sidebarCollapsed} />
 
       <main className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10 w-full overflow-hidden">
         {/* Top bar — fixed on mobile, normal flow on desktop */}
-        <header className="fixed md:relative top-0 left-0 right-0 h-[88px] min-h-[88px] bg-[#F4EFE6]/80 backdrop-blur-2xl border-b border-white/80 flex items-center pl-[72px] pr-4 md:px-10 flex-shrink-0 z-20 shadow-[0_4px_20px_rgba(163,149,126,0.05)]">
+        <header className="fixed md:relative top-0 left-0 right-0 h-[88px] min-h-[88px] bg-[#F4EFE6]/90 backdrop-blur-2xl border-b border-[#E9E4DC] flex items-center pl-[72px] pr-4 md:px-10 flex-shrink-0 z-20 shadow-[0_4px_20px_rgba(163,149,126,0.05)]">
           <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none"></div>
 
           <div id="dashboard-header-right" className="ml-auto relative z-10 flex items-center">

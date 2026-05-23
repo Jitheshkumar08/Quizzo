@@ -39,38 +39,47 @@ export default async function QuizShareRedirectPage({ params }: Props) {
     const callbackUrl = `/quiz/${encodeURIComponent(canonicalSlug)}`;
 
     return (
-      <div className="fixed inset-0 z-0 flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#FCF9F2] p-4">
+      <div className="relative flex min-h-[100dvh] w-full items-center justify-center bg-[#FCF9F2] p-4">
         <div className="absolute inset-0 bg-[radial-gradient(#E8E3DA_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
-        <div className="absolute inset-0 bg-[#1F1B19]/18 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[#1F1B19]/25 backdrop-blur-[3px]" />
 
-        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-white/95 bg-[#FFFDF9] p-7 text-center shadow-[0_34px_110px_rgba(0,0,0,0.30),0_0_0_1px_rgba(31,27,25,0.08)]">
-          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-blue-100/80 to-transparent" />
-          <div className="absolute -right-14 -top-16 h-36 w-36 rounded-full bg-blue-100 blur-3xl" />
-          <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[24px] bg-blue-100 text-blue-700 shadow-[0_12px_28px_rgba(37,99,235,0.16)] ring-1 ring-blue-200">
-            <BookOpen className="h-8 w-8" />
+        <div className="relative w-full max-w-[420px] overflow-hidden rounded-[32px] bg-[#FFFDF9] p-8 sm:p-10 text-center shadow-[0_34px_80px_rgba(0,0,0,0.2),0_0_0_1px_rgba(31,27,25,0.05)]">
+          <div className="relative mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#dfceff]/50 text-[#6a32db] border border-[#dfceff]/80">
+            <BookOpen className="h-7 w-7" />
           </div>
-          <div className="relative space-y-2">
-            <h1 className="text-2xl font-black tracking-tight text-[#1F1B19]">Sign in to start this quiz</h1>
-            <p className="mx-auto max-w-sm text-sm font-semibold leading-relaxed text-[#6B6357]">
-              You need to log in or create an account before attempting this quiz.
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <h1 className="text-[20px] sm:text-[22px] font-black tracking-tight text-[#1F1B19] mb-2.5">
+              Sign in to start this quiz
+            </h1>
+            <p className="max-w-[320px] text-[14px] font-semibold leading-relaxed text-[#6B6357] mb-6">
+              You need to log in or create a free account before attempting this quiz.
             </p>
-            <p className="mx-auto max-w-sm break-words text-xs font-bold leading-relaxed text-[#918B80]">
-              After authentication, you will be returned to <span className="text-[#2C2A28]">{quiz.title}</span>.
-            </p>
+            <div className="flex flex-col items-center gap-2 w-full">
+              <p className="text-[12px] font-semibold text-[#918B80]">
+                After authentication, you will be returned to:
+              </p>
+              <div className="flex w-full max-w-[320px] items-center justify-center rounded-xl bg-[#F8F3EA]/80 px-4 py-2.5 border border-[#E8E3DA]">
+                <span className="text-[14px] font-black text-[#1F1B19] break-words [overflow-wrap:anywhere] text-center leading-snug">
+                  {quiz.title}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="relative mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+          <div className="relative mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 z-10">
             <Link
               href={authLinkWithCallback("/login", callbackUrl)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[18px] bg-[#1F1B19] px-5 text-sm font-black text-white shadow-[0_14px_30px_rgba(31,27,25,0.24)] transition-colors hover:bg-[#14110F]"
+              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-xl bg-[#1F1B19] px-4 text-[14px] font-bold text-white transition-all hover:bg-[#14110F] hover:shadow-[0_8px_20px_rgba(31,27,25,0.15)] active:scale-[0.98]"
             >
-              <LogIn className="h-4 w-4" />
+              <LogIn className="h-[18px] w-[18px]" />
               Log in
             </Link>
             <Link
               href={authLinkWithCallback("/signup", callbackUrl)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[18px] border border-[#D8CFC3] bg-white px-5 text-sm font-black text-[#2C2A28] shadow-[0_10px_24px_rgba(44,42,40,0.08)] transition-colors hover:bg-[#F8F3EA]"
+              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-xl border border-[#D8CFC3] bg-white px-4 text-[14px] font-bold text-[#2C2A28] transition-all hover:bg-[#F8F3EA] shadow-sm active:scale-[0.98]"
             >
-              <UserPlus className="h-4 w-4" />
+              <UserPlus className="h-[18px] w-[18px]" />
               Sign up
             </Link>
           </div>

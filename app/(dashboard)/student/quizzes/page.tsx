@@ -15,6 +15,7 @@ import QuizAvailabilityFilter, { type QuizAvailabilityFilterValue, type QuizSort
 import AdminQuizOrderGrid from "@/components/quiz/AdminQuizOrderGrid";
 import QuizStartLink from "@/components/quiz/QuizStartLink";
 import StudentQuizNoticeModal from "@/components/quiz/StudentQuizNoticeModal";
+import QuizShareButton from "@/components/quiz/QuizShareButton";
 
 export const metadata = { title: "Browse Quizzes" };
 
@@ -271,8 +272,8 @@ export default async function StudentQuizzesPage({
                       serverNow={now}
                     />
                   ) : (
-                    <div className="px-3 py-1 rounded-full bg-purple-50 text-xs font-bold uppercase tracking-wider text-purple-600 border border-purple-100 shadow-sm min-w-max">
-                      Start
+                    <div className="px-3 py-1 rounded-full bg-emerald-50 text-xs font-bold uppercase tracking-wider text-emerald-800 border border-emerald-100 shadow-sm min-w-max">
+                      OPEN
                     </div>
                   )}
                 </div>
@@ -289,11 +290,6 @@ export default async function StudentQuizzesPage({
                     {quiz.passwordProtected && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-100">
                         <Lock className="w-3 h-3" /> Password
-                      </span>
-                    )}
-                    {(sched === "open" || sched === "none") && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border border-emerald-100">
-                        Open
                       </span>
                     )}
                     {hasSchedule && sched === "upcoming" && (
@@ -327,6 +323,9 @@ export default async function StudentQuizzesPage({
                       Starts {formatCardDateTime(quiz.scheduledStart!)} | Ends {formatCardDateTime(quiz.scheduledEnd!)}
                     </p>
                   )}
+                  <p className="mt-4 min-w-0 truncate text-xs font-semibold text-gray-500">
+                    by <span className="font-bold text-gray-600">@{quiz.createdBy.username}</span>
+                  </p>
                 </div>
 
                 {/* Stats & Footer */}
@@ -341,7 +340,11 @@ export default async function StudentQuizzesPage({
                   </div>
 
                   <div className="flex items-center justify-between gap-3 mt-2">
-                    <span className="text-xs font-medium text-gray-500 min-w-0 truncate">by @{quiz.createdBy.username}</span>
+                    <QuizShareButton
+                      quizId={quiz.id}
+                      initialSharePath={quiz.shareSlug ? `/quiz/${quiz.shareSlug}` : `/student/quizzes/${quiz.id}`}
+                      compact
+                    />
                     {sched === "ended" ? (
                       <div className="relative inline-flex items-center justify-center py-2 px-4 transition-all duration-200 cursor-not-allowed opacity-60">
                         <span className="relative z-10 font-bold text-sm tracking-[0.05em] text-gray-500 uppercase">
