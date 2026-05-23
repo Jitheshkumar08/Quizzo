@@ -229,3 +229,10 @@ model RoleChangeEvent {
   @@index([createdAt])
   @@index([targetUserId])
 }
+
+model SiteConfig {
+  id                       String   @id @default("global")
+  celebrationSoundEnabled  Boolean  @default(true)
+  updatedAt                DateTime @updatedAt @default(now())
+  updatedById              String?
+}

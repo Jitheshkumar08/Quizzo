@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   History,
   ShieldAlert,
+  Settings2,
   Menu,
   X,
   LogOut,
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { href: "/admin/users", label: "Manage Users", icon: Users, roles: ["MOD", "ADMIN"], group: "Admin" },
   { href: "/admin/quizzes", label: "All Quizzes", icon: ShieldAlert, roles: ["MOD", "ADMIN"], group: "Admin" },
   { href: "/admin/attempts", label: "All Attempts", icon: ClipboardCheck, roles: ["MOD", "ADMIN"], group: "Admin" },
+  { href: "/admin/settings", label: "Site Settings", icon: Settings2, roles: ["ADMIN"], group: "Admin" },
 ];
 
 interface SidebarProps {

@@ -37,6 +37,7 @@ function PageButton({
     <button
       type="button"
       onClick={onClick}
+      onMouseDown={(event) => event.preventDefault()}
       disabled={disabled}
       className="group relative m-1 box-border min-h-14 min-w-14 cursor-pointer rounded-[20px] border-0 bg-transparent px-2 font-[inherit] disabled:cursor-not-allowed disabled:opacity-45"
       aria-label={direction === "previous" ? "Previous page" : "Next page"}
@@ -91,6 +92,7 @@ function PageSizeDropdown({
             const isActive = pageSize === opt.value;
             return (
               <button
+                type="button"
                 key={opt.label}
                 onClick={() => {
                   setOpen(false);
@@ -126,20 +128,58 @@ export default function PaginationControls({
   pageSize,
   onPageSizeChange,
 }: PaginationControlsProps) {
+  const controlsRef = useRef<HTMLDivElement>(null);
+
+  function restoreControlPosition(targetTop: number | null) {
+    const scrollArea = document.getElementById("dashboard-scroll-area");
+    const currentTop = controlsRef.current?.getBoundingClientRect().top;
+
+    if (targetTop === null || currentTop === undefined) {
+      return;
+    }
+
+    const delta = currentTop - targetTop;
+    if (Math.abs(delta) < 1) {
+      return;
+    }
+
+    if (scrollArea) {
+      const previousBehavior = scrollArea.style.scrollBehavior;
+      scrollArea.style.scrollBehavior = "auto";
+      scrollArea.scrollTop += delta;
+      scrollArea.style.scrollBehavior = previousBehavior;
+      return;
+    }
+
+    window.scrollBy({ top: delta, behavior: "auto" });
+  }
+
+  function preserveScrollPosition(update: () => void) {
+    const targetTop = controlsRef.current?.getBoundingClientRect().top ?? null;
+    update();
+
+    window.requestAnimationFrame(() => {
+      restoreControlPosition(targetTop);
+      window.requestAnimationFrame(() => restoreControlPosition(targetTop));
+    });
+
+    window.setTimeout(() => restoreControlPosition(targetTop), 80);
+  }
+
   return (
-    <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E8E2D8] bg-white/62 px-4 py-3 shadow-[0_10px_26px_rgba(44,42,40,0.07)] sm:flex-row sm:items-center sm:justify-between">
+    <div ref={controlsRef} className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E8E2D8] bg-white/62 px-4 py-3 shadow-[0_10px_26px_rgba(44,42,40,0.07)] sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center justify-center gap-3 sm:justify-start">
         <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#A09890]">
           {totalItems === 0 ? "0 shown" : `${startItem}-${endItem} of ${totalItems} shown`}
         </p>
-        <PageSizeDropdown pageSize={pageSize} onChange={onPageSizeChange} />
+        <PageSizeDropdown pageSize={pageSize} onChange={(size) => preserveScrollPosition(() => onPageSizeChange(size))} />
       </div>
       <div className="flex items-center justify-center gap-1">
-        <PageButton direction="previous" disabled={currentPage <= 1} onClick={onPrevious} />
+        <PageButton direction="previous" disabled={currentPage <= 1} onClick={() => preserveScrollPosition(onPrevious)} />
         <div className="flex h-12 min-w-[124px] items-center justify-center rounded-[20px] border border-[#E0D9CF] bg-[#F7F1E8]/90 px-4 text-[13px] font-black text-[#3D3A37] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
           Page {currentPage} of {totalPages}
         </div>
-        <PageButton direction="next" disabled={currentPage >= totalPages} onClick={onNext} />
+        <PageButton direction="next" disabled={currentPage >= totalPages} onClick={() => preserveScrollPosition(onNext)} />
       </div>
     </div>
   );
