@@ -13,16 +13,51 @@ export default async function TakeQuizPage({ params }: Props) {
 
   const { id } = await params;
 
-  const exists = await prisma.quiz.findFirst({
+  const quiz = await prisma.quiz.findFirst({
     where: { id, isPublished: true },
-    select: { id: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      accessPasswordHash: true,
+      allowMultipleAttempts: true,
+      scheduledStart: true,
+      scheduledEnd: true,
+      timeLimitMinutes: true,
+      updatedAt: true,
+      createdBy: { select: { fullName: true, username: true } },
+      _count: { select: { questions: true } },
+    },
   });
 
-  if (!exists) redirect("/student/quizzes");
+  if (!quiz) redirect("/student/quizzes");
+
+  const totalAttempts = await prisma.result.count({
+    where: {
+      quizId: quiz.id,
+      attemptType: "NORMAL",
+    },
+  });
 
   return (
     <div>
-      <QuizGate quizId={id} />
+      <QuizGate
+        key={quiz.updatedAt.toISOString()}
+        quizId={id}
+        startSummary={{
+          id: quiz.id,
+          title: quiz.title,
+          description: quiz.description,
+          totalAttempts,
+          questionCount: quiz._count.questions,
+          passwordProtected: !!quiz.accessPasswordHash,
+          allowMultipleAttempts: quiz.allowMultipleAttempts,
+          scheduledStart: quiz.scheduledStart?.toISOString() ?? null,
+          scheduledEnd: quiz.scheduledEnd?.toISOString() ?? null,
+          timeLimitMinutes: quiz.timeLimitMinutes,
+          createdByName: quiz.createdBy.fullName || quiz.createdBy.username,
+        }}
+      />
     </div>
   );
 }
