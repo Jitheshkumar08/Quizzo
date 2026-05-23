@@ -24,9 +24,10 @@ export default async function QuizShareRedirectPage({ params }: Props) {
       OR: [
         { shareSlug: cleanedSlug },
         { id: cleanedSlug },
+        { shareAliases: { some: { slug: cleanedSlug } } },
       ],
     },
-    select: { id: true, title: true },
+    select: { id: true, title: true, shareSlug: true },
   });
 
   if (!quiz) {
@@ -34,7 +35,8 @@ export default async function QuizShareRedirectPage({ params }: Props) {
   }
 
   if (!session) {
-    const callbackUrl = `/quiz/${encodeURIComponent(cleanedSlug)}`;
+    const canonicalSlug = quiz.shareSlug ?? cleanedSlug;
+    const callbackUrl = `/quiz/${encodeURIComponent(canonicalSlug)}`;
 
     return (
       <div className="fixed inset-0 z-0 flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#FCF9F2] p-4">

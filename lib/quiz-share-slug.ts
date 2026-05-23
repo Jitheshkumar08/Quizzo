@@ -28,11 +28,46 @@ export async function generateUniqueQuizShareSlug(
       where: { shareSlug: candidate },
       select: { id: true },
     });
+    const existingAlias = await tx.quizShareAlias.findUnique({
+      where: { slug: candidate },
+      select: { quizId: true },
+    });
 
-    if (!existing || existing.id === excludeQuizId) {
+    const quizMatches = !existing || existing.id === excludeQuizId;
+    const aliasMatches = !existingAlias || existingAlias.quizId === excludeQuizId;
+
+    if (quizMatches && aliasMatches) {
       return candidate;
     }
   }
 
   return `${base}-${Date.now().toString(36)}`;
+}
+
+export async function buildQuizShareSlugUpdate(
+  tx: Prisma.TransactionClient,
+  {
+    quizId,
+    currentSlug,
+    title,
+  }: {
+    quizId: string;
+    currentSlug: string | null;
+    title: string;
+  }
+) {
+  const nextSlug = await generateUniqueQuizShareSlug(tx, title, quizId);
+  if (nextSlug === currentSlug) {
+    return { shareSlug: currentSlug };
+  }
+
+  if (currentSlug) {
+    await tx.quizShareAlias.upsert({
+      where: { slug: currentSlug },
+      update: { quizId },
+      create: { quizId, slug: currentSlug },
+    });
+  }
+
+  return { shareSlug: nextSlug };
 }

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { recordQuizListEvent } from "@/lib/quiz-list-events";
-import { generateUniqueQuizShareSlug } from "@/lib/quiz-share-slug";
+import { buildQuizShareSlugUpdate, generateUniqueQuizShareSlug } from "@/lib/quiz-share-slug";
 import { canAccessInstructorArea, canEditInstructorQuiz } from "@/lib/roles";
 
 const QuestionSchema = z.object({
@@ -157,15 +157,19 @@ export async function POST(req: NextRequest) {
           publish && existingQuiz?.displayOrder == null
             ? await getNextDisplayOrder(tx)
             : undefined;
+        const shareSlugUpdate = await buildQuizShareSlugUpdate(tx, {
+          quizId,
+          currentSlug: existingQuiz?.shareSlug ?? null,
+          title,
+        });
+
         const updated = await tx.quiz.update({
           where: { id: quizId },
           data: {
             title,
             description,
             jsonBlobUrl,
-            ...(existingQuiz?.shareSlug
-              ? {}
-              : { shareSlug: await generateUniqueQuizShareSlug(tx, title, quizId) }),
+            ...shareSlugUpdate,
             isPublished: publish,
             isClosed: closed,
             ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),
@@ -286,14 +290,18 @@ export async function PATCH(req: NextRequest) {
           ? await getNextDisplayOrder(tx)
           : undefined;
 
+      const shareSlugUpdate = await buildQuizShareSlugUpdate(tx, {
+        quizId,
+        currentSlug: quiz.shareSlug,
+        title,
+      });
+
       const next = await tx.quiz.update({
         where: { id: quizId },
         data: {
           title,
           description,
-          ...(quiz.shareSlug
-            ? {}
-            : { shareSlug: await generateUniqueQuizShareSlug(tx, title, quizId) }),
+          ...shareSlugUpdate,
           isPublished: publish,
           isClosed: closed,
           ...(typeof nextDisplayOrder === "number" ? { displayOrder: nextDisplayOrder } : {}),

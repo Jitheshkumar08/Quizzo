@@ -107,11 +107,22 @@ model Quiz {
   results               Result[]
   quizSessions          QuizSession[]
   remedialQuizSessions  RemedialQuizSession[]
+  shareAliases          QuizShareAlias[]
   updatedAt             DateTime @updatedAt @default(now())
 
   @@index([isPublished, createdAt])
   @@index([isPublished, displayOrder])
   @@index([createdById, createdAt])
+}
+
+model QuizShareAlias {
+  id        String   @id @default(uuid())
+  quizId    String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
 }
 
 model Question {
