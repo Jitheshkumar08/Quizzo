@@ -139,7 +139,9 @@ export default async function ResultDetailPage({ params, searchParams }: Props) 
         : "from-rose-50 via-white to-red-50 border-rose-100";
 
   const showConfetti = celebrate === "1" && pct >= 75;
-  const celebrationSoundEnabled = showConfetti ? (await getSiteConfig()).celebrationSoundEnabled : false;
+  const siteConfig = showConfetti ? await getSiteConfig() : null;
+  const celebrationSoundEnabled = siteConfig?.celebrationSoundEnabled ?? false;
+  const celebrationSoundPath = siteConfig?.celebrationSoundPath;
 
   return (
     // Pass questions + userAnswers as props so the wrapper can render
@@ -179,7 +181,7 @@ export default async function ResultDetailPage({ params, searchParams }: Props) 
       `}</style>
 
       {/* Confetti celebration for 75%+ scores, only on fresh submit */}
-      {showConfetti && <ConfettiCelebration playSound={celebrationSoundEnabled && pct >= 90} />}
+      {showConfetti && <ConfettiCelebration playSound={celebrationSoundEnabled && pct >= 90} soundSrc={celebrationSoundPath} />}
 
       {/* Back */}
       <Link

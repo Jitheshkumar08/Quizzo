@@ -3,6 +3,7 @@ import { Settings2 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { isAdminRole } from "@/lib/roles";
 import { getSiteConfig } from "@/lib/site-config";
+import { listCelebrationSounds } from "@/lib/celebration-sounds";
 import { prisma } from "@/lib/prisma";
 import SiteSettingsForm from "@/components/admin/SiteSettingsForm";
 import SlugManagementTable from "@/components/admin/SlugManagementTable";
@@ -15,8 +16,9 @@ export default async function AdminSiteSettingsPage() {
     redirect("/dashboard");
   }
 
-  const [siteConfig, slugRows] = await Promise.all([
+  const [siteConfig, celebrationSounds, slugRows] = await Promise.all([
     getSiteConfig(),
+    listCelebrationSounds(),
     prisma.quiz.findMany({
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
       select: {
@@ -58,7 +60,11 @@ export default async function AdminSiteSettingsPage() {
         </div>
       </div>
 
-      <SiteSettingsForm initialCelebrationSoundEnabled={siteConfig.celebrationSoundEnabled} />
+      <SiteSettingsForm
+        availableSounds={celebrationSounds}
+        initialCelebrationSoundEnabled={siteConfig.celebrationSoundEnabled}
+        initialCelebrationSoundPath={siteConfig.celebrationSoundPath}
+      />
       <SlugManagementTable initialQuizzes={slugQuizzes} />
     </div>
   );

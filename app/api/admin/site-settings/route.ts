@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getSiteConfig, updateSiteConfig } from "@/lib/site-config";
 import { isAdminRole } from "@/lib/roles";
+import { isValidCelebrationSoundPath } from "@/lib/celebration-sounds";
 
 export async function GET() {
   const session = await auth();
@@ -20,17 +21,27 @@ export async function PATCH(req: Request) {
     }
 
     const body: unknown = await req.json();
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      !("celebrationSoundEnabled" in body) ||
-      typeof body.celebrationSoundEnabled !== "boolean"
-    ) {
+    if (typeof body !== "object" || body === null) {
       return NextResponse.json({ error: "Invalid setting value" }, { status: 400 });
     }
 
+    const currentConfig = await getSiteConfig();
+    const celebrationSoundEnabled =
+      "celebrationSoundEnabled" in body && typeof body.celebrationSoundEnabled === "boolean"
+        ? body.celebrationSoundEnabled
+        : currentConfig.celebrationSoundEnabled;
+    const celebrationSoundPath =
+      "celebrationSoundPath" in body && typeof body.celebrationSoundPath === "string"
+        ? body.celebrationSoundPath
+        : currentConfig.celebrationSoundPath;
+
+    if (!(await isValidCelebrationSoundPath(celebrationSoundPath))) {
+      return NextResponse.json({ error: "Invalid celebration sound file" }, { status: 400 });
+    }
+
     const config = await updateSiteConfig({
-      celebrationSoundEnabled: body.celebrationSoundEnabled,
+      celebrationSoundEnabled,
+      celebrationSoundPath,
       updatedById: session.user.id,
     });
 

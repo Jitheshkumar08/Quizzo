@@ -5,8 +5,8 @@ import confetti from "canvas-confetti";
 import { playCelebrationSound } from "@/components/ui/celebrationAudio";
 
 interface ConfettiCelebrationProps {
-  /** When true, plays /assets/congralutions.mp3 alongside the confetti */
   playSound?: boolean;
+  soundSrc?: string;
 }
 
 /**
@@ -14,11 +14,9 @@ interface ConfettiCelebrationProps {
  * Renders nothing visually — it uses the full-page canvas-confetti overlay.
  * Automatically cleans up after the show (~4 s).
  *
- * If `playSound` is true, also plays the celebration sound from:
- *   public/assets/congralutions.mp3
- * (swap that file anytime — same filename, same path)
+ * If `playSound` is true, also plays the configured celebration sound.
  */
-export default function ConfettiCelebration({ playSound = false }: ConfettiCelebrationProps) {
+export default function ConfettiCelebration({ playSound = false, soundSrc }: ConfettiCelebrationProps) {
   const hasFired = useRef(false);
 
   useEffect(() => {
@@ -27,7 +25,7 @@ export default function ConfettiCelebration({ playSound = false }: ConfettiCeleb
 
     // ── Sound (90%+ scores) ────────────────────────────────
     if (playSound) {
-      playCelebrationSound();
+      playCelebrationSound(soundSrc);
     }
 
     // ── Burst 1 — left cannon ──────────────────────────────
@@ -135,7 +133,7 @@ export default function ConfettiCelebration({ playSound = false }: ConfettiCeleb
         ticks: 200,
       });
     }, 2200);
-  }, [playSound]);
+  }, [playSound, soundSrc]);
 
   return null; // renders nothing — confetti uses its own full-page canvas
 }
