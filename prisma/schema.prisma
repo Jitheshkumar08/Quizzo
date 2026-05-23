@@ -234,6 +234,7 @@ model SiteConfig {
   id                       String   @id @default("global")
   celebrationSoundEnabled  Boolean  @default(true)
   celebrationSoundPath     String   @default("/assets/congralutions.mp3")
+  celebrationRules         Json     @default("[]")
   updatedAt                DateTime @updatedAt @default(now())
   updatedById              String?
 }

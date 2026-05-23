@@ -9,7 +9,7 @@ import { parseAnswerMap, parseStringArray } from "@/lib/reattempt-utils";
 import { calculateResultReviewStats, parseResultReviewSnapshot } from "@/lib/result-review";
 import QuizStartLink from "@/components/quiz/QuizStartLink";
 import ConfettiCelebration from "@/components/ui/ConfettiCelebration";
-import { getSiteConfig } from "@/lib/site-config";
+import { findCelebrationRuleForScore, getSiteConfig } from "@/lib/site-config";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -138,10 +138,12 @@ export default async function ResultDetailPage({ params, searchParams }: Props) 
         ? "from-amber-50 via-white to-orange-50 border-amber-100"
         : "from-rose-50 via-white to-red-50 border-rose-100";
 
-  const showConfetti = celebrate === "1" && pct >= 75;
-  const siteConfig = showConfetti ? await getSiteConfig() : null;
-  const celebrationSoundEnabled = siteConfig?.celebrationSoundEnabled ?? false;
-  const celebrationSoundPath = siteConfig?.celebrationSoundPath;
+  const siteConfig = celebrate === "1" ? await getSiteConfig() : null;
+  const celebrationRule = siteConfig ? findCelebrationRuleForScore(siteConfig.celebrationRules, pct) : null;
+  const showConfetti = celebrate === "1" && !!celebrationRule?.confettiEnabled;
+  const playCelebrationSound = !!(celebrationRule?.soundEnabled && siteConfig?.celebrationSoundEnabled);
+  const shouldRunCelebration = celebrate === "1" && !!celebrationRule && (showConfetti || playCelebrationSound);
+  const celebrationSoundPath = celebrationRule?.soundPath ?? siteConfig?.celebrationSoundPath;
 
   return (
     // Pass questions + userAnswers as props so the wrapper can render
@@ -180,8 +182,14 @@ export default async function ResultDetailPage({ params, searchParams }: Props) 
         }
       `}</style>
 
-      {/* Confetti celebration for 75%+ scores, only on fresh submit */}
-      {showConfetti && <ConfettiCelebration playSound={celebrationSoundEnabled && pct >= 90} soundSrc={celebrationSoundPath} />}
+      {/* Rule-based celebration effects, only on fresh submit */}
+      {shouldRunCelebration && (
+        <ConfettiCelebration
+          playSound={playCelebrationSound}
+          showConfetti={showConfetti}
+          soundSrc={celebrationSoundPath}
+        />
+      )}
 
       {/* Back */}
       <Link

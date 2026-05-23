@@ -6,6 +6,7 @@ import { playCelebrationSound } from "@/components/ui/celebrationAudio";
 
 interface ConfettiCelebrationProps {
   playSound?: boolean;
+  showConfetti?: boolean;
   soundSrc?: string;
 }
 
@@ -16,7 +17,7 @@ interface ConfettiCelebrationProps {
  *
  * If `playSound` is true, also plays the configured celebration sound.
  */
-export default function ConfettiCelebration({ playSound = false, soundSrc }: ConfettiCelebrationProps) {
+export default function ConfettiCelebration({ playSound = false, showConfetti = true, soundSrc }: ConfettiCelebrationProps) {
   const hasFired = useRef(false);
 
   useEffect(() => {
@@ -27,6 +28,8 @@ export default function ConfettiCelebration({ playSound = false, soundSrc }: Con
     if (playSound) {
       playCelebrationSound(soundSrc);
     }
+
+    if (!showConfetti) return;
 
     // ── Burst 1 — left cannon ──────────────────────────────
     const fireLeft = () =>
@@ -133,7 +136,7 @@ export default function ConfettiCelebration({ playSound = false, soundSrc }: Con
         ticks: 200,
       });
     }, 2200);
-  }, [playSound, soundSrc]);
+  }, [playSound, showConfetti, soundSrc]);
 
   return null; // renders nothing — confetti uses its own full-page canvas
 }

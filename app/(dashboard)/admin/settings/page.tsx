@@ -62,6 +62,7 @@ export default async function AdminSiteSettingsPage() {
 
       <SiteSettingsForm
         availableSounds={celebrationSounds}
+        initialCelebrationRules={siteConfig.celebrationRules}
         initialCelebrationSoundEnabled={siteConfig.celebrationSoundEnabled}
         initialCelebrationSoundPath={siteConfig.celebrationSoundPath}
       />

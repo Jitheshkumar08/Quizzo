@@ -410,8 +410,7 @@ export default function QuizTaker({
       if (res.ok) {
         markQuizSubmittedForHistory(quizId);
         if (data.resultId) {
-          const celebrate = data.percentage != null && data.percentage >= 75 ? "?celebrate=1" : "";
-          navigateToResultAfterSubmit(`/student/results/${data.resultId}${celebrate}`);
+          navigateToResultAfterSubmit(`/student/results/${data.resultId}?celebrate=1`);
         } else {
           router.replace(`/student/quizzes`);
         }
