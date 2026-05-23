@@ -323,63 +323,67 @@ export default function QuizGate({
         <ArrowLeft className="w-4 h-4" /> Back to quizzes
       </Link>
 
-      <div className="relative overflow-hidden rounded-[32px] border border-white/80 bg-white/80 p-6 shadow-[0_22px_60px_rgba(44,42,40,0.10)] ring-1 ring-[#E8E2D8]/80 backdrop-blur-2xl sm:p-8">
+      <div className="relative overflow-hidden rounded-[28px] border border-white/80 bg-white/80 p-4 shadow-[0_22px_60px_rgba(44,42,40,0.10)] ring-1 ring-[#E8E2D8]/80 backdrop-blur-2xl sm:rounded-[32px] sm:p-8">
         <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
 
         <div className="relative z-10 space-y-6">
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
-              <div className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
-                <BookOpen className="h-6 w-6" />
+            <div className="grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)_86px] items-center gap-1.5 sm:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_166px] sm:gap-2 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-4">
+              <div className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 sm:h-12 sm:w-12">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
 
-              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
-                <span className="inline-flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-blue-100 bg-blue-50 px-3.5 text-sm font-black text-blue-600 shadow-sm">
-                  <Users className="h-4 w-4" /> {startSummary.totalAttempts} Attempts
+              <div className="contents lg:flex lg:min-w-0 lg:flex-wrap lg:items-center lg:justify-end lg:gap-2">
+                <span className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-2xl border border-blue-100 bg-blue-50 px-1.5 text-[10px] font-black text-blue-600 shadow-sm sm:h-10 sm:gap-1.5 sm:px-3.5 sm:text-sm">
+                  <Users className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                  <span className="truncate">{startSummary.totalAttempts} Attempts</span>
                 </span>
-                <span className="inline-flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-purple-100 bg-purple-50 px-3.5 text-sm font-black text-purple-600 shadow-sm">
-                  <BookOpen className="h-4 w-4" /> {startSummary.questionCount} Questions
+                <span className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-2xl border border-purple-100 bg-purple-50 px-1.5 text-[10px] font-black text-purple-600 shadow-sm sm:h-10 sm:gap-1.5 sm:px-3.5 sm:text-sm">
+                  <BookOpen className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                  <span className="truncate">{startSummary.questionCount} Questions</span>
                 </span>
                 <button
                   type="button"
                   onClick={copyShareLink}
-                  className={`group/share inline-flex h-10 w-[166px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-2xl px-3.5 text-[13px] font-black tracking-[0.01em] shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition-[background-color,box-shadow,transform] duration-300 ease-out hover:shadow-[0_16px_32px_rgba(79,70,229,0.24)] active:scale-[0.97] ${
+                  className={`group/share inline-flex h-9 w-[86px] cursor-pointer items-center justify-center gap-1 overflow-hidden rounded-2xl px-1.5 text-[10px] font-black tracking-[0.01em] shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition-[background-color,box-shadow,transform] duration-300 ease-out hover:shadow-[0_16px_32px_rgba(79,70,229,0.24)] active:scale-[0.97] sm:h-10 sm:w-[166px] sm:gap-2 sm:px-3.5 sm:text-[13px] ${
                     copied
                       ? "bg-emerald-600 text-white hover:shadow-[0_16px_32px_rgba(5,150,105,0.22)]"
                       : "bg-violet-600 text-white hover:bg-violet-700"
                   }`}
                   aria-live="polite"
                 >
-                  <span className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-xl bg-white/18 ring-1 ring-white/18">
+                  <span className="relative flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-lg bg-white/18 ring-1 ring-white/18 sm:h-6 sm:w-6 sm:rounded-xl">
                     <Share2
-                      className={`absolute h-4 w-4 transition-all duration-300 ease-out ${
+                      className={`absolute h-3.5 w-3.5 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${
                         copied ? "-translate-y-2 rotate-45 scale-75 opacity-0" : "translate-y-0 rotate-0 scale-100 opacity-100"
                       }`}
                     />
                     <Check
-                      className={`absolute h-4 w-4 transition-all duration-300 ease-out ${
+                      className={`absolute h-3.5 w-3.5 transition-all duration-300 ease-out sm:h-4 sm:w-4 ${
                         copied ? "translate-y-0 rotate-0 scale-100 opacity-100" : "translate-y-2 -rotate-45 scale-75 opacity-0"
                       }`}
                     />
                   </span>
-                  <span className="relative h-5 w-[74px] overflow-hidden">
+                  <span className="relative h-4 w-[36px] overflow-hidden sm:h-5 sm:w-[74px]">
                     <span
                       className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${
                         copied ? "-translate-y-full opacity-0 blur-[2px]" : "translate-y-0 opacity-100 blur-0"
                       }`}
                     >
-                      Share Link
+                      <span className="sm:hidden">Share</span>
+                      <span className="hidden sm:inline">Share Link</span>
                     </span>
                     <span
                       className={`absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-300 ease-out ${
                         copied ? "translate-y-0 opacity-100 blur-0" : "translate-y-full opacity-0 blur-[2px]"
                       }`}
                     >
-                      Copied!
+                      <span className="sm:hidden">Done</span>
+                      <span className="hidden sm:inline">Copied!</span>
                     </span>
                   </span>
                   <Copy
-                    className={`h-3.5 w-3.5 flex-shrink-0 transition-all duration-300 ease-out ${
+                    className={`hidden h-3.5 w-3.5 flex-shrink-0 transition-all duration-300 ease-out sm:block ${
                       copied ? "translate-x-2 scale-75 opacity-0" : "translate-x-0 scale-100 opacity-70 group-hover/share:opacity-100"
                     }`}
                   />
@@ -387,12 +391,12 @@ export default function QuizGate({
               </div>
             </div>
 
-            <h1 className="max-w-full break-words text-2xl font-black leading-tight text-slate-950 [overflow-wrap:anywhere] sm:text-3xl">
+            <h1 className="max-w-full break-words text-center text-2xl font-black leading-tight text-slate-950 [overflow-wrap:anywhere] sm:text-3xl lg:text-left">
               {title}
             </h1>
           </div>
 
-          <p className="text-sm font-bold text-slate-500">
+          <p className="text-center text-sm font-bold text-slate-500 lg:text-left">
             Created by <span className="text-slate-800">{startSummary.createdByName}</span>
           </p>
 
@@ -403,14 +407,14 @@ export default function QuizGate({
               </span>
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Description</p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-700">
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-700 [overflow-wrap:anywhere]">
                   {description}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-sm:justify-center">
             {passwordRequired && (
               <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700">
                 <Lock className="h-3.5 w-3.5" /> Password protected
@@ -444,10 +448,10 @@ export default function QuizGate({
           )}
 
           {passwordRequired && (
-            <div className="rounded-[24px] border border-amber-100 bg-amber-50/45 p-4 sm:p-5">
+          <div className="rounded-[24px] border border-amber-100 bg-amber-50/45 p-4 sm:p-5">
               <div className="mb-4 flex items-start gap-3 text-sm font-semibold leading-relaxed text-slate-600">
                 <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
-                <p>This quiz is protected. Enter the password, then start when you are ready.</p>
+                <p className="break-words [overflow-wrap:anywhere]">This quiz is protected. Enter the password, then start when you are ready.</p>
               </div>
               <label className="block">
                 <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Quiz password</span>
@@ -512,8 +516,8 @@ export default function QuizGate({
             <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{unlockError}</p>
           )}
 
-          <div className="flex flex-col gap-3 border-t border-[#ECE6DD] pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-semibold leading-relaxed text-slate-500">
+          <div className="flex flex-col gap-4 border-t border-[#ECE6DD] pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-sm font-semibold leading-relaxed text-slate-500 sm:text-left">
               Your attempt will begin when you click Start Now.
             </p>
             <StartActionButton
