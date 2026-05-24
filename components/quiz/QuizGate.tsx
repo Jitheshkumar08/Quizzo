@@ -7,6 +7,8 @@ import { ArrowLeft, Ban, BookOpen, CalendarClock, Check, Clock3, Copy, FileText,
 import { TypewriterLoader } from "@/components/ui/TypewriterLoader";
 import PasswordInput from "@/components/ui/PasswordInput";
 import QuizTaker from "./QuizTaker";
+import TimerBadge from "./TimerBadge";
+import ScheduleStartBadge from "./ScheduleStartBadge";
 import { formatAppDateTime } from "@/lib/timezone";
 import { getSupabaseRealtimeClient } from "@/lib/supabase-realtime-client";
 import { markQuizStartIntent } from "./quizBrowserHistory";
@@ -52,10 +54,13 @@ interface QuizStartSummary {
   questionCount: number;
   passwordProtected: boolean;
   allowMultipleAttempts: boolean;
+  closed: boolean;
   scheduledStart: string | null;
   scheduledEnd: string | null;
   timeLimitMinutes: number | null;
   createdByName: string;
+  activeSessionStartedAt: string | null;
+  serverNow: string;
 }
 
 type QuizListEventPayload = {
@@ -72,11 +77,17 @@ function StartActionButton({
   disabled,
   loading,
   onClick,
+  label,
+  state,
 }: {
   disabled?: boolean;
   loading: boolean;
   onClick: () => void;
+  label: string;
+  state: "start" | "continue" | "closed" | "not-started";
 }) {
+  const ActionIcon = state === "closed" ? Ban : state === "not-started" ? CalendarClock : Play;
+
   return (
     <button
       type="button"
@@ -84,8 +95,12 @@ function StartActionButton({
       disabled={disabled || loading}
       className="quiz-start-action-btn mx-auto flex h-[48px] w-[70%] items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 sm:mx-0 sm:w-[240px]"
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-current" />}
-      <span className="whitespace-nowrap">Start Now</span>
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <ActionIcon className={`h-4 w-4 ${state === "start" || state === "continue" ? "fill-current" : ""}`} />
+      )}
+      <span className="whitespace-nowrap">{label}</span>
     </button>
   );
 }
@@ -93,18 +108,21 @@ function StartActionButton({
 export default function QuizGate({
   quizId,
   startSummary,
+  initialBlock,
 }: {
   quizId: string;
   startSummary: QuizStartSummary;
+  initialBlock?: BlockPayload | null;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [quiz, setQuiz] = useState<QuizPayload | null>(null);
-  const [block, setBlock] = useState<BlockPayload | null>(null);
+  const [block, setBlock] = useState<BlockPayload | null>(initialBlock ?? null);
   const [password, setPassword] = useState("");
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [clientNowMs, setClientNowMs] = useState(() => Date.now());
   const refreshTimer = useRef<number | null>(null);
   const copyResetTimer = useRef<number | null>(null);
 
@@ -154,6 +172,18 @@ export default function QuizGate({
   useEffect(() => {
     router.prefetch("/student/quizzes");
   }, [router]);
+
+  useEffect(() => {
+    if (!startSummary.scheduledEnd) return;
+
+    const scheduledEndMs = new Date(startSummary.scheduledEnd).getTime();
+    const delayMs = scheduledEndMs - Date.now();
+    const timer = window.setTimeout(() => {
+      setClientNowMs(Date.now());
+    }, Math.min(Math.max(delayMs + 250, 0), 2147483647));
+
+    return () => window.clearTimeout(timer);
+  }, [startSummary.scheduledEnd]);
 
   useEffect(() => {
     return () => {
@@ -326,10 +356,19 @@ export default function QuizGate({
 
   const title = block?.title ?? startSummary.title;
   const code = block?.code;
-  const passwordRequired = startSummary.passwordProtected || code === "PASSWORD_REQUIRED";
-  const canStartFromCurrentBlock = !code || code === "PASSWORD_REQUIRED";
   const hasSchedule = !!(startSummary.scheduledStart && startSummary.scheduledEnd);
   const description = startSummary.description?.trim() || "The creator has not added a description yet.";
+  const scheduledNotStarted = startSummary.scheduledStart ? clientNowMs < new Date(startSummary.scheduledStart).getTime() : false;
+  const scheduledEnded = startSummary.scheduledEnd ? clientNowMs > new Date(startSummary.scheduledEnd).getTime() : false;
+  const quizClosed = startSummary.closed || code === "ENDED" || scheduledEnded;
+  const quizNotStarted = !quizClosed && (code === "NOT_STARTED" || scheduledNotStarted);
+  const passwordRequired = (startSummary.passwordProtected || code === "PASSWORD_REQUIRED") && !quizNotStarted && !quizClosed && code !== "MAX_ATTEMPTS";
+  const canStartFromCurrentBlock = (!code || code === "PASSWORD_REQUIRED") && !quizNotStarted;
+  const canContinue = !!startSummary.activeSessionStartedAt && !quizClosed && !quizNotStarted;
+  const showStartCountdown = quizNotStarted && !!startSummary.scheduledStart;
+  const hasHeaderStatus = canContinue || showStartCountdown;
+  const startActionLabel = quizClosed ? "Closed" : quizNotStarted ? "Not started" : canContinue ? "Continue" : "Start Now";
+  const startActionState = quizClosed ? "closed" : quizNotStarted ? "not-started" : canContinue ? "continue" : "start";
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 animate-fade-in-up py-3 sm:py-4 lg:py-5">
@@ -373,7 +412,22 @@ export default function QuizGate({
                 <BookOpen className="h-6 w-6 sm:h-6 sm:w-6" />
               </div>
 
-              <div className="order-1 grid w-full grid-cols-3 gap-2 sm:contents lg:flex lg:min-w-0 lg:flex-wrap lg:items-center lg:justify-end lg:gap-2">
+              <div className={`order-1 grid w-full gap-2 sm:contents lg:flex lg:min-w-0 lg:flex-wrap lg:items-center lg:justify-end lg:gap-2 ${hasHeaderStatus ? "grid-cols-2 min-[430px]:grid-cols-4" : "grid-cols-3"}`}>
+                {canContinue && (
+                  <TimerBadge
+                    quizId={quizId}
+                    startTime={startSummary.activeSessionStartedAt!}
+                    timeLimitMinutes={startSummary.timeLimitMinutes}
+                    scheduledEnd={startSummary.scheduledEnd}
+                    serverNow={startSummary.serverNow}
+                  />
+                )}
+                {showStartCountdown && (
+                  <ScheduleStartBadge
+                    scheduledStart={startSummary.scheduledStart!}
+                    serverNow={startSummary.serverNow}
+                  />
+                )}
                 <span className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-2xl border border-blue-100 bg-blue-50 px-1.5 text-[10px] font-black text-blue-600 shadow-sm sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-sm">
                   <Users className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
                   <span className="truncate">{startSummary.totalAttempts} Attempts</span>
@@ -550,16 +604,26 @@ export default function QuizGate({
             <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{unlockError}</p>
           )}
 
-          <div className="flex flex-col gap-6 border-t border-[#ECE6DD] pt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-6">
-            <p className="text-center text-sm font-semibold leading-relaxed text-slate-500 sm:text-left">
-              Your attempt will begin when you click Start Now.
-            </p>
-            <StartActionButton
-              loading={loading || unlocking}
-              disabled={!canStartFromCurrentBlock}
-              onClick={startQuiz}
-            />
-          </div>
+          {code !== "MAX_ATTEMPTS" && (
+            <div className="flex flex-col gap-6 border-t border-[#ECE6DD] pt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-6">
+              <p className="text-center text-sm font-semibold leading-relaxed text-slate-500 sm:text-left">
+                {quizClosed
+                  ? "This quiz is closed."
+                  : quizNotStarted
+                    ? "This quiz has not started yet."
+                  : canContinue
+                    ? "Continue your saved attempt before the timer ends."
+                    : "Your attempt will begin when you click Start Now."}
+              </p>
+              <StartActionButton
+                loading={loading || unlocking}
+                disabled={quizClosed || quizNotStarted || !canStartFromCurrentBlock}
+                onClick={startQuiz}
+                label={startActionLabel}
+                state={startActionState}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

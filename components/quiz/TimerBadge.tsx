@@ -111,7 +111,7 @@ export default function TimerBadge({
         .toString()
         .padStart(2, "0");
     const s = (remainingSec % 60).toString().padStart(2, "0");
-    const isWarning = remainingSec <= 60;
+    const isWarning = remainingSec <= 180;
 
     const colors = isWarning
         ? "bg-red-50 text-red-600 border-red-200"

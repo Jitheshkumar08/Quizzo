@@ -435,7 +435,7 @@ export default function QuizTaker({
   const unansweredCount = questions.length - answeredCount;
   const timerToneClass =
     hasTimer && remainingSec !== null
-      ? remainingSec <= 60
+      ? remainingSec <= 180
         ? "text-red-700 bg-red-50 border-red-200 shadow-red-900/5"
         : remainingSec <= 300
           ? "text-amber-800 bg-amber-50 border-amber-200 shadow-amber-900/5"
