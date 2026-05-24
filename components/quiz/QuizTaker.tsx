@@ -136,6 +136,12 @@ export default function QuizTaker({
 
   useEffect(() => setMounted(true), []);
 
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      setSidebarOpen(true);
+    }
+  }, []);
+
   const navigateToResultAfterSubmit = useCallback((href: string) => {
     window.history.replaceState(null, "", "/student/quizzes");
     router.push(href);
@@ -369,10 +375,13 @@ export default function QuizTaker({
         if (el && scrollArea) {
           const scrollAreaRect = scrollArea.getBoundingClientRect();
           const elRect = el.getBoundingClientRect();
+          const rawZoom = window.getComputedStyle(scrollArea).getPropertyValue("zoom");
+          const scrollScale = Number.parseFloat(rawZoom);
+          const scrollPixelScale = Number.isFinite(scrollScale) && scrollScale > 0 ? scrollScale : 1;
 
-          // Scroll so the target question is comfortably near the top of the view
+          // Mobile dashboard content is zoomed; rects are visual px while scrollTop uses unscaled px.
           scrollArea.scrollTo({
-            top: scrollArea.scrollTop + (elRect.top - scrollAreaRect.top) - 24,
+            top: scrollArea.scrollTop + ((elRect.top - scrollAreaRect.top) - 24) / scrollPixelScale,
             behavior: 'smooth'
           });
         } else if (el) {
