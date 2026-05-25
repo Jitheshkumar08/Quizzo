@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw, BookOpen } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, Trophy, Clock, ArrowLeft, RotateCcw, BookOpen, GraduationCap } from "lucide-react";
 import ReviewSidebarClientWrapper from "./ReviewSidebarClientWrapper";
 import StartReattemptButton from "./StartReattemptButton";
 import { parseAnswerMap, parseStringArray } from "@/lib/reattempt-utils";
@@ -259,6 +259,12 @@ export default async function ResultDetailPage({ params, searchParams }: Props) 
               className="result-action-btn-outline flex h-[46px] w-full items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 sm:w-auto"
             >
               <BookOpen className="w-4 h-4" /> Browse Quizzes
+            </Link>
+            <Link
+              href={`/student/quizzes/${result.quizId}/learn`}
+              className="result-action-btn-outline flex h-[46px] w-full items-center justify-center gap-2 bg-violet-50 text-violet-600 hover:bg-violet-100 sm:w-auto"
+            >
+              <GraduationCap className="w-4 h-4" /> Study Answers
             </Link>
           </div>
 

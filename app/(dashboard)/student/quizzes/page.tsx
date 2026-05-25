@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { BookOpen, Users, Lock, CalendarRange, Timer, Infinity as InfinityIcon } from "lucide-react";
+import { BookOpen, Users, Lock, CalendarRange, Timer, Infinity as InfinityIcon, GraduationCap } from "lucide-react";
+import Link from "next/link";
 import { getScheduleStatus } from "@/lib/quiz-student-access";
 import TimerBadge from "@/components/quiz/TimerBadge";
 import { finalizeExpiredOpenSession } from "@/lib/quiz-session";
@@ -345,6 +346,12 @@ export default async function StudentQuizzesPage({
                       initialSharePath={quiz.shareSlug ? `/quiz/${quiz.shareSlug}` : `/student/quizzes/${quiz.id}`}
                       compact
                     />
+                    <Link
+                      href={`/student/quizzes/${quiz.id}/learn`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors"
+                    >
+                      <GraduationCap className="w-3.5 h-3.5" /> Study
+                    </Link>
                     {sched === "ended" ? (
                       <div className="relative inline-flex items-center justify-center py-2 px-4 transition-all duration-200 cursor-not-allowed opacity-60">
                         <span className="relative z-10 font-bold text-sm tracking-[0.05em] text-gray-500 uppercase">
