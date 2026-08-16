@@ -288,9 +288,9 @@ export default function SignupForm({
   }
 
   const fields = [
-    { name: "fullName", label: "Full Name", type: "text", placeholder: "Ex: Johnny Sins" },
-    { name: "username", label: "Username", type: "text", placeholder: "johnnysins123" },
-    { name: "email", label: "Email Address", type: "email", placeholder: "johnnysins@email.com" },
+    { name: "fullName", label: "Full Name", type: "text", placeholder: "Ex: Jithesh Kumar" },
+    { name: "username", label: "Username", type: "text", placeholder: "Jitheshkumar08" },
+    { name: "email", label: "Email Address", type: "email", placeholder: "Jitheshkumar@quizzo.com" },
     { name: "password", label: "Password", type: "password", placeholder: "Min 8 characters" },
     { name: "confirmPassword", label: "Confirm Password", type: "password", placeholder: "Repeat password" },
   ];
